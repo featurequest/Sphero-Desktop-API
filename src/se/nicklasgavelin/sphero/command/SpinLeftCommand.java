@@ -1,7 +1,7 @@
 package se.nicklasgavelin.sphero.command;
 
 import se.nicklasgavelin.sphero.command.RawMotorCommand.MOTOR_MODE;
-import se.nicklasgavelin.sphero.util.Value;
+import se.nicklasgavelin.util.Value;
 
 /**
  * Command to spin the Sphero left

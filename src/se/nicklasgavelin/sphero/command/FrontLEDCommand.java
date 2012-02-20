@@ -1,6 +1,6 @@
 package se.nicklasgavelin.sphero.command;
 
-import se.nicklasgavelin.sphero.util.Value;
+import se.nicklasgavelin.util.Value;
 
 /**
  * A command to modify the brightness of the front LED on the Sphero robot.

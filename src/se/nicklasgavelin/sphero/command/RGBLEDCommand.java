@@ -1,7 +1,7 @@
 package se.nicklasgavelin.sphero.command;
 
 import java.awt.Color;
-import se.nicklasgavelin.sphero.util.Value;
+import se.nicklasgavelin.util.Value;
 
 /**
  * Command to adjust the color displayed by the RGB LED on the Sphero.

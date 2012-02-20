@@ -1,7 +1,7 @@
 package se.nicklasgavelin.sphero;
 
-import se.nicklasgavelin.sphero.util.Value;
-import se.nicklasgavelin.sphero.util.Vector2D;
+import se.nicklasgavelin.util.Value;
+import se.nicklasgavelin.util.Vector2D;
 
 /**
  * @author Orbotix

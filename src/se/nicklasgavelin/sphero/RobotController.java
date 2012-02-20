@@ -1,7 +1,7 @@
 package se.nicklasgavelin.sphero;
 
 import se.nicklasgavelin.sphero.command.*;
-import se.nicklasgavelin.sphero.util.Value;
+import se.nicklasgavelin.util.Value;
 
 /**
  * Handles the basic controls of a robot. See methods for more information

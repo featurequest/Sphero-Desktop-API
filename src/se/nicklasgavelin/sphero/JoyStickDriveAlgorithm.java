@@ -1,6 +1,6 @@
 package se.nicklasgavelin.sphero;
 
-import se.nicklasgavelin.sphero.util.Value;
+import se.nicklasgavelin.util.Value;
 
 /**
  * @author Orbotix

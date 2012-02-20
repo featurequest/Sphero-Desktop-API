@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.apache.http.util.ByteArrayBuffer;
 import se.nicklasgavelin.bluetooth.BluetoothConnection;
 import se.nicklasgavelin.bluetooth.BluetoothDevice;
 import se.nicklasgavelin.log.Logging;
@@ -18,8 +17,9 @@ import se.nicklasgavelin.sphero.exception.RobotInitializeConnectionFailed;
 import se.nicklasgavelin.sphero.response.DeviceResponse;
 import se.nicklasgavelin.sphero.response.DeviceResponse.RESPONSE_CODE;
 import se.nicklasgavelin.sphero.response.DeviceResponseHeader;
-import se.nicklasgavelin.sphero.util.Pair;
-import se.nicklasgavelin.sphero.util.Value;
+import se.nicklasgavelin.util.ByteArrayBuffer;
+import se.nicklasgavelin.util.Pair;
+import se.nicklasgavelin.util.Value;
 
 /**
  * Robot class. Mirrors the direct connection between the application

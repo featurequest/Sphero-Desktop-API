@@ -1,6 +1,6 @@
 package se.nicklasgavelin.sphero.command;
 
-import se.nicklasgavelin.sphero.util.Value;
+import se.nicklasgavelin.util.Value;
 
 /**
  * Command for setting the Sphero rotation rate. I've seen no visible result

@@ -1,6 +1,6 @@
 package se.nicklasgavelin.sphero.command;
 
-import se.nicklasgavelin.sphero.util.Value;
+import se.nicklasgavelin.util.Value;
 
 /**
  * Command to roll the robot in a given heading with a given speed.

@@ -18,6 +18,8 @@ is release under Apache License 2.0.
 
 For debugging purposes we use the log4j library that are released under the Apache License 2.0.
 
+Also a bit of code from the Robotix team has been used! So many big thanks! ;)
+
 --- Extra ---
 For usage under Unix based systems (other than Mac OSX) you may need to download
 and include the bluecove gpl release from http://bluecove.org/bluecove-gpl/ as the included

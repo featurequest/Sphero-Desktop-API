@@ -1,0 +1,18 @@
+package site.nicklas.sphero.response;
+
+import site.nicklas.sphero.command.DeviceCommand.DEVICE_COMMAND;
+
+/**
+ * A front led response that is for the FrontLEDCommand that must
+ * be received to create this
+ */
+public class FrontLEDResponse extends DeviceResponse
+{
+    /**
+     * Create a FrontLEDResponse from a given received data
+     */
+    public FrontLEDResponse( byte[] data )
+    {
+        super( DEVICE_COMMAND.FRONT_LED_OUTPUT, data );
+    }
+}

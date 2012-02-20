@@ -1,0 +1,28 @@
+--- LICENSE ---
+Just kidding, there's no restrictions that I've set,
+feel free to do anything to this code without any restrictions
+from my part. If you're nice you could include this text file in any projects
+that uses this port of the Sphero API to give me and my thesis work credit for
+developing the port.
+
+Source code by Nicklas Gavelin, nicklas.gavelin@gmail.com, Sweden, Luleå University of
+Technology during the thesis work for Peter Parnes, peter.parnes@ltu.se.
+
+--- Libraries ---
+This source code uses the Bluecove 2.1.1 release for the bluetooth communication.
+A wrapper have been developed to simplify the usage of the Bluecove library. The
+bluecove library is released under Apache License 2.0.
+
+It also uses the httpcore 4.1.4 library for creating new byte arrays easily. httpcore
+is release under Apache License 2.0.
+
+For debugging purposes we use the log4j library that are released under the Apache License 2.0.
+
+--- Extra ---
+For usage under Unix based systems (other than Mac OSX) you may need to download
+and include the bluecove gpl release from http://bluecove.org/bluecove-gpl/ as the included
+version only supports Windows and Mac OSX systems.
+
+--- Questions & Suggestions ---
+For any questions I'm available at nicklas.gavelin@gmail.com when time allows it.
+I don't guarantee that I'll have time to answer questions!

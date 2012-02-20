@@ -1,8 +1,6 @@
 package se.nicklasgavelin.bluetooth;
 
 import java.util.Collection;
-import java.util.Vector;
-
 import se.nicklasgavelin.bluetooth.Bluetooth.EVENT;
 
 /**
@@ -11,7 +9,7 @@ import se.nicklasgavelin.bluetooth.Bluetooth.EVENT;
  * or if the device search is completed. If the device search is completed
  * the devices detected will also be returned.
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  *
  */
 public interface BluetoothDiscoveryListener

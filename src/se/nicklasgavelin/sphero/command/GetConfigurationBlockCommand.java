@@ -4,7 +4,7 @@ package se.nicklasgavelin.sphero.command;
  * Command to get the configuration of the Sphero.
  * Havn't seen any visible return values.
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class GetConfigurationBlockCommand extends DeviceCommand
 {

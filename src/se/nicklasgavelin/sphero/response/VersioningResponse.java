@@ -6,7 +6,7 @@ import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
  * Version response giving the version of the Sphero.
  *
  * @author Orbotix
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class VersioningResponse extends DeviceResponse
 {

@@ -5,7 +5,7 @@ package se.nicklasgavelin.sphero.command;
  * the Sphero. Contains the information about the command and
  * also the data.
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  *
  */
 public abstract class DeviceCommand extends DeviceMessage

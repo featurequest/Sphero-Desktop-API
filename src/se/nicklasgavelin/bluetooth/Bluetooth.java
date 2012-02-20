@@ -17,7 +17,7 @@ import se.nicklasgavelin.log.Logging;
  * for the classes. The BluetoothDiscoveryListener will receive events happening
  * in this class.
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  * @version 0.1alpha
  */
 public class Bluetooth implements DiscoveryListener, Runnable

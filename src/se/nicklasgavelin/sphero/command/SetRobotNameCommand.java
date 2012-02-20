@@ -8,7 +8,7 @@ import java.util.Arrays;
  *
  * @deprecated Sending this command will not result in any visible changes (as
  * far as I've noticed)
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class SetRobotNameCommand extends DeviceCommand
 {

@@ -5,6 +5,8 @@ import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
 /**
  * A front led response that is for the FrontLEDCommand that must
  * be received to create this
+ *
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class FrontLEDResponse extends DeviceResponse
 {

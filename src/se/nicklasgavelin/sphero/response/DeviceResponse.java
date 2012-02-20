@@ -10,7 +10,7 @@ import se.nicklasgavelin.sphero.command.DeviceMessage;
  * Responses are created automatically when messages are received from
  * the Sphero robots. Should NOT be created manually at all!
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public abstract class DeviceResponse extends DeviceMessage
 {

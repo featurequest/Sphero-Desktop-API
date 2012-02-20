@@ -5,7 +5,7 @@ import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
 /**
  * Calibration response received after sending a CalibrateCommand
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class CalibrateResponse extends DeviceResponse
 {

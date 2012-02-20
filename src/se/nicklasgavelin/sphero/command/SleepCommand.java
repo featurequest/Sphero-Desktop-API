@@ -7,7 +7,7 @@ package se.nicklasgavelin.sphero.command;
  * NOTICE: Sending this command will result in a lost connection to the Sphero
  * as the Bluetooth connection is being closed down
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  *
  */
 public class SleepCommand extends DeviceCommand

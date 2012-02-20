@@ -10,7 +10,7 @@ import java.util.Iterator;
  * disabled by default. Otherwise the logging will follow
  * the settings in the Configuration class
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  * @version 2.0
  */
 public class Logging

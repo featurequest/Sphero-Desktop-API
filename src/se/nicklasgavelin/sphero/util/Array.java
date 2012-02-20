@@ -5,7 +5,7 @@ import java.util.Arrays;
 /**
  * Array utilities
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class Array
 {

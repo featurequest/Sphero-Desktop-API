@@ -6,7 +6,7 @@ import se.nicklasgavelin.sphero.util.Value;
 /**
  * Command to adjust the color displayed by the RGB LED on the Sphero.
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class RGBLEDCommand extends DeviceCommand
 {

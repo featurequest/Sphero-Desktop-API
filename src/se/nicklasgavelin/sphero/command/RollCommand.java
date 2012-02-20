@@ -5,7 +5,7 @@ import se.nicklasgavelin.sphero.util.Value;
 /**
  * Command to roll the robot in a given heading with a given speed.
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class RollCommand extends DeviceCommand
 {

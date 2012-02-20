@@ -8,7 +8,7 @@ import se.nicklasgavelin.sphero.command.RawMotorCommand.MOTOR_MODE;
  * @deprecated Sending this command will result in some future commands to fail
  * to execute on the Sphero for some reason. Has something to do with the logic
  * on the Sphero
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class SpinRightCommand extends DeviceCommand
 {

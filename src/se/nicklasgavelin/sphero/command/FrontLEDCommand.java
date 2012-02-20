@@ -6,7 +6,7 @@ import se.nicklasgavelin.sphero.util.Value;
  * A command to modify the brightness of the front LED on the Sphero robot.
  * The brightness must be set to 0-1
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class FrontLEDCommand extends DeviceCommand
 {

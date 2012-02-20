@@ -30,7 +30,7 @@ import javax.microedition.io.StreamConnection;
  *
  * @author Francis Li
  * @author extrapixel
- * @author Nicklas Gavelin (Modifier)
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology (Modifier)
  */
 public class BluetoothService extends Observable implements Runnable
 {

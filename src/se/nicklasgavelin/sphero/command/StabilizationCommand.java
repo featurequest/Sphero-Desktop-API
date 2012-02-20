@@ -8,7 +8,7 @@ package se.nicklasgavelin.sphero.command;
  *
  * @deprecated Usage of this command results in failure to execute some future
  * commands such as the RollCommand
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class StabilizationCommand extends DeviceCommand
 {

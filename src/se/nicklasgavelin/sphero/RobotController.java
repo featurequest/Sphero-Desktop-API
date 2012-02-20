@@ -1,22 +1,13 @@
 package se.nicklasgavelin.sphero;
 
-import se.nicklasgavelin.sphero.command.JumpToBootloaderCommand;
-import se.nicklasgavelin.sphero.command.RotationRateCommand;
-import se.nicklasgavelin.sphero.command.RGBLEDCommand;
-import se.nicklasgavelin.sphero.command.CalibrateCommand;
-import se.nicklasgavelin.sphero.command.RollCommand;
-import se.nicklasgavelin.sphero.command.SetRobotNameCommand;
-import se.nicklasgavelin.sphero.command.FrontLEDCommand;
-import se.nicklasgavelin.sphero.command.SleepCommand;
-import se.nicklasgavelin.sphero.command.StabilizationCommand;
-import se.nicklasgavelin.sphero.command.VersioningCommand;
+import se.nicklasgavelin.sphero.command.*;
 import se.nicklasgavelin.sphero.util.Value;
 
 /**
  * Handles the basic controls of a robot. See methods for more information
  *
  * @deprecated Not in use any more, use methods in the Robot class instead
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class RobotController
 {

@@ -5,7 +5,7 @@ package se.nicklasgavelin.sphero.command;
  * The response received after sending this command contains the version
  * information
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class VersioningCommand extends DeviceCommand
 {

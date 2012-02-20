@@ -5,7 +5,7 @@ import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
 /**
  * Create a response for the RGBLEDCommand
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class RGBLEDResponse extends DeviceResponse
 {

@@ -6,7 +6,7 @@ import se.nicklasgavelin.sphero.util.Value;
  * Command for setting the Sphero rotation rate. I've seen no visible result
  * after sending this command.
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class RotationRateCommand extends DeviceCommand
 {

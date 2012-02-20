@@ -6,7 +6,7 @@ package se.nicklasgavelin.sphero.command;
  * make the roll command work properly
  *
  * @author Orbotix
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class CalibrateCommand extends DeviceCommand
 {

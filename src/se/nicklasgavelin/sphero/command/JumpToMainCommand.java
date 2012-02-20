@@ -4,7 +4,7 @@ package se.nicklasgavelin.sphero.command;
  * Command to make the Sphero jump to the main application,
  * will result in a lost connection to the Sphero!
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class JumpToMainCommand extends DeviceCommand
 {

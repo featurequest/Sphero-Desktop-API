@@ -7,7 +7,7 @@ import se.nicklasgavelin.sphero.Robot;
  * command doesn't work as expected as a CODE_ERROR_UNSUPPORTED is returned.
  * Modified the FrontLEDCommand to work as a ping command to.
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class PingCommand extends DeviceCommand
 {

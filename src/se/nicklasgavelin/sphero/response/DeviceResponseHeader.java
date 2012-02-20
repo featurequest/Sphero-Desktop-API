@@ -7,7 +7,7 @@ import se.nicklasgavelin.sphero.response.DeviceResponse.RESPONSE_CODE;
  * Used for deciding package length and content quickly without needing
  * the complete packet.
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class DeviceResponseHeader
 {

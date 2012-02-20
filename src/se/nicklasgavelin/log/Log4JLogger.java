@@ -4,13 +4,16 @@
  */
 package se.nicklasgavelin.log;
 
-import org.apache.log4j.*;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 
 
 /**
  * Log appender for Log4j
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class Log4JLogger implements Logging.Appender
 {

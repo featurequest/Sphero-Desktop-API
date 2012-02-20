@@ -5,7 +5,7 @@ import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
 /**
  * Respons efor the StabilizationCommand
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class StabilizationResponse extends DeviceResponse
 {

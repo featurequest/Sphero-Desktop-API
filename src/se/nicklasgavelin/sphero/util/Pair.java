@@ -3,7 +3,7 @@ package se.nicklasgavelin.sphero.util;
 /**
  * Pair for holding two types of objects
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  * @param <X> The first type of object
  * @param <Y> The second type of object
  */

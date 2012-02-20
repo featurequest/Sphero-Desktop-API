@@ -36,7 +36,7 @@ import se.nicklasgavelin.sphero.util.Value;
  * r.connect();
  * r.sendCommand( new FrontLEDCommand( 0.5F ) );
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  * @version 1.1
  */
 public class Robot

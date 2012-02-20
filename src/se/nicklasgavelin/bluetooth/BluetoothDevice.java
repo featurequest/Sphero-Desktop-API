@@ -2,15 +2,15 @@ package se.nicklasgavelin.bluetooth;
 
 import java.io.IOException;
 import javax.bluetooth.*;
-import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
 import se.nicklasgavelin.log.Logging;
+import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
 
 /**
  * Manages a single bluetooth device
  * Masks the "RemoteDevice" class as extra methods are implemented
  * to make it easier to communicate with the given device
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  *
  */
 public class BluetoothDevice implements DiscoveryListener

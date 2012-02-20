@@ -1,8 +1,9 @@
 package se.nicklasgavelin.bluetooth;
 
-import java.io.*;
-
-import javax.microedition.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import javax.microedition.io.StreamConnection;
 
 /**
  * This originated from the Mobile Processing project -
@@ -26,6 +27,7 @@ import javax.microedition.io.*;
  *
  * @author Francis Li
  * @author extrapixel
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology (Modifier)
  */
 public class BluetoothConnection
 {

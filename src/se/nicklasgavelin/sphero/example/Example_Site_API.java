@@ -22,7 +22,7 @@ import se.nicklasgavelin.sphero.response.DeviceResponse;
 /**
  * Simple test class to test the Sphero API
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class Example_Site_API extends JFrame
 {

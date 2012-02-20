@@ -6,7 +6,7 @@ import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
  * Macro command containing macros for the Sphero
  *
  * @deprecated Under development, doesn't work atm.
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class MacroCommand extends DeviceCommand
 {

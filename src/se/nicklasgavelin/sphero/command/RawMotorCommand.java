@@ -8,7 +8,7 @@ package se.nicklasgavelin.sphero.command;
  * to execute on the Sphero for some reason. Has something to do with the logic
  * on the Sphero
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class RawMotorCommand extends DeviceCommand
 {

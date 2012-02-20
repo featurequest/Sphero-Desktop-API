@@ -7,7 +7,7 @@ import se.nicklasgavelin.sphero.response.DeviceResponse;
  * Interface for listening on a robot.
  * You need to perform Robot.addListener to listen for robot events
  *
- * @author Nicklas Gavelin
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public interface RobotListener
 {

@@ -11,7 +11,7 @@ public class ByteArrayBuffer
 {
     // Internal storage buffer
     private byte[] buffer;
-    
+
     // Current length
     private int length;
 
@@ -68,6 +68,13 @@ public class ByteArrayBuffer
             this.append( b[i] );
     }
 
+    /**
+     * Returns the reference to the underlying byte array
+     */
+    public byte[] buffer()
+    {
+        return this.buffer;
+    }
 
     /**
      * Returns the converted buffer as a byte array
@@ -108,6 +115,39 @@ public class ByteArrayBuffer
         return (index < this.length ? this.buffer[ index] : null);
     }
 
+    /**
+     * Returns a clone of the current buffer
+     *
+     * @return A clone of the current buffer
+     */
+    @Override
+    public ByteArrayBuffer clone()
+    {
+        // Create a buffer with the same capacity
+        ByteArrayBuffer clone = new ByteArrayBuffer( this.buffer.length );
+
+        // Copy our current data
+        clone.append( this.toByteArray() );
+
+        // Return the clone
+        return clone;
+    }
+
+    /**
+     * Returns a specific part of the byte array.
+     * Will throw an IndexOutOfBoundException if the offset + length is larger
+     * than the capacity of the buffer
+     *
+     * @param offset The offset to start at
+     * @param length The length of the resulted array
+     */
+    public byte[] toByteArray( int offset, int length )
+    {
+        byte[] ret = new byte[ length ];
+        System.arraycopy( this.buffer, offset, ret, 0, length );
+
+        return ret;
+    }
 
     /**
      * Returns the index of the first occurrence of byte b
@@ -145,17 +185,24 @@ public class ByteArrayBuffer
 
 
     /**
-     * Set the new capacity of the byte array
+     * Set the new capacity of the byte array,
+     * will keep the current data as long as the new length is larger
+     * than the current one.
      *
-     * @param capacity The new capacity
+     * @param capacity The new capacity (may be larger or smaller)
      */
     public void setCapacity( int capacity )
     {
         // Create our new buffer
         byte[] newBuffer = new byte[ capacity ];
 
+        int newLength = ( this.length > newBuffer.length ? newBuffer.length : this.length );
+
         // Copy our old data to our new buffer
-        System.arraycopy( this.buffer, 0, newBuffer, 0, this.buffer.length );
+        System.arraycopy( this.buffer, 0, newBuffer, 0, newLength );
+
+        // Check if we need to remove data
+        this.length = newLength;
 
         // Replace our old buffer with our new one
         this.buffer = newBuffer;

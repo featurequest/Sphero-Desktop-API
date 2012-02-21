@@ -6,8 +6,6 @@ import java.util.Arrays;
 /**
  * Command to change the name of the Sphero.
  *
- * @deprecated Sending this command will not result in any visible changes (as
- * far as I've noticed)
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class SetRobotNameCommand extends DeviceCommand

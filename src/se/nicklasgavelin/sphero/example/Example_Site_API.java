@@ -17,6 +17,7 @@ import se.nicklasgavelin.sphero.Robot;
 import se.nicklasgavelin.sphero.RobotListener;
 import se.nicklasgavelin.sphero.command.DeviceCommand;
 import se.nicklasgavelin.sphero.command.FrontLEDCommand;
+import se.nicklasgavelin.sphero.command.SetRobotNameCommand;
 import se.nicklasgavelin.sphero.response.DeviceResponse;
 
 /**
@@ -245,7 +246,7 @@ public class Example_Site_API extends JFrame
                             robots.add( r );
 
                             System.out.println( "Connected to " + d.getName() + " : " + d.getAddress() );
-                            r.rgbTransition( 255, 0, 0, 0, 255, 255, 50 );
+//                            r.rgbTransition( 255, 0, 0, 0, 255, 255, 50 );
 
                             // Send direct command
                             r.sendCommand( new FrontLEDCommand( 1 ) );

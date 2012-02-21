@@ -1148,6 +1148,14 @@ public class Robot
         return (address.startsWith( ROBOT_ADDRESS_PREFIX ));
     }
 
+    /**
+     * Returns the Bluetooth connection address or null if no
+     * address could be returned
+     */
+    public String getConnectionURL()
+    {
+        return this.bt.getConnectionURL();
+    }
 
     /**
      * Checks if a given Bluetooth device is a valid Sphero Bluetooth device or
@@ -1369,7 +1377,7 @@ public class Robot
                         if ( cmd.getSecond() )
                         {
                             // System command, what should we do?!?!?! Chill out!
-                            System.out.println( "New system command response " + response );
+//                            System.out.println( "New system command response " + response );
                         }
                         else
                         {

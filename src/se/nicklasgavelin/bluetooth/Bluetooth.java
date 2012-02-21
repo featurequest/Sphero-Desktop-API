@@ -364,7 +364,11 @@ public class Bluetooth implements DiscoveryListener, Runnable
     public void deviceDiscovered( RemoteDevice device, DeviceClass deviceClass )
     {
         log( "Discovered device " + device );
-        this.devices.add( new BluetoothDevice( this, device ) );
+        BluetoothDevice btd = new BluetoothDevice( this, device );
+        this.devices.add( btd );
+
+        // Notify listeners
+        this.notifyListeners( btd );
     }
 
     /**

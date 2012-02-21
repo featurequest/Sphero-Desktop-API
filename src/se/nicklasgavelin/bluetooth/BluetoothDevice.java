@@ -76,7 +76,14 @@ public class BluetoothDevice implements DiscoveryListener
     {
         if ( this.connectionUrl != null )
             return this.connectionUrl;
-        return this.service.getConnectionURL();
+        try
+        {
+            return this.service.getConnectionURL();
+        }
+        catch( NullPointerException e )
+        {
+            return null;
+        }
     }
 
     /**

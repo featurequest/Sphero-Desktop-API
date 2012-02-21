@@ -33,7 +33,10 @@ public class GetBluetoothInfoResponse extends DeviceResponse
         if ( !isDataCorrupt() )
         {
             if ( data == null || (data.length != INFO_DATA_LENGTH && data.length != OLD_INFO_DATA_LENGTH) )
+            {
+                System.err.println( "Data is corrupt" );
                 setCorrupt( true );
+            }
             else
             {
                 // Data is ok, continue reading bluetooth information
@@ -69,6 +72,8 @@ public class GetBluetoothInfoResponse extends DeviceResponse
                 }
                 catch ( UnsupportedEncodingException e )
                 {
+                    System.err.println( "Encoding not supported" );
+
                     // Encoding not supported
                     this.name = null;
                     this.address = null;

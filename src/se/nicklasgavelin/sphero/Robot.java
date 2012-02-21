@@ -17,6 +17,7 @@ import se.nicklasgavelin.sphero.exception.RobotInitializeConnectionFailed;
 import se.nicklasgavelin.sphero.response.DeviceResponse;
 import se.nicklasgavelin.sphero.response.DeviceResponse.RESPONSE_CODE;
 import se.nicklasgavelin.sphero.response.DeviceResponseHeader;
+import se.nicklasgavelin.sphero.response.GetBluetoothInfoResponse;
 import se.nicklasgavelin.util.ByteArrayBuffer;
 import se.nicklasgavelin.util.Pair;
 import se.nicklasgavelin.util.Value;
@@ -36,8 +37,12 @@ import se.nicklasgavelin.util.Value;
  * r.connect();
  * r.sendCommand( new FrontLEDCommand( 0.5F ) );
  *
- * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
+ * Technology
  * @version 1.1
+ * 
+ * TODO: Set temporary internal values on sending commands so that we don't
+ * update them too late if we send multiple commands
  */
 public class Robot
 {
@@ -52,6 +57,8 @@ public class Robot
     private RobotStreamListener listeningThread;
     private RobotSendingQueue sendingTimer;
     private List<RobotListener> listeners;
+    // Other
+    private String name = null;
 
     /**
      * Holds the robot position, rotation rate and the drive algorithm used.
@@ -408,7 +415,7 @@ public class Robot
         Logging.info( "Notifying listeners about device respose " + dr + " for device command " + dc );
 
         // Go through all listeners and notify them
-        for (RobotListener r : this.listeners)
+        for ( RobotListener r : this.listeners )
             r.responseReceived( this, dr, dc );
     }
 
@@ -423,7 +430,7 @@ public class Robot
         Logging.info( "Notifying listeners about event " + event );
 
         // Notify all listeners
-        for (RobotListener r : this.listeners)
+        for ( RobotListener r : this.listeners )
             r.event( this, event );
     }
 
@@ -734,6 +741,8 @@ public class Robot
                 receivedFirstDisconnect = true;
         }
 
+        Logging.debug( "Updating internal values for " + command );
+
         // Update stuff event
         switch ( command.getCommand() )
         {
@@ -888,7 +897,7 @@ public class Robot
         float[] n = new float[ 3 ];
 
         // Go through all steps
-        for (int i = 0; i < steps; i++)
+        for ( int i = 0; i < steps; i++ )
         {
             // Calculate hue saturation and intensity
             n[0] = (iHue ? fHSB[0] + (i * incHue) : fHSB[0] - (i * incHue));
@@ -1148,6 +1157,7 @@ public class Robot
         return (address.startsWith( ROBOT_ADDRESS_PREFIX ));
     }
 
+
     /**
      * Returns the Bluetooth connection address or null if no
      * address could be returned
@@ -1156,6 +1166,7 @@ public class Robot
     {
         return this.bt.getConnectionURL();
     }
+
 
     /**
      * Checks if a given Bluetooth device is a valid Sphero Bluetooth device or
@@ -1202,7 +1213,10 @@ public class Robot
      */
     public String getName()
     {
-        return this.bt.getName();
+        String n = this.bt.getName();
+        if ( n == null )
+            return this.name;
+        return n;
     }
 
 
@@ -1356,10 +1370,10 @@ public class Robot
 
                     // Start reading messages from the buffer that we got
                     int read2 = 0;
-                    for (int pointer = 0;
-                         pointer < buf.length()
+                    for ( int pointer = 0;
+                            pointer < buf.length()
                             && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH)
-                            && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH + newData[pointer + DeviceResponse.PACKET_LENGTH_INDEX]);)
+                            && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH + newData[pointer + DeviceResponse.PACKET_LENGTH_INDEX]); )
                     {
                         // Copy data
                         DeviceResponseHeader drh = new DeviceResponseHeader( newData, pointer );
@@ -1373,11 +1387,21 @@ public class Robot
                         byte[] packetData = Arrays.copyOfRange( newData, pointer, pointer + drh.getPacketLength() + DeviceResponse.RESPONSE_HEADER_LENGTH );
                         DeviceResponse response = DeviceResponse.valueOf( cmd.getFirst(), packetData ); //, cmd.getFirst() );
 
+                        Logging.debug( "Received " + response + (cmd.getSecond() ? " as a SYSTEM RESPONSE" : "") );
+
                         // Check if we got a system command or not
                         if ( cmd.getSecond() )
                         {
-                            // System command, what should we do?!?!?! Chill out!
-//                            System.out.println( "New system command response " + response );
+                            // System command
+                            switch ( response.getCommand() )
+                            {
+                                case GET_BLUETOOTH_INFO:
+                                    // Update Sphero name
+                                    GetBluetoothInfoResponse gb = ( GetBluetoothInfoResponse ) response;
+                                    if ( !gb.isDataCorrupt() )
+                                        name = gb.getName();
+                                    break;
+                            }
                         }
                         else
                         {
@@ -1689,7 +1713,7 @@ public class Robot
                                 if ( sendingQueue.size() > 0 )
                                 {
                                     // Go through all the messages that we can
-                                    for (int i = 0; i < sendingQueue.size(); i++)
+                                    for ( int i = 0; i < sendingQueue.size(); i++ )
                                     {
                                         // Peek at the the rest of the messages
                                         int length = sendingQueue.peek().getFirst().getPacketLength();

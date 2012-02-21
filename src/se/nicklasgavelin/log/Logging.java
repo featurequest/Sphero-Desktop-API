@@ -1,8 +1,6 @@
 package se.nicklasgavelin.log;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * Manages the logging of the application.
@@ -10,7 +8,8 @@ import java.util.Iterator;
  * disabled by default. Otherwise the logging will follow
  * the settings in the Configuration class
  *
- * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
+ * Technology
  * @version 2.0
  */
 public class Logging
@@ -20,6 +19,14 @@ public class Logging
     private static Collection<Appender> logAppenders;
     private static boolean log4exists = true;
     private static final String log4logger = "site.nicklas.log.Log4JLogger";
+    private static final String from = Logging.class.getName();
+    private static final Collection<String> fromCollection = new ArrayList<String>();
+
+
+    static
+    {
+        fromCollection.add( from );
+    }
 
     /**
      * Different debug levels,
@@ -90,12 +97,12 @@ public class Logging
             Appender log4jAppender = ( Appender ) Class.forName( Logging.log4logger ).newInstance();
             add( log4jAppender );
 
-            System.out.println( "[" + Logging.class.getCanonicalName() + "] Redirecting log to log4j (" + Configuration.debugEnabled + ")" );
+//            System.out.println( "[" + Logging.class.getCanonicalName() + "] Redirecting log to log4j (" + Configuration.debugEnabled + ")" );
         }
         catch ( Throwable e )
         {
             log4exists = false;
-            System.out.println( "[" + Logging.class.getCanonicalName() + "] Turning off debug as no log4j instance could be created" );
+//            System.out.println( "[" + Logging.class.getCanonicalName() + "] Turning off debug as no log4j instance could be created" );
         }
     }
 
@@ -122,16 +129,82 @@ public class Logging
     private static void callAppenders( Level l, String msg, Throwable t )
     {
         initialize();
-        if ( (!Configuration.debugEnabled && !l.equals( Level.FATAL )) || !log4exists )
+
+        if ( (!Configuration.debugEnabled && !l.equals( Level.FATAL )) )
             return;
 
-        Iterator<Appender> i = logAppenders.iterator();
-
-        while ( i.hasNext() )
+        if ( !log4exists )
         {
-            Appender la = i.next();
-            la.log( l, msg, t );
+            // Native debug
+            nativeDebug( l, msg, t );
         }
+        else
+        {
+            Iterator<Appender> i = logAppenders.iterator();
+
+            while ( i.hasNext() )
+            {
+                Appender la = i.next();
+                la.log( l, msg, t );
+            }
+        }
+    }
+
+
+    private static void nativeDebug( Level l, String msg, Throwable t )
+    {
+        try
+        {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime( new Date( System.currentTimeMillis() ) );
+
+            StringBuffer sb;
+            sb = new StringBuffer();
+            sb.append( "[ " );
+            sb.append( (calendar.get( Calendar.HOUR_OF_DAY )) ).append( ":" );
+            sb.append( (calendar.get( Calendar.MINUTE )) ).append( ":" );
+            sb.append( (calendar.get( Calendar.SECOND )) ).append( "." );
+            sb.append( (calendar.get( Calendar.MILLISECOND )) );
+            sb.append( " ]");
+
+            sb.append( "[ " );
+            sb.append( l.toString() );
+            sb.append( " ] ");
+
+            sb.append( msg );
+
+            if( t != null )
+                System.err.println( sb.toString() );
+            else
+               System.out.println( sb.toString() );
+        }
+        catch ( Throwable ignore )
+        {
+
+        }
+
+        // Check if we have something throwable
+        if ( t != null )
+        {
+            UtilsJavaSE.StackTraceLocation s = UtilsJavaSE.getLocation( fromCollection );
+            if ( s != null )
+                System.err.println( "\t " + fromLocation( s ) );
+        }
+
+    }
+
+
+    private static String fromLocation( UtilsJavaSE.StackTraceLocation s )
+    {
+        if ( s == null )
+            return "";
+        return s.className + "." + s.methodName + "(" + s.fileName + ":" + s.lineNumber + ")";
+    }
+
+
+    private String getDate()
+    {
+        return (new Date()).toString();
     }
 
 
@@ -283,7 +356,7 @@ public class Logging
      * Log a warning message with an object
      *
      * @param msg The warning message
-     * @param o The object to log
+     * @param o   The object to log
      */
     public static void info( String msg, Object o )
     {

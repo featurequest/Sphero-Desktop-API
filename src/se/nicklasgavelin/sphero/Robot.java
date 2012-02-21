@@ -40,7 +40,7 @@ import se.nicklasgavelin.util.Value;
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology
  * @version 1.1
- * 
+ *
  * TODO: Set temporary internal values on sending commands so that we don't
  * update them too late if we send multiple commands
  */
@@ -1157,10 +1157,21 @@ public class Robot
         return (address.startsWith( ROBOT_ADDRESS_PREFIX ));
     }
 
+    /**
+     * Returns true if the robot is connected
+     *
+     * @return True if connected to the robot, false otherwise
+     */
+    public boolean isConnected()
+    {
+        return this.connected;
+    }
 
     /**
      * Returns the Bluetooth connection address or null if no
      * address could be returned
+     *
+     * @return The Bluetooth connection URL
      */
     public String getConnectionURL()
     {

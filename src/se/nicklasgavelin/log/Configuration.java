@@ -16,16 +16,14 @@ import com.intel.bluetooth.DebugLog;
 public class Configuration
 {
     /* Debug settings */
-    public static boolean debugEnabled = false;
+    public static boolean debugEnabled = true;
     public static boolean bluecoveDebugEnabled = false;
-    public static Logging.Level debugLevel = Logging.Level.DEBUG;
-    private static final Configuration c = new Configuration();
+    public static Logging.Level debugLevel = Logging.Level.INFO;
 
-
-    private Configuration()
+    static
     {
         // Set bluecove debugging
-        DebugLog.setDebugEnabled( bluecoveDebugEnabled );
-        Logging.info( "Turning " + (bluecoveDebugEnabled ? "ON" : "OFF") + " bluecove debugger" );
+        DebugLog.setDebugEnabled( Configuration.bluecoveDebugEnabled );
+        Logging.info( "Turning " + (Configuration.bluecoveDebugEnabled ? "ON" : "OFF") + " bluecove debugger" );
     }
 }

@@ -367,7 +367,7 @@ public class Robot
         // Create an empty array of listeners
         this.listeners = new ArrayList<RobotListener>();
 
-        Logging.info( "Robot created successfully" );
+        Logging.debug( "Robot created successfully" );
     }
 
     /*
@@ -383,7 +383,7 @@ public class Robot
      */
     public void addListener( RobotListener l )
     {
-        Logging.info( "Adding listener of type " + l.getClass().getCanonicalName() );
+        Logging.debug( "Adding listener of type " + l.getClass().getCanonicalName() );
 
         if ( !this.listeners.contains( l ) )
             this.listeners.add( l );
@@ -412,7 +412,7 @@ public class Robot
      */
     private void notifyListenersDeviceResponse( DeviceResponse dr, DeviceCommand dc )
     {
-        Logging.info( "Notifying listeners about device respose " + dr + " for device command " + dc );
+        Logging.debug( "Notifying listeners about device respose " + dr + " for device command " + dc );
 
         // Go through all listeners and notify them
         for ( RobotListener r : this.listeners )
@@ -427,7 +427,7 @@ public class Robot
      */
     private void notifyListenerEvent( EVENT_CODE event )
     {
-        Logging.info( "Notifying listeners about event " + event );
+        Logging.debug( "Notifying listeners about event " + event );
 
         // Notify all listeners
         for ( RobotListener r : this.listeners )
@@ -519,7 +519,7 @@ public class Robot
      */
     private boolean internalConnect() throws RobotInitializeConnectionFailed, RobotBluetoothException
     {
-        Logging.info( "Trying to connect to " + this.getName() + ":" + this.getAddress() );
+        Logging.debug( "Trying to connect to " + this.getName() + ":" + this.getAddress() );
         this.btc = bt.connect();
 
         // Check if we could connect to the bluetooth device
@@ -580,7 +580,7 @@ public class Robot
      */
     private void disconnect( boolean notifyListeners )
     {
-        Logging.info( "Disconnecting from the current robot" );
+        Logging.debug( "Disconnecting from the current robot" );
 
         if ( this.connected )
         {
@@ -1604,7 +1604,7 @@ public class Robot
         {
             if ( !this.stop && !this.stopAccepting )
             {
-                Logging.info( "Enqueueing system command " + command + " with a delay of " + delay + " milliseconds (systemcommand=" + (systemCommand ? "YES" : "NO") );
+                Logging.debug( "Enqueueing system command " + command + " with a delay of " + delay + " milliseconds (systemcommand=" + (systemCommand ? "YES" : "NO") );
                 this.schedule( new CommandTask( new Pair<DeviceCommand, Boolean>( command, systemCommand ) ), ( long ) delay );
             }
         }

@@ -1,5 +1,6 @@
 package se.nicklasgavelin.log;
 
+import java.io.PrintStream;
 import java.util.*;
 
 /**
@@ -10,7 +11,9 @@ import java.util.*;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology
- * @version 2.0
+ * @version 2.1
+ *
+ * Notice: Based on the debug logger in Bluecove
  */
 public class Logging
 {
@@ -151,60 +154,69 @@ public class Logging
     }
 
 
+    /**
+     * Debug method that is run instead of appenders if no appenders
+     * could be found
+     *
+     * @param l   The level of the message
+     * @param msg The message
+     * @param t   The throwable object or null
+     */
     private static void nativeDebug( Level l, String msg, Throwable t )
     {
+        // Fetch location for the message
+        UtilsJavaSE.StackTraceLocation s = UtilsJavaSE.getLocation( fromCollection );
+        PrintStream out = (t == null ? System.out : System.err);
+
         try
         {
+            // Create our timestamp
             Calendar calendar = Calendar.getInstance();
             calendar.setTime( new Date( System.currentTimeMillis() ) );
 
-            StringBuffer sb;
-            sb = new StringBuffer();
-            sb.append( "[ " );
-            sb.append( (calendar.get( Calendar.HOUR_OF_DAY )) ).append( ":" );
-            sb.append( (calendar.get( Calendar.MINUTE )) ).append( ":" );
-            sb.append( (calendar.get( Calendar.SECOND )) ).append( "." );
-            sb.append( (calendar.get( Calendar.MILLISECOND )) );
-            sb.append( " ]");
+            // Hours
+            String hour = calendar.get( Calendar.HOUR_OF_DAY ) + "";
+            hour = (Integer.parseInt( hour ) < 10 ? "0" : "") + hour;
 
-            sb.append( "[ " );
-            sb.append( l.toString() );
-            sb.append( " ] ");
+            // Minutes
+            String minutes = calendar.get( Calendar.MINUTE ) + "";
+            minutes = (Integer.parseInt( minutes ) < 10 ? "0" : "") + minutes;
 
-            sb.append( msg );
+            // Seconds
+            String seconds = calendar.get( Calendar.SECOND ) + "";
+            seconds = (Integer.parseInt( seconds ) < 10 ? "0" : "") + seconds;
 
-            if( t != null )
-                System.err.println( sb.toString() );
-            else
-               System.out.println( sb.toString() );
+            // Milliseconds
+            String ms = calendar.get( Calendar.MILLISECOND ) + "";
+
+            // Now create our debug message
+            String aMsg = "[ " + hour + ":" + minutes + ":" + seconds + "." + ms + " ]"; // Timestamp
+            aMsg += "[ " + l + " ]"; // Level
+            aMsg += " " + msg;
+
+            // Print message
+            out.println( aMsg );
         }
-        catch ( Throwable ignore )
+        catch ( Throwable _ )
         {
-
         }
 
         // Check if we have something throwable
-        if ( t != null )
-        {
-            UtilsJavaSE.StackTraceLocation s = UtilsJavaSE.getLocation( fromCollection );
-            if ( s != null )
-                System.err.println( "\t " + fromLocation( s ) );
-        }
-
+        if ( s != null )
+            out.println( "\t " + fromLocation( s ) );
     }
 
-
+    /**
+     * Returns the location from which the message was created
+     *
+     * @param s The stack location
+     * @return The location or ""
+     */
     private static String fromLocation( UtilsJavaSE.StackTraceLocation s )
     {
         if ( s == null )
             return "";
         return s.className + "." + s.methodName + "(" + s.fileName + ":" + s.lineNumber + ")";
-    }
-
-
-    private String getDate()
-    {
-        return (new Date()).toString();
     }
 
 

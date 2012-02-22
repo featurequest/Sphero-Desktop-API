@@ -37,7 +37,6 @@ public class DeviceResponseHeader
     public DeviceResponseHeader( byte[] data, int offset )
     {
         this.code = RESPONSE_CODE.valueOf( data[ DeviceResponse.RESPONSE_CODE_INDEX + offset] );
-        System.err.println( "Response header with code " + data[ DeviceResponse.RESPONSE_CODE_INDEX + offset ] );
         this.sequenceNumber = data[ DeviceResponse.SEQUENCE_NUMBER_INDEX + offset];
         this.packetLength = data[ DeviceResponse.PACKET_LENGTH_INDEX + offset];
     }

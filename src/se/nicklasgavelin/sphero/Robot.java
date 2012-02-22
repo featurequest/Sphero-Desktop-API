@@ -1441,7 +1441,8 @@ public class Robot
                 }
                 catch ( Exception e )
                 {
-                    Logging.fatal( "Listening thread closed down unexpectedly", e );
+                    if( connected )
+                        Logging.fatal( "Listening thread closed down unexpectedly", e );
                     connectionClosedUnexpected();
                 }
             }
@@ -1764,7 +1765,8 @@ public class Robot
                                 //    listeningThread.removeLast();
 
                                 // Close unexpectedly
-                                Logging.fatal( "Writing thread closed down unexpectedly", e );
+                                if( connected )
+                                    Logging.fatal( "Writing thread closed down unexpectedly", e );
                                 connectionClosedUnexpected();
                             }
                         }

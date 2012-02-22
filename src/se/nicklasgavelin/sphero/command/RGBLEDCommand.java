@@ -6,7 +6,8 @@ import se.nicklasgavelin.util.Value;
 /**
  * Command to adjust the color displayed by the RGB LED on the Sphero.
  *
- * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
+ * Technology
  */
 public class RGBLEDCommand extends DeviceCommand
 {
@@ -26,8 +27,8 @@ public class RGBLEDCommand extends DeviceCommand
     {
         super( DEVICE_COMMAND.RGB_LED_OUTPUT );
         this.red = ( byte ) Value.clamp( red, 0, 255 );
-        this.green = ( byte ) Value.clamp( green, 0, 255 );;
-        this.blue = ( byte ) Value.clamp( blue, 0, 255 );;
+        this.green = ( byte ) Value.clamp( green, 0, 255 );
+        this.blue = ( byte ) Value.clamp( blue, 0, 255 );
     }
 
 

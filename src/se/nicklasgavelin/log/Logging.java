@@ -206,10 +206,12 @@ public class Logging
             out.println( "\t " + fromLocation( s ) );
     }
 
+
     /**
      * Returns the location from which the message was created
      *
      * @param s The stack location
+     *
      * @return The location or ""
      */
     private static String fromLocation( UtilsJavaSE.StackTraceLocation s )

@@ -16,7 +16,7 @@ import com.intel.bluetooth.DebugLog;
 public class Configuration
 {
     /* Debug settings */
-    public static boolean debugEnabled = true;
+    public static boolean debugEnabled = false;
     public static boolean bluecoveDebugEnabled = false;
     public static Logging.Level debugLevel = Logging.Level.DEBUG;
     private static final Configuration c = new Configuration();

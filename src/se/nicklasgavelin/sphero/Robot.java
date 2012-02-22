@@ -1433,11 +1433,15 @@ public class Robot
                     if ( newData.length - read2 > 0 )
                         buf.append( newData, read2, newData.length - read2 );
                 }
+                catch ( NullPointerException e )
+                {
+                }
                 catch ( NoSuchElementException e )
                 {
                 }
                 catch ( Exception e )
                 {
+                    Logging.fatal( "Listening thread closed down unexpectedly", e );
                     connectionClosedUnexpected();
                 }
             }
@@ -1760,6 +1764,7 @@ public class Robot
                                 //    listeningThread.removeLast();
 
                                 // Close unexpectedly
+                                Logging.fatal( "Writing thread closed down unexpectedly", e );
                                 connectionClosedUnexpected();
                             }
                         }

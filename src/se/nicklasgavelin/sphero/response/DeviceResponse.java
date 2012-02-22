@@ -39,7 +39,8 @@ public abstract class DeviceResponse extends DeviceMessage
         CODE_ERROR_PARAMETER( 7 ),
         CODE_ERROR_EXECUTE( 8 ),
         CODE_ERROR_MAIN_APP_CORRUPT( 52 ),
-        CODE_ERROR_TIME_OUT( -1 );
+        CODE_ERROR_TIME_OUT( -1 ),
+        UNKNOWN_RESPONSE_CODE( -2 );
         private byte code;
 
 
@@ -100,9 +101,9 @@ public abstract class DeviceResponse extends DeviceMessage
                     return CODE_ERROR_MAIN_APP_CORRUPT;
                 case -1:
                     return CODE_ERROR_TIME_OUT;
+                default:
+                    return UNKNOWN_RESPONSE_CODE;
             }
-
-            return null;
         }
 
 

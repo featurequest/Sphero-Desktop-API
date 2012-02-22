@@ -13,9 +13,6 @@ This source code uses the Bluecove 2.1.1 release for the bluetooth communication
 A wrapper have been developed to simplify the usage of the Bluecove library. The
 bluecove library is released under Apache License 2.0.
 
-It also uses the httpcore 4.1.4 library for creating new byte arrays easily. httpcore
-is release under Apache License 2.0.
-
 For debugging purposes we use the log4j library that are released under the Apache License 2.0.
 
 Also a bit of code from the Robotix team has been used! So many big thanks! ;)

@@ -64,7 +64,7 @@ public class ByteArrayBuffer
      */
     public void append( byte[] b, int offset, int length )
     {
-        for ( int i = offset; i < length; i++ )
+        for ( int i = offset; i < (length+offset); i++ )
             this.append( b[i] );
     }
 

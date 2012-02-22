@@ -10,11 +10,62 @@
 <project name="Sphero-Desktop-API" default="default" basedir=".">
     <description>Builds, tests, and runs the project Sphero-Desktop-API.</description>
     <import file="nbproject/build-impl.xml"/>
+    <mkdir dir="dist"/>
+    <mkdir dir="dist/javadoc"/>
+    <target name="package-for-store" depends="clean, init, jar, javadoc">
+        <loadfile srcfile="VERSION" property="version.number">
+            <filterchain>
+                <headfilter lines="1"/>
+            </filterchain>
+        </loadfile>
+
+        <!-- Change the value of this property to be the name of your JAR,
+             minus the .jar extension. It should not have spaces.
+             <property name="store.jar.name" value="MyJarName"/>
+        -->
+        <property name="store.jar.name" value="Sphero-Desktop-API-${version.number}"/>
+
+        <!-- don't edit below this line -->
+
+        <property name="store.dir" value="dist"/>
+        <property name="store.jar" value="${store.dir}/${store.jar.name}.jar"/>
+
+        <echo message="Packaging ${application.title} into a single JAR at ${store.jar}"/>
+
+        <jar destfile="${store.dir}/temp_final.jar" filesetmanifest="skip">
+            <zipgroupfileset dir="dist" includes="*.jar"/>
+            <zipgroupfileset dir="lib" includes="*.jar"/>
+<!--            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+            </manifest>-->
+        </jar>
+
+        <zip destfile="${store.jar}" compress="true">
+            <zipfileset src="${store.dir}/temp_final.jar"
+                        excludes="META-INF/*.SF, META-INF/*.DSA, META-INF/*.RSA"/>
+            <fileset dir="lib" includes="*.dll, *.so, *.jnilib"/>
+            <fileset dir="settings/" includes="bluecove.*, bluecove.*.*"/>
+            <fileset file="VERSION"/>
+            <fileset file="LICENSE"/>
+        </zip>
+
+        <delete file="${store.dir}/temp_final.jar"/>
+        <delete file="${dist.jar}"/>
+        <delete file="README.TXT"/>
+
+        <zip destfile="Sphero-Desktop-API.zip" compress="true">
+            <fileset file="${store.jar}"/>
+            <fileset file="README"/>
+            <fileset file="VERSION"/>
+            <fileset file="LICENSE"/>
+            <zipfileset dir="dist/javadoc" prefix="javadoc"/>
+        </zip>
+    </target>
     <!--
 
-    There exist several targets which are by default empty and which can be 
-    used for execution of your tasks. These targets are usually executed 
-    before and after some main targets. They are: 
+    There exist several targets which are by default empty and which can be
+    used for execution of your tasks. These targets are usually executed
+    before and after some main targets. They are:
 
       -pre-init:                 called before initialization of project properties
       -post-init:                called after initialization of project properties
@@ -40,12 +91,12 @@
             </obfuscate>
         </target>
 
-    For list of available properties check the imported 
-    nbproject/build-impl.xml file. 
+    For list of available properties check the imported
+    nbproject/build-impl.xml file.
 
 
     Another way to customize the build is by overriding existing main targets.
-    The targets of interest are: 
+    The targets of interest are:
 
       -init-macrodef-javac:     defines macro for javac compilation
       -init-macrodef-junit:     defines macro for junit execution
@@ -53,7 +104,7 @@
       -init-macrodef-java:      defines macro for class execution
       -do-jar-with-manifest:    JAR building (if you are using a manifest)
       -do-jar-without-manifest: JAR building (if you are not using a manifest)
-      run:                      execution of project 
+      run:                      execution of project
       -javadoc-build:           Javadoc generation
       test-report:              JUnit report generation
 
@@ -65,10 +116,10 @@
             </exec>
         </target>
 
-    Notice that the overridden target depends on the jar target and not only on 
-    the compile target as the regular run target does. Again, for a list of available 
+    Notice that the overridden target depends on the jar target and not only on
+    the compile target as the regular run target does. Again, for a list of available
     properties which you can use, check the target you are overriding in the
-    nbproject/build-impl.xml file. 
+    nbproject/build-impl.xml file.
 
     -->
 </project>

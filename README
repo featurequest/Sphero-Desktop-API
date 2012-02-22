@@ -1,4 +1,8 @@
 --- README ---
+Simply download and include the Sphero-Desktop-API-<Version>.jar in your IDE environment
+to use the API. The ZIP file available at github provides both the .jar file and
+the available javadoc for the current compiled version of the API.
+
 There are no real time atm. to write a in-depth readme for the usage of this
 library. I've created a small example application that connects to an available
 Sphero device and then sends some basic commands. This example is located in:

@@ -1,4 +1,4 @@
---- README ---
+## README
 
 This README file will cover quick ways of using the API.
 I will try to create a more in-depth README file when I get the time :)
@@ -6,7 +6,7 @@ For now I will only cover the real easy way to use the API.
 
 IT IS POSSIBLE TO CONNECT TO MULTIPLE SPHERO DEVICES!
 
---- INSTALLATION ---
+## INSTALLATION
 
 First way (Simple): Download the Sphero-Desktop-API-<VERSION>.zip file
 which contains the library as a compressed .jar file and the java doc
@@ -20,7 +20,7 @@ the created project as a source in a separate project. If you compile the
 source be sure to add the required libraries located in the "lib" file.
 
 
---- EXAMPLE ---
+## EXAMPLE
 
 I've created a small example application that connects to an available
 Sphero device and then sends some basic commands. This example is located in:
@@ -28,7 +28,7 @@ Sphero device and then sends some basic commands. This example is located in:
 se.nicklasgavelin.sphero.example
 
 
---- HOW IT WAS CREATED & WHY ---
+## HOW IT WAS CREATED & WHY 
 
 This API was created for Luleå University of Technology in Sweden during
 my thesis work and is under no specific license (although read the LICENSE file)
@@ -46,7 +46,7 @@ API gives the possibility to connect to multiple Sphero devices and send individ
 messages to the connected Spheros!
 
 
---- CONTACT ---
+## CONTACT
 
 I'm available via mail at nicklas.gavelin@gmail.com for questions or suggestions
 as I'm actively working on the API at the moment for my thesis work. I may not

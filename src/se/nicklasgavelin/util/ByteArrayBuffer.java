@@ -28,6 +28,11 @@ public class ByteArrayBuffer
         this.length = 0;
     }
 
+    public void append( int b )
+    {
+        this.append( (byte) b );
+    }
+
 
     /**
      * Append a byte array to the buffer

@@ -12,7 +12,7 @@
     <import file="nbproject/build-impl.xml"/>
     <mkdir dir="dist"/>
     <mkdir dir="dist/javadoc"/>
-    <target name="package-for-store" depends="clean, init, jar, javadoc">
+    <target name="package-for-store" depends="clean, init, jar">
         <loadfile srcfile="VERSION" property="version.number">
             <filterchain>
                 <headfilter lines="1"/>
@@ -61,6 +61,9 @@
             <zipfileset dir="dist/javadoc" prefix="javadoc"/>
         </zip>
     </target>
+
+    <target name="nojavadoc" depends="package-for-store"></target>
+    <target name="withjavadoc" depends="nojavadoc, javadoc"></target>
     <!--
 
     There exist several targets which are by default empty and which can be

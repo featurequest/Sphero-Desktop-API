@@ -292,6 +292,17 @@ public class Robot
 
 
         /**
+         * Returns the RGB Color value for the internal RGB LED
+         *
+         * @return The color for the RGB LED
+         */
+        public Color getRGBColor()
+        {
+            return (new Color( this.red, this.green, this.blue ));
+        }
+
+
+        /**
          * Returns the brightness of the front led (0-1)
          *
          * @return The brightness level of the front led
@@ -1157,6 +1168,7 @@ public class Robot
         return (address.startsWith( ROBOT_ADDRESS_PREFIX ));
     }
 
+
     /**
      * Returns true if the robot is connected
      *
@@ -1166,6 +1178,7 @@ public class Robot
     {
         return this.connected;
     }
+
 
     /**
      * Returns the Bluetooth connection address or null if no
@@ -1441,7 +1454,7 @@ public class Robot
                 }
                 catch ( Exception e )
                 {
-                    if( connected )
+                    if ( connected )
                         Logging.fatal( "Listening thread closed down unexpectedly", e );
                     connectionClosedUnexpected();
                 }
@@ -1603,10 +1616,7 @@ public class Robot
         public void enqueue( DeviceCommand command, float delay, boolean systemCommand )
         {
             if ( !this.stop && !this.stopAccepting )
-            {
-                Logging.debug( "Enqueueing system command " + command + " with a delay of " + delay + " milliseconds (systemcommand=" + (systemCommand ? "YES" : "NO") );
                 this.schedule( new CommandTask( new Pair<DeviceCommand, Boolean>( command, systemCommand ) ), ( long ) delay );
-            }
         }
 
 
@@ -1765,7 +1775,7 @@ public class Robot
                                 //    listeningThread.removeLast();
 
                                 // Close unexpectedly
-                                if( connected )
+                                if ( connected )
                                     Logging.fatal( "Writing thread closed down unexpectedly", e );
                                 connectionClosedUnexpected();
                             }

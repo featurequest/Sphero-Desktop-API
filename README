@@ -9,14 +9,14 @@ IT IS POSSIBLE TO CONNECT TO MULTIPLE SPHERO DEVICES!
 --- INSTALLATION ---
 
 First way (Simple): Download the Sphero-Desktop-API-<VERSION>.zip file
-which contains the library as a compressed .jar file and the java doc 
+which contains the library as a compressed .jar file and the java doc
 for the API. Then include the .jar file in your project in your favorite
 IDE. All necessary libraries (Bluecove and native libraries) are included
 in the .jar file for simple inclusion.
 
 Second way (Not as simple): Checkout the source code (prepared somewhat
 for Netbeans or Eclipse) and then either compile the code yourself or include
-the created project as a source in a separate project. If you compile the 
+the created project as a source in a separate project. If you compile the
 source be sure to add the required libraries located in the "lib" file.
 
 
@@ -30,7 +30,7 @@ se.nicklasgavelin.sphero.example
 
 --- HOW IT WAS CREATED & WHY ---
 
-This API was created for Luleå University of Technology in Sweden during
+This API was created for LuleÃ¥ University of Technology in Sweden during
 my thesis work and is under no specific license (although read the LICENSE file)
 and as such can be used freely by anyone that gets a copy of the library.
 Although it would be nice with some recognition :)

@@ -1,4 +1,4 @@
-package experimental.sphero.macro;
+package se.nicklasgavelin.sphero.macro;
 
 import java.awt.Color;
 import se.nicklasgavelin.util.ByteArrayBuffer;
@@ -103,7 +103,7 @@ public class RGBSD2 extends MacroCommand
         bytes.append( this.red );
         bytes.append( this.green );
         bytes.append( this.blue );
-        
+
         return bytes.toByteArray();
     }
 }

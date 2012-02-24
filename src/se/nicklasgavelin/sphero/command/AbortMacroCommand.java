@@ -1,6 +1,4 @@
-package experimental.sphero.command;
-
-import se.nicklasgavelin.sphero.command.DeviceCommand;
+package se.nicklasgavelin.sphero.command;
 
 /**
  * Ask robot to abort a running macro

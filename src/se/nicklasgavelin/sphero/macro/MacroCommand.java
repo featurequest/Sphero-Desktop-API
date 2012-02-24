@@ -1,4 +1,4 @@
-package experimental.sphero.macro;
+package se.nicklasgavelin.sphero.macro;
 
 /**
  * Still experimental
@@ -66,31 +66,31 @@ public abstract class MacroCommand
      */
     public enum MACRO_COMMAND
     {
-        MAC_END( 0, -1 ),
-        MAC_SD1( 1, 3 ),
-        MAC_SD2( 2, 3 ),
-        MAC_STABILIZATION( 3, -1 ),
-        MAC_CALIBRATE( 4, -1 ),
+        MAC_END( 0, -1 ), // OK!
+        MAC_SD1( 1, 3 ), // Working
+        MAC_SD2( 2, 3 ), // Working
+//        MAC_STABILIZATION( 3, -1 ),
+        MAC_CALIBRATE( 4, 3 ), // Working
         MAC_ROLL( 5, 5 ),
-        MAC_ROLL_SD1( 6, 4 ),
-        MAC_RGB( 7, 5 ),
-        MAC_RGB_SD2( 8, 4 ),
-        MAC_FRONT_LED( 9, -1 ),
-        MAC_RAW_MOTOR( 10, -1 ),
-        MAC_DELAY( 11, 3 ),
-        MAC_GOTO( 12, -1 ),
-        MAC_GOSUB( 13, -1 ),
-        MAC_SLEEP( 14, -1 ),
-        MAC_SPD1( 15, 2 ),
-        MAC_SPD2( 16, 2 ),
-        MAC_ROLL_SPD1_SD1( 17, 3 ),
-        MAC_ROLL_SPD2_SD1( 18, 3 ),
+        MAC_ROLL_SD1( 6, 4 ), // Working
+        MAC_RGB( 7, 5 ), // Working
+        MAC_RGB_SD2( 8, 4 ), // Working
+        MAC_FRONT_LED( 9, 2 ), // Working
+        MAC_RAW_MOTOR( 10, 6 ), // TODO: Debug
+        MAC_DELAY( 11, 3 ), // Working
+//        MAC_GOTO( 12, -1 ),
+//        MAC_GOSUB( 13, -1 ),
+//        MAC_SLEEP( 14, -1 ),
+        MAC_SPD1( 15, 2 ), // Working
+        MAC_SPD2( 16, 2 ), // Working
+        MAC_ROLL_SPD1_SD1( 17, 3 ), // Working
+        MAC_ROLL_SPD2_SD1( 18, 3 ), // Working
         MAC_ROTATION_RATE( 19, 2 ),
-        MAC_FADE( 20, -1 ),
-        MAC_EMIT( 21, 2 ),
-        MAC_WAIT_UNTIL_STOP( 25, 3 ),
-        MAC_ROTATE( 26, -1 ),
-        MAC_STREAM_END( 27, -1 );
+//        MAC_FADE( 20, -1 ),
+        MAC_EMIT( 21, 2 ), // ?
+        MAC_WAIT_UNTIL_STOP( 25, 3 ), // ?
+//        MAC_ROTATE( 26, -1 ),
+        MAC_STREAM_END( 27, 1 ); // TODO: Maybe working?
 
         // Internal storage
         private int value, length;
@@ -148,7 +148,7 @@ public abstract class MacroCommand
          * @param value The MACRO_COMMAND id value
          *
          * @return The MACRO_COMMAND for the given value or null if no
-         *         MACRO_COMMAND could be represented by the given value
+         * MACRO_COMMAND could be represented by the given value
          */
         public static MACRO_COMMAND valueOf( int value )
         {

@@ -1,6 +1,6 @@
-package experimental.sphero.command;
+package se.nicklasgavelin.sphero.command;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand;
+import se.nicklasgavelin.util.ByteArrayBuffer;
 
 public class RunMacroCommand extends DeviceCommand
 {
@@ -23,10 +23,13 @@ public class RunMacroCommand extends DeviceCommand
     @Override
     protected byte[] getPacketData()
     {
-        byte[] data = new byte[ 1 ];
+        ByteArrayBuffer bab = new ByteArrayBuffer( 1 );
+        bab.append( this.identifier );
 
-        data[0] = this.identifier;
-
-        return data;
+        return bab.toByteArray();
+//        byte[] data = new byte[ 1 ];
+//        data[0] = this.identifier;
+//
+//        return data;
     }
 }

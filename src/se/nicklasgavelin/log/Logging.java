@@ -166,7 +166,8 @@ public class Logging
     {
         // Fetch location for the message
         UtilsJavaSE.StackTraceLocation s = UtilsJavaSE.getLocation( fromCollection );
-        PrintStream out = (t == null ? System.out : System.err);
+        boolean useError = (t == null && (!l.equals( Level.ERROR ) && !l.equals( Level.FATAL )));
+        PrintStream out = (useError ? System.out : System.err);
 
         try
         {

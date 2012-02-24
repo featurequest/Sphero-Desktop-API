@@ -11,7 +11,6 @@ public class ByteArrayBuffer
 {
     // Internal storage buffer
     private byte[] buffer;
-
     // Current length
     private int length;
 
@@ -28,9 +27,10 @@ public class ByteArrayBuffer
         this.length = 0;
     }
 
+
     public void append( int b )
     {
-        this.append( (byte) b );
+        this.append( ( byte ) b );
     }
 
 
@@ -69,9 +69,10 @@ public class ByteArrayBuffer
      */
     public void append( byte[] b, int offset, int length )
     {
-        for ( int i = offset; i < (length+offset); i++ )
+        for ( int i = offset; i < (length + offset); i++ )
             this.append( b[i] );
     }
+
 
     /**
      * Returns the reference to the underlying byte array
@@ -80,6 +81,7 @@ public class ByteArrayBuffer
     {
         return this.buffer;
     }
+
 
     /**
      * Returns the converted buffer as a byte array
@@ -120,6 +122,7 @@ public class ByteArrayBuffer
         return (index < this.length ? this.buffer[ index] : null);
     }
 
+
     /**
      * Returns a clone of the current buffer
      *
@@ -138,6 +141,7 @@ public class ByteArrayBuffer
         return clone;
     }
 
+
     /**
      * Returns a specific part of the byte array.
      * Will throw an IndexOutOfBoundException if the offset + length is larger
@@ -153,6 +157,7 @@ public class ByteArrayBuffer
 
         return ret;
     }
+
 
     /**
      * Returns the index of the first occurrence of byte b
@@ -201,7 +206,7 @@ public class ByteArrayBuffer
         // Create our new buffer
         byte[] newBuffer = new byte[ capacity ];
 
-        int newLength = ( this.length > newBuffer.length ? newBuffer.length : this.length );
+        int newLength = (this.length > newBuffer.length ? newBuffer.length : this.length);
 
         // Copy our old data to our new buffer
         System.arraycopy( this.buffer, 0, newBuffer, 0, newLength );
@@ -242,5 +247,15 @@ public class ByteArrayBuffer
     public int length()
     {
         return this.length;
+    }
+
+
+    @Override
+    public String toString()
+    {
+        String s = "";
+        for ( int i = 0; i < this.length(); i++ )
+            s += this.buffer[i] + " ";
+        return s.substring( 0, s.length() - 1 );
     }
 }

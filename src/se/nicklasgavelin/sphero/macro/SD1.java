@@ -1,33 +1,37 @@
-package experimental.sphero.macro;
+package se.nicklasgavelin.sphero.macro;
 
 import se.nicklasgavelin.util.ByteArrayBuffer;
 import se.nicklasgavelin.util.Value;
 
 /**
  * @author Orbotix
- * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
- * Technology
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class SD2 extends MacroCommand
+public class SD1 extends MacroCommand
 {
     private int delay;
     public static final int MIN_DELAY = 0, MAX_DELAY = 65534;
 
 
-//     public SD2( byte[] data )
+//    public SD1( byte[] data )
 //    {
 //    }
-    public SD2( int _delay )
+    /**
+     * Create SD1 macro command with a given delay
+     *
+     * @param _delay The delay (MIN_DELAY - MAX_DELAY)
+     */
+    public SD1( Integer _delay )
     {
-        super( MACRO_COMMAND.MAC_SD2 );
+        super( MACRO_COMMAND.MAC_SD1 );
         this.setDelay( _delay );
     }
 
 
     /**
-     * Returns the delay value
+     * Returns the internal delay value
      *
-     * @return The delay value
+     * @return The internal delay value
      */
     public Integer getDelay()
     {
@@ -36,7 +40,7 @@ public class SD2 extends MacroCommand
 
 
     /**
-     * Update the internal delay value to a new value
+     * Update the internal delay value
      *
      * @param _delay The new delay value (MIN_DELAY - MAX_DELAY)
      */

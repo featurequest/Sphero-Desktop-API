@@ -14,6 +14,8 @@ import se.nicklasgavelin.sphero.command.*;
 import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
 import se.nicklasgavelin.sphero.exception.RobotInitializeConnectionFailed;
+import se.nicklasgavelin.sphero.macro.MacroCommand;
+import se.nicklasgavelin.sphero.macro.MacroObject;
 import se.nicklasgavelin.sphero.response.DeviceResponse;
 import se.nicklasgavelin.sphero.response.DeviceResponse.RESPONSE_CODE;
 import se.nicklasgavelin.sphero.response.DeviceResponseHeader;
@@ -46,19 +48,162 @@ import se.nicklasgavelin.util.Value;
  */
 public class Robot
 {
-    // Logger for the robot class
-//    private Logger logger = null;
-//    private static final Level logLevel = Level.WARN;
-    // Bluetooth
-    private BluetoothDevice bt;
-    private BluetoothConnection btc;
-    private boolean connected = false;
-    // Listener/writer
-    private RobotStreamListener listeningThread;
-    private RobotSendingQueue sendingTimer;
-    private List<RobotListener> listeners;
-    // Other
-    private String name = null;
+    /**
+     * Manages sending of macro commands
+     *
+     * @author Orbotix
+     * @author Nicklas Gavelin
+     */
+    private class MACRO_SETTINGS
+    {
+        private Collection<MacroCommand> commands;
+        private Collection<Integer> ballMemory;
+        private boolean macroRunning, macroStreamingEnabled;
+        private static final int maxMacroSize = 248, robotStorageSpace = 1000, minSpaceToSend = 128;
+
+
+        /**
+         * Create a macro settings object
+         */
+        private MACRO_SETTINGS()
+        {
+            commands = new ArrayList<MacroCommand>();
+            ballMemory = new ArrayList<Integer>();
+            macroRunning = false;
+            macroStreamingEnabled = true;
+        }
+
+
+        /**
+         * Stop any current macros from running
+         */
+        private void stopMacro()
+        {
+            // Abort the current macro
+            sendCommand( new AbortMacroCommand() );
+
+            // Clear the memory
+            this.commands.clear();
+            this.ballMemory.clear();
+
+            // Set stop flag
+            this.macroRunning = false;
+        }
+
+
+        /**
+         * Play a given macro object
+         *
+         * @param macro The given macro object
+         */
+        private void playMacro( MacroObject macro )
+        {
+            if ( macro.getMode().equals( MacroObject.MacroObjectMode.Normal ) )
+            {
+                // Normal macro mode
+                Robot.this.sendSystemCommand( new SaveTemporaryMacroCommand( 1, macro.generateMacroData() ) );
+                Robot.this.sendSystemCommand( new RunMacroCommand( -1 ) );
+            }
+            else
+            {
+                if ( !macroStreamingEnabled )
+                    return;
+
+                if ( macro.getMode().equals( MacroObject.MacroObjectMode.CachedStreaming ) )
+                {
+                    // Cached streaming mode
+                    if ( !macro.getCommands().isEmpty() )
+                    {
+                        // Get all macro commands localy instead
+                        this.commands.clear();
+                        this.commands.addAll( macro.getCommands() );
+
+                        // Now empty our queue
+                        this.emptyMacroCommandQueue();
+
+                        if ( !this.macroRunning )
+                        {
+                            this.macroRunning = true;
+                            //                        this.sendSystemCommand( new RunMacroCommand( -2 ) );
+                        }
+                    }
+                }
+            }
+        }
+
+
+        /**
+         * Continue emptying the macro command queue by creating new commands
+         * and sending them to the Sphero device
+         */
+        private void emptyMacroCommandQueue()
+        {
+            // Check if we need or can create more commands
+            if ( this.commands.isEmpty() || freeBallMemory() <= minSpaceToSend )
+                return;
+
+            // Calculate number of free bytes that we have
+            int ballSpace = freeBallMemory(),
+                    freeBytes = (ballSpace > maxMacroSize ? maxMacroSize : ballSpace),
+                    chunkSize = 0;
+
+            // Create our sending collection (stuff that we want to send)
+            Collection<MacroCommand> send = new ArrayList<MacroCommand>();
+
+            // Go through new commands that we want to send
+            for ( MacroCommand cmd : this.commands )
+            {
+                // Check if we allow for the new command to be added (that we still got enough space left to add it)
+                if ( freeBytes - (chunkSize + cmd.getLength()) <= 0 || (chunkSize + cmd.getLength()) > maxMacroSize )
+                    break;
+
+                // Add the command to the send queue and increase the space we've used
+                send.add( cmd );
+                chunkSize += cmd.getLength();
+            }
+
+            // Emit marker (we will receive a message from the Sphero when this emit marker is reached)
+//        Emit em = new Emit( 4 );
+//        send.add( em );
+//        chunkSize += em.getLength();
+
+            // Create our sending buffer to add commands to
+            ByteArrayBuffer sendBuffer = new ByteArrayBuffer( chunkSize );
+
+            // Add all commands to the buffer
+            for ( MacroCommand cmd : send )
+                sendBuffer.append( cmd.getByteRepresentation() );
+
+            // Remove the commands that we can send from the waiting command queue
+            this.commands.removeAll( send );
+
+            // Send a save macro command to the Sphero with the new data
+            Robot.this.sendSystemCommand(
+                    new SaveMacroCommand(
+                    SaveMacroCommand.MacroFlagMotorControl,
+                    SaveMacroCommand.MACRO_STREAMING_DESTINATION,
+                    sendBuffer.toByteArray() ) );
+
+            // Check if we can continue creating more messages to send
+            if ( !this.commands.isEmpty() && freeBallMemory() > minSpaceToSend )
+                this.emptyMacroCommandQueue();
+        }
+
+
+        /**
+         * Returns the number of free bytes for the ball
+         *
+         * @return The number of free bytes for the Sphero device
+         */
+        private int freeBallMemory()
+        {
+            int bytesInUse = 0;
+            for ( Iterator<Integer> i = this.ballMemory.iterator(); i.hasNext(); )
+                bytesInUse = bytesInUse + i.next().intValue();
+
+            return (robotStorageSpace - bytesInUse);
+        }
+    }
 
     /**
      * Holds the robot position, rotation rate and the drive algorithm used.
@@ -325,6 +470,18 @@ public class Robot
             this.brightness = 0.0F;
         }
     }
+    // Bluetooth
+    private BluetoothDevice bt;
+    private BluetoothConnection btc;
+    private boolean connected = false;
+    // Listener/writer
+    private RobotStreamListener listeningThread;
+    private RobotSendingQueue sendingTimer;
+    private List<RobotListener> listeners;
+    // Other
+    private String name = null;
+    // Robot macro
+    private MACRO_SETTINGS macroSettings;
     // Robot position and led color
     private RobotMovement movement;
     private RobotRawMovement rawMovement;
@@ -371,6 +528,7 @@ public class Robot
         this.movement = new RobotMovement();
         this.rawMovement = new RobotRawMovement();
         this.led = new RobotLED();
+        this.macroSettings = new MACRO_SETTINGS();
 
         // Discover the connection services that we can use
         bt.discover();
@@ -544,9 +702,6 @@ public class Robot
         // the initialization of everything else regarding the connection
         this.connected = true;
 
-        // Create a controller for our robot
-//        this.controller = new RobotController( this );
-
         // Create a listening thread and close any old ones down
         if ( this.listeningThread != null )
             this.listeningThread.stopThread();
@@ -559,12 +714,14 @@ public class Robot
         this.sendingTimer = new RobotSendingQueue( btc );
 
         // Reset the robot
-        this.sendSystemCommand( new RollCommand( this.movement.heading, this.movement.velocity, this.movement.stop ) );
-        this.sendSystemCommand( new CalibrateCommand( this.movement.heading ) );
-        this.sendSystemCommand( new FrontLEDCommand( this.led.brightness ) );
+        this.sendSystemCommand( new AbortMacroCommand() );
+        this.sendSystemCommand( new RGBLEDCommand( this.getLed().getRGBColor() ) );
+        this.sendSystemCommand( new RollCommand( this.movement.getHeading(), this.movement.getVelocity(), this.movement.getStop() ) );
+        this.sendSystemCommand( new CalibrateCommand( this.movement.getHeading() ) );
+        this.sendSystemCommand( new FrontLEDCommand( this.led.getFrontLEDBrightness() ) );
 
         // Create our pinger
-        this.sendSystemCommand( new PingCommand( this ), 4000, PING_INTERVAL );
+        this.sendSystemCommand( new PingCommand( this ), PING_INTERVAL, PING_INTERVAL );
 
         // Notify listeners
         this.notifyListenerEvent( (this.connected ? EVENT_CODE.CONNECTION_ESTABLISHED : EVENT_CODE.CONNECTION_FAILED) );
@@ -752,7 +909,7 @@ public class Robot
                 receivedFirstDisconnect = true;
         }
 
-        Logging.debug( "Updating internal values for " + command );
+//        Logging.debug( "Updating internal values for " + command );
 
         // Update stuff event
         switch ( command.getCommand() )
@@ -1140,10 +1297,38 @@ public class Robot
 
     /*
      * *****************************************************
-     * GETTERS
+     * MACRO
      *****************************************************
      */
 
+    /**
+     * Stop any current macros from running
+     */
+    public void stopMacro()
+    {
+        this.macroSettings.stopMacro();
+    }
+
+
+    /**
+     * Send a macro to the Sphero device. If the macro mode is set to Normal
+     * either
+     * a RunMacroCommand has to be sent or you have to run .playMacro on the
+     * Robot instance
+     *
+     * @param macro The macro to send to the Sphero
+     */
+    public void sendCommand( MacroObject macro )
+    {
+        this.macroSettings.playMacro( macro );
+    }
+
+
+    /*
+     * *****************************************************
+     * GETTERS
+     *****************************************************
+     */
 //    /**
 //     * Returns the controller for the robot. The controller helps the user
 //     * to perform some basic commands. For more advanced solutions use the
@@ -1335,17 +1520,6 @@ public class Robot
 
 
         /**
-         * Remove the last entry of the waiting for response queue
-         *
-         * @author Nicklas Gavelin
-         */
-        protected void removeLast()
-        {
-            this.waitingForResponse.removeLast();
-        }
-
-
-        /**
          * Stop the actively running thread
          */
         public void stopThread()
@@ -1395,42 +1569,56 @@ public class Robot
                     // Start reading messages from the buffer that we got
                     int read2 = 0;
                     for ( int pointer = 0;
-                            pointer < buf.length()
-                            && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH)
-                            && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH + newData[pointer + DeviceResponse.PACKET_LENGTH_INDEX]); )
+                          pointer < buf.length()
+                          && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH)
+                          && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH + newData[pointer + DeviceResponse.PACKET_LENGTH_INDEX]); )
                     {
                         // Copy data
                         DeviceResponseHeader drh = new DeviceResponseHeader( newData, pointer );
-                        Pair<DeviceCommand, Boolean> cmd = waitingForResponse.removeFirst();
 
-                        // Update internal values if we got an OK from the robot
-                        if ( drh.getResponseCode().equals( RESPONSE_CODE.CODE_OK ) )
-                            updateInternalValues( cmd.getFirst() );
-
-                        // Build our Device response
-                        byte[] packetData = Arrays.copyOfRange( newData, pointer, pointer + drh.getPacketLength() + DeviceResponse.RESPONSE_HEADER_LENGTH );
-                        DeviceResponse response = DeviceResponse.valueOf( cmd.getFirst(), packetData ); //, cmd.getFirst() );
-
-                        Logging.debug( "Received " + response + (cmd.getSecond() ? " as a SYSTEM RESPONSE" : "") );
-
-                        // Check if we got a system command or not
-                        if ( cmd.getSecond() )
+                        if ( drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.RESPONSE ) )
                         {
-                            // System command
-                            switch ( response.getCommand() )
+                            Pair<DeviceCommand, Boolean> cmd = waitingForResponse.remove();
+
+                            // Build our Device response
+                            byte[] packetData = Arrays.copyOfRange( newData, pointer, pointer + drh.getPacketLength() + DeviceResponse.RESPONSE_HEADER_LENGTH );
+                            DeviceResponse response = DeviceResponse.valueOf( cmd.getFirst(), packetData ); //, cmd.getFirst() );
+
+                            // Update internal values if we got an OK from the robot
+                            if ( drh.getResponseCode().equals( RESPONSE_CODE.CODE_OK ) )
+                                updateInternalValues( cmd.getFirst() );
+
+                            Logging.debug( "Received " + response + (cmd.getSecond() ? " as a SYSTEM RESPONSE" : "") );
+
+                            // Check if we got a system command or not
+                            if ( cmd.getSecond() )
                             {
-                                case GET_BLUETOOTH_INFO:
-                                    // Update Sphero name
-                                    GetBluetoothInfoResponse gb = ( GetBluetoothInfoResponse ) response;
-                                    if ( !gb.isDataCorrupt() )
-                                        name = gb.getName();
-                                    break;
+                                // System command
+                                switch ( response.getCommand() )
+                                {
+                                    case GET_BLUETOOTH_INFO:
+                                        // Update Sphero name
+                                        GetBluetoothInfoResponse gb = ( GetBluetoothInfoResponse ) response;
+                                        if ( !gb.isDataCorrupt() )
+                                            name = gb.getName();
+                                        break;
+                                }
                             }
+                            else
+                            {
+                                // Ordinary command, notify listeners
+                                notifyListenersDeviceResponse( response, cmd.getFirst() );
+                            }
+                        }
+                        else if ( drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.INFORMATION ) )
+                        {
+                            // TODO: Received information packet, what should we do, what SHOULD we do?
+                            Logging.debug( "Received information packet: " + drh );
                         }
                         else
                         {
-                            // Ordinary command, notify listeners
-                            notifyListenersDeviceResponse( response, cmd.getFirst() );
+                            // Unknown packet type
+                            //Logging.error( "Received unrecognized packet: " + drh );
                         }
 
                         // Move our pointer forward
@@ -1448,9 +1636,11 @@ public class Robot
                 }
                 catch ( NullPointerException e )
                 {
+                    Logging.error( "NullPointerException", e );
                 }
                 catch ( NoSuchElementException e )
                 {
+                    Logging.error( "NoSuchElementException", e );
                 }
                 catch ( Exception e )
                 {
@@ -1458,6 +1648,31 @@ public class Robot
                         Logging.fatal( "Listening thread closed down unexpectedly", e );
                     connectionClosedUnexpected();
                 }
+            }
+        }
+    }
+
+
+    /**
+     * Performs updates depending on which messages that are sent
+     *
+     * @param sent The sent messages
+     */
+    private void update( Collection<Pair<DeviceCommand, Boolean>> sent )
+    {
+        for ( Pair<DeviceCommand, Boolean> p : sent )
+        {
+            switch ( p.getFirst().getCommand() )
+            {
+                case SAVE_MACRO:
+                    if ( this.macroSettings.macroRunning )
+                    {
+                        // Macro has been saved, now get the fuck out!
+                        if ( this.macroSettings.ballMemory.size() > 0 )
+                            this.macroSettings.ballMemory.remove( 0 );
+                        this.macroSettings.emptyMacroCommandQueue();
+                    }
+                    break;
             }
         }
     }
@@ -1478,7 +1693,7 @@ public class Robot
         private final BluetoothConnection btc;
         // Writer & queue that the writer uses
         private Writer w;
-        private BlockingQueue<Pair<DeviceCommand, Boolean>> sendingQueue;
+        private final BlockingQueue<Pair<DeviceCommand, Boolean>> sendingQueue;
 
 
         /**
@@ -1530,13 +1745,16 @@ public class Robot
          */
         public void enqueue( DeviceCommand command, boolean systemCommand )
         {
-            try
+            synchronized ( sendingQueue )
             {
-                if ( !this.stop && !this.stopAccepting )
-                    this.sendingQueue.put( new Pair<DeviceCommand, Boolean>( command, systemCommand ) );
-            }
-            catch ( InterruptedException e )
-            {
+                try
+                {
+                    if ( !this.stop && !this.stopAccepting )
+                        this.sendingQueue.put( new Pair<DeviceCommand, Boolean>( command, systemCommand ) );
+                }
+                catch ( InterruptedException e )
+                {
+                }
             }
         }
 
@@ -1709,8 +1927,7 @@ public class Robot
             @Override
             public void run()
             {
-                // Holds number of added messages
-                int added = 0;
+                ByteArrayBuffer sendingBuffer = new ByteArrayBuffer( 256 );
 
                 // Run until we manually stop the thread or
                 // a connection error occurs.
@@ -1720,29 +1937,32 @@ public class Robot
                     {
                         // Try and fetch some message
                         Pair<DeviceCommand, Boolean> p = sendingQueue.take();
-                        ByteArrayBuffer sendingBuffer = new ByteArrayBuffer( 256 );
+
+                        Collection<Pair<DeviceCommand, Boolean>> sent = new ArrayList<Pair<DeviceCommand, Boolean>>();
 
                         // Append message to sending buffer
                         sendingBuffer.append( p.getFirst().getPacket(), 0, p.getFirst().getPacketLength() );
 
+                        // Add command to listening queue
+                        listeningThread.enqueue( p );
+                        sent.add( p );
+
                         // Lock until we have sent our messages in-case someone
                         // else tries to do this at the same time
-                        synchronized ( btc )
+                        synchronized ( sendingQueue )
                         {
                             try
                             {
-                                // Add command to listening queue
-                                listeningThread.enqueue( p );
-                                added++;
-
                                 // Check if we can send more
-                                if ( sendingQueue.size() > 0 )
+                                if ( !sendingQueue.isEmpty() )
                                 {
                                     // Go through all the messages that we can
                                     for ( int i = 0; i < sendingQueue.size(); i++ )
                                     {
+                                        Pair<DeviceCommand, Boolean> c = sendingQueue.peek();
+
                                         // Peek at the the rest of the messages
-                                        int length = sendingQueue.peek().getFirst().getPacketLength();
+                                        int length = c.getFirst().getPacketLength();
 
                                         // Check that we have enough space to add the next message to, if not
                                         // send what we got and continue later on
@@ -1750,13 +1970,10 @@ public class Robot
                                             break;
 
                                         // Enqueue the next command
-                                        Pair<DeviceCommand, Boolean> c = sendingQueue.remove();
-                                        listeningThread.enqueue( c );
                                         sendingBuffer.append( c.getFirst().getPacket(), 0, c.getFirst().getPacketLength() );
-
-                                        // Increase number of added messages in case
-                                        // we go haywire
-                                        added++;
+                                        listeningThread.enqueue( c );
+                                        sent.add( c );
+                                        sendingQueue.remove();
                                     }
                                 }
 
@@ -1764,9 +1981,7 @@ public class Robot
                                 btc.write( sendingBuffer.toByteArray() );
                                 btc.flush();
 
-                                // Clear buffer
-                                sendingBuffer.clear();
-                                added = 0;
+                                update( sent );
                             }
                             catch ( IOException e )
                             {
@@ -1778,6 +1993,10 @@ public class Robot
                                 if ( connected )
                                     Logging.fatal( "Writing thread closed down unexpectedly", e );
                                 connectionClosedUnexpected();
+                            }
+                            finally
+                            {
+                                sendingBuffer.clear();
                             }
                         }
                     }

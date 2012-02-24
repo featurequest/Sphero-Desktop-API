@@ -1,4 +1,4 @@
-package experimental.sphero.command;
+package se.nicklasgavelin.sphero.command;
 
 import se.nicklasgavelin.sphero.command.DeviceCommand;
 
@@ -15,6 +15,12 @@ public class SaveTemporaryMacroCommand extends DeviceCommand
     public static final byte MacroFlagExtendedFlags = -128;
     private byte flags;
     private byte[] macroData;
+
+
+    public SaveTemporaryMacroCommand( int flags, byte[] macro )
+    {
+        this( ( byte ) flags, macro );
+    }
 
 
     public SaveTemporaryMacroCommand( byte flags, byte[] macro )

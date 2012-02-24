@@ -1,4 +1,4 @@
-package experimental.sphero.macro;
+package se.nicklasgavelin.sphero.macro;
 
 import java.awt.Color;
 import se.nicklasgavelin.util.ByteArrayBuffer;

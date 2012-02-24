@@ -27,7 +27,7 @@ public abstract class DeviceResponse extends DeviceMessage
      *
      * @author Nicklas Gavelin
      */
-    public enum RESPONSE_CODE
+    public static enum RESPONSE_CODE
     {
         CODE_OK( 0 ),
         CODE_ERROR_GENERAL( 1 ),
@@ -77,33 +77,38 @@ public abstract class DeviceResponse extends DeviceMessage
          */
         public static RESPONSE_CODE valueOf( int code )
         {
-            switch ( code )
-            {
-                case 0:
-                    return CODE_OK;
-                case 1:
-                    return CODE_ERROR_GENERAL;
-                case 2:
-                    return CODE_ERROR_CHECKSUM;
-                case 3:
-                    return CODE_ERROR_FRAGMENT;
-                case 4:
-                    return CODE_ERROR_BAD_COMMAND;
-                case 5:
-                    return CODE_ERROR_UNSUPPORTED;
-                case 6:
-                    return CODE_ERROR_BAD_MESSAGE;
-                case 7:
-                    return CODE_ERROR_PARAMETER;
-                case 8:
-                    return CODE_ERROR_EXECUTE;
-                case 52:
-                    return CODE_ERROR_MAIN_APP_CORRUPT;
-                case -1:
-                    return CODE_ERROR_TIME_OUT;
-                default:
-                    return UNKNOWN_RESPONSE_CODE;
-            }
+            RESPONSE_CODE[] cmds = RESPONSE_CODE.values();
+            for( RESPONSE_CODE dr : cmds )
+                if( dr.getValue() == code )
+                    return dr;
+            return null;
+//            switch ( code )
+//            {
+//                case 0:
+//                    return CODE_OK;
+//                case 1:
+//                    return CODE_ERROR_GENERAL;
+//                case 2:
+//                    return CODE_ERROR_CHECKSUM;
+//                case 3:
+//                    return CODE_ERROR_FRAGMENT;
+//                case 4:
+//                    return CODE_ERROR_BAD_COMMAND;
+//                case 5:
+//                    return CODE_ERROR_UNSUPPORTED;
+//                case 6:
+//                    return CODE_ERROR_BAD_MESSAGE;
+//                case 7:
+//                    return CODE_ERROR_PARAMETER;
+//                case 8:
+//                    return CODE_ERROR_EXECUTE;
+//                case 52:
+//                    return CODE_ERROR_MAIN_APP_CORRUPT;
+//                case -1:
+//                    return CODE_ERROR_TIME_OUT;
+//                default:
+//                    return UNKNOWN_RESPONSE_CODE;
+//            }
         }
 
 

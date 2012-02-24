@@ -3,7 +3,6 @@ package se.nicklasgavelin.sphero.response;
 import se.nicklasgavelin.sphero.command.DeviceCommand;
 
 /**
- *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology
  */

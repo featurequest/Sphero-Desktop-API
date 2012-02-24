@@ -1,4 +1,4 @@
-package experimental.sphero.macro;
+package se.nicklasgavelin.sphero.macro;
 
 import se.nicklasgavelin.util.ByteArrayBuffer;
 import se.nicklasgavelin.util.Value;
@@ -56,7 +56,7 @@ public class Emit extends MacroCommand
         ByteArrayBuffer bytes = new ByteArrayBuffer( getLength() );
         bytes.append( getCommandID() );
         bytes.append( this.identifier.intValue() );
-        
+
         return bytes.toByteArray();
     }
 }

@@ -1,12 +1,8 @@
-package experimental.sphero.command;
-
-import se.nicklasgavelin.sphero.command.DeviceCommand;
+package se.nicklasgavelin.sphero.command;
 
 /**
- * Command to turn data streaming on
- *
- * @author Nicklas Gavelin
- *
+ * @deprecated Doesn't do anything atm
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class SetDataStreamingCommand extends DeviceCommand
 {

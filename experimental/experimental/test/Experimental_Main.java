@@ -4,17 +4,18 @@
  */
 package experimental.test;
 
-import experimental.sphero.macro.Delay;
-import experimental.sphero.macro.MacroObject;
-import experimental.sphero.macro.RGBSD2;
 import java.util.Collection;
 import se.nicklasgavelin.bluetooth.Bluetooth;
 import se.nicklasgavelin.bluetooth.Bluetooth.EVENT;
 import se.nicklasgavelin.bluetooth.BluetoothDevice;
 import se.nicklasgavelin.bluetooth.BluetoothDiscoveryListener;
 import se.nicklasgavelin.sphero.Robot;
+import se.nicklasgavelin.sphero.command.RawMotorCommand;
 import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
+import se.nicklasgavelin.sphero.macro.Delay;
+import se.nicklasgavelin.sphero.macro.MacroObject;
+import se.nicklasgavelin.sphero.macro.RawMotor;
 
 /**
  *
@@ -31,7 +32,7 @@ public class Experimental_Main implements BluetoothDiscoveryListener
 
     private Experimental_Main() throws InvalidRobotAddressException, RobotBluetoothException
     {
-        String id = "000666440DB8";
+        String id = "00066644390F";// ( - | x | - ) // "000666440DB8"; // ( x | - | - )
         Robot r = new Robot(
                 new BluetoothDevice(
                 new Bluetooth( this, Bluetooth.SERIAL_COM ),
@@ -40,20 +41,62 @@ public class Experimental_Main implements BluetoothDiscoveryListener
         if ( r.connect() )
         {
             System.out.println( "Connected" );
-
-            MacroObject mo = new MacroObject();
-            mo.setRobot( r );
-            mo.addCommand( new RGBSD2( 255, 0, 0 ) );
-            mo.addCommand( new Delay( 4000 ) );
-            mo.addCommand( new RGBSD2( 0, 255, 0 ) );
-            mo.addCommand( new Delay( 2000 ) );
-//            mo.addCommand( new Roll( 1.0D, 0, 0) );
-//            mo.addCommand( new Delay(2000) );
-//            mo.addCommand( new Roll( 0D, 0, 0) );
-            mo.playMacro();
+            r.stopMacro();
+            MacroObject mo = this.createSwingMotionMacro( 255, 1, 50 );
+            mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
+            r.sendCommand( mo );
+//            MacroObject mo = new MacroObject();
+//            mo.addCommand( new RawMotor( RawMotorCommand.MOTOR_MODE.FORWARD, 100, RawMotorCommand.MOTOR_MODE.FORWARD, 100 ) );
+//            mo.addCommand( new Delay( 5000 ) );
+//            mo.addCommand( new RawMotor( RawMotorCommand.MOTOR_MODE.FORWARD, 0, RawMotorCommand.MOTOR_MODE.FORWARD, 0 ) );
+//            r.sendCommand( mo );
         }
         else
             System.err.println( "Failed to connect" );
+    }
+
+
+    private int calcspeed( double f, float maxSpeed )
+    {
+        return ( int ) (Math.sin( (f % (Math.PI / 2)) + (Math.PI / 2) ) * maxSpeed);
+    }
+
+
+    public MacroObject createSwingMotionMacro( int _maxSpeed, int dDelay, int nSteps )
+    {
+        float maxSpeed = ( float ) _maxSpeed;
+        int n = nSteps;
+        int delay = dDelay;
+        double PI = Math.PI;
+        double maxValue = 2 * PI + (PI / 2);
+        double incVal = (maxValue / n);
+
+        RawMotorCommand.MOTOR_MODE mm = RawMotorCommand.MOTOR_MODE.FORWARD; // : RawMotorCommand.MOTOR_MODE.REVERSE );
+        MacroObject mo = new MacroObject();
+
+        for ( int i = 0; i < n; i++ )
+        {
+            int speed = calcspeed( i * incVal, maxSpeed );
+            if ( speed == _maxSpeed )
+            {
+                switch ( mm )
+                {
+                    case FORWARD:
+                        mm = RawMotorCommand.MOTOR_MODE.REVERSE;
+                        break;
+                    case REVERSE:
+                        mm = RawMotorCommand.MOTOR_MODE.FORWARD;
+                        break;
+                }
+            }
+
+            mo.addCommand( new RawMotor( mm, speed, mm, speed ) );
+            mo.addCommand( new Delay( delay ) );
+        }
+
+        mo.addCommand( new RawMotor( RawMotorCommand.MOTOR_MODE.FORWARD, 0, RawMotorCommand.MOTOR_MODE.FORWARD, 0 ) );
+
+        return mo;
     }
 
 

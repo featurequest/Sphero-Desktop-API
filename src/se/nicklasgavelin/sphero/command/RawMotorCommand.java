@@ -17,7 +17,7 @@ public class RawMotorCommand extends DeviceCommand
      *
      * @author Nicklas Gavelin
      */
-    public enum MOTOR_MODE
+    public static enum MOTOR_MODE
     {
         FORWARD( 1 ),
         REVERSE( 2 );

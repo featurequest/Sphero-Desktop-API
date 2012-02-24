@@ -1,12 +1,14 @@
-package experimental.sphero.command;
+package se.nicklasgavelin.sphero.command;
 
 import se.nicklasgavelin.sphero.command.DeviceCommand;
+import se.nicklasgavelin.util.ByteArrayBuffer;
 
 /**
  * Send a command to save a given macro command on the Sphero device
  *
  * @author Orbotix
- * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
+ * Technology
  */
 public class SaveMacroCommand extends DeviceCommand
 {
@@ -28,9 +30,9 @@ public class SaveMacroCommand extends DeviceCommand
     /**
      * Create a command with a given destination, flags and macro command
      *
-     * @param flags The flags
+     * @param flags       The flags
      * @param destination The destination on the Sphero
-     * @param macro The macro command as a byte array
+     * @param macro       The macro command as a byte array
      */
     public SaveMacroCommand( byte flags, byte destination, byte[] macro )
     {
@@ -42,16 +44,27 @@ public class SaveMacroCommand extends DeviceCommand
     }
 
 
+    /**
+     * Create a command with a given destination, flags and macro command
+     *
+     * @param flags       The flags
+     * @param destination The destination on the Sphero
+     * @param macro       The macro command as a byte array
+     */
+    public SaveMacroCommand( int flags, int destination, byte[] macro )
+    {
+        this( ( byte ) flags, ( byte ) destination, macro );
+    }
+
+
     @Override
     protected byte[] getPacketData()
     {
-        byte[] data = new byte[ this.macroData.length + 2 ];
+        ByteArrayBuffer bab = new ByteArrayBuffer( this.macroData.length +  2);;
+        bab.append( this.destination );
+        bab.append( this.macroFlags );
+        bab.append( this.macroData );
 
-        data[0] = this.destination;
-        data[1] = this.macroFlags;
-        for ( int i = 0; i < this.macroData.length; i++ )
-            data[(i + 2)] = this.macroData[i];
-
-        return data;
+        return bab.toByteArray();
     }
 }

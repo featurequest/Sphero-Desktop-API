@@ -5,12 +5,13 @@ package se.nicklasgavelin.sphero.command;
  * the Sphero. Contains the information about the command and
  * also the data.
  *
- * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
+ * Technology
  *
  */
 public abstract class DeviceCommand extends DeviceMessage
 {
-    public enum DEVICE_COMMAND
+    public static enum DEVICE_COMMAND
     {
         // Core commands
         PING( 0, 0 ),
@@ -114,61 +115,67 @@ public abstract class DeviceCommand extends DeviceMessage
          */
         public static DEVICE_COMMAND valueOf( int uniqueId ) // int commandId, int deviceId )
         {
-            switch ( uniqueId )
-            {
-                case 0:
-                    return PING;
-                case 1:
-                    return VERSIONING;
-                case 2:
-                    return SET_BLUETOOTH_NAME;
-                case 3:
-                    return GET_BLUETOOTH_INFO;
-                case 4:
-                    return GO_TO_SLEEP;
-                case 5:
-                    return JUMP_TO_BOOTLOADER;
-                case 6:
-                    return LEVEL_1_DIAGNOSTICS;
-                case 7:
-                    return JUMP_TO_MAIN;
-                case 8:
-                    return CALIBRATE;
-                case 9:
-                    return STABILIZATION;
-                case 10:
-                    return ROTATION_RATE;
-                case 11:
-                    return RGB_LED_OUTPUT;
-                case 12:
-                    return FRONT_LED_OUTPUT;
-                case 13:
-                    return ROLL;
-                case 14:
-                    return BOOST;
-                case 15:
-                    return RAW_MOTOR;
-                case 16:
-                    return GET_CONFIGURATION_BLOCK;
-                case 17:
-                    return RUN_MACRO;
-                case 18:
-                    return MACRO;
-                case 19:
-                    return SAVE_MACRO;
-                case 20:
-                    return ABORT_MACRO;
-                case 21:
-                    return SET_DATA_STREAMING;
-                case 22:
-                    return SPIN_LEFT;
-                case 23:
-                    return SPIN_RIGHT;
-                case 24:
-                    return CUSTOM_PING;
-            }
-
+            DEVICE_COMMAND[] cmds = DEVICE_COMMAND.values();
+            for( DEVICE_COMMAND dc : cmds )
+                if( dc.getId() == uniqueId )
+                    return dc;
             return null;
+
+//            switch ( uniqueId )
+//            {
+//                case 0:
+//                    return PING;
+//                case 1:
+//                    return VERSIONING;
+//                case 2:
+//                    return SET_BLUETOOTH_NAME;
+//                case 3:
+//                    return GET_BLUETOOTH_INFO;
+//                case 4:
+//                    return GO_TO_SLEEP;
+//                case 5:
+//                    return JUMP_TO_BOOTLOADER;
+//                case 6:
+//                    return LEVEL_1_DIAGNOSTICS;
+//                case 7:
+//                    return JUMP_TO_MAIN;
+//                case 8:
+//                    return CALIBRATE;
+//                case 9:
+//                    return STABILIZATION;
+//                case 10:
+//                    return ROTATION_RATE;
+//                case 11:
+//                    return RGB_LED_OUTPUT;
+//                case 12:
+//                    return FRONT_LED_OUTPUT;
+//                case 13:
+//                    return ROLL;
+//                case 14:
+//                    return BOOST;
+//                case 15:
+//                    return RAW_MOTOR;
+//                case 16:
+//                    return GET_CONFIGURATION_BLOCK;
+//                case 17:
+//                    return RUN_MACRO;
+//                case 18:
+//                    return MACRO;
+//                case 19:
+//                    return SAVE_MACRO;
+//                case 20:
+//                    return ABORT_MACRO;
+//                case 21:
+//                    return SET_DATA_STREAMING;
+//                case 22:
+//                    return SPIN_LEFT;
+//                case 23:
+//                    return SPIN_RIGHT;
+//                case 24:
+//                    return CUSTOM_PING;
+//            }
+//
+//            return null;
         }
     }
     // Internal storage
@@ -255,7 +262,7 @@ public abstract class DeviceCommand extends DeviceMessage
 
         if ( data != null )
         {
-            for (int i = 0; i < data_length; i++)
+            for ( int i = 0; i < data_length; i++ )
             {
                 buffer[(i + COMMAND_HEADER_LENGTH)] = data[i];
                 checksum = ( byte ) (checksum + data[i]);

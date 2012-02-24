@@ -1,4 +1,4 @@
-package experimental.sphero.macro;
+package se.nicklasgavelin.sphero.macro;
 
 import se.nicklasgavelin.util.ByteArrayBuffer;
 import se.nicklasgavelin.util.Value;
@@ -115,7 +115,7 @@ public class Roll extends MacroCommand
         bytes.append( this.heading >> 8 );
         bytes.append( this.heading & 0xFF );
         bytes.append( this.delay );
-        
+
         return bytes.toByteArray();
     }
 }

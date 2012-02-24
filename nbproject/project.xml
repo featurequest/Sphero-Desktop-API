@@ -9,7 +9,7 @@
                 <root id="src.experimental.dir"/>
                 <root id="src.bluecove-bluez.dir"/>
                 <root id="src.bluecove.dir"/>
-                <root id="src.dir"/>
+                <root id="src.src.dir"/>
             </source-roots>
             <test-roots/>
         </data>

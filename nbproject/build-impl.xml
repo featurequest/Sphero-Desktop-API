@@ -142,7 +142,7 @@ is divided into following sections:
                 <available file="${src.experimental.dir}"/>
                 <available file="${src.bluecove-bluez.dir}"/>
                 <available file="${src.bluecove.dir}"/>
-                <available file="${src.dir}"/>
+                <available file="${src.src.dir}"/>
             </or>
         </condition>
         <condition property="netbeans.home+have.tests">
@@ -212,7 +212,7 @@ is divided into following sections:
         <fail unless="src.experimental.dir">Must set src.experimental.dir</fail>
         <fail unless="src.bluecove-bluez.dir">Must set src.bluecove-bluez.dir</fail>
         <fail unless="src.bluecove.dir">Must set src.bluecove.dir</fail>
-        <fail unless="src.dir">Must set src.dir</fail>
+        <fail unless="src.src.dir">Must set src.src.dir</fail>
         <fail unless="build.dir">Must set build.dir</fail>
         <fail unless="dist.dir">Must set dist.dir</fail>
         <fail unless="build.classes.dir">Must set build.classes.dir</fail>
@@ -233,7 +233,7 @@ is divided into following sections:
     </target>
     <target depends="-init-ap-cmdline-properties" if="ap.supported.internal" name="-init-macrodef-javac-with-processors">
         <macrodef name="javac" uri="http://www.netbeans.org/ns/j2se-project/3">
-            <attribute default="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.dir}" name="srcdir"/>
+            <attribute default="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.src.dir}" name="srcdir"/>
             <attribute default="${build.classes.dir}" name="destdir"/>
             <attribute default="${javac.classpath}" name="classpath"/>
             <attribute default="${javac.processorpath}" name="processorpath"/>
@@ -273,7 +273,7 @@ is divided into following sections:
     </target>
     <target depends="-init-ap-cmdline-properties" name="-init-macrodef-javac-without-processors" unless="ap.supported.internal">
         <macrodef name="javac" uri="http://www.netbeans.org/ns/j2se-project/3">
-            <attribute default="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.dir}" name="srcdir"/>
+            <attribute default="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.src.dir}" name="srcdir"/>
             <attribute default="${build.classes.dir}" name="destdir"/>
             <attribute default="${javac.classpath}" name="classpath"/>
             <attribute default="${javac.processorpath}" name="processorpath"/>
@@ -305,7 +305,7 @@ is divided into following sections:
     </target>
     <target depends="-init-macrodef-javac-with-processors,-init-macrodef-javac-without-processors" name="-init-macrodef-javac">
         <macrodef name="depend" uri="http://www.netbeans.org/ns/j2se-project/3">
-            <attribute default="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.dir}" name="srcdir"/>
+            <attribute default="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.src.dir}" name="srcdir"/>
             <attribute default="${build.classes.dir}" name="destdir"/>
             <attribute default="${javac.classpath}" name="classpath"/>
             <sequential>
@@ -600,7 +600,7 @@ is divided into following sections:
                 <include name="*"/>
             </dirset>
         </pathconvert>
-        <j2seproject3:depend srcdir="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.dir}:${build.generated.subdirs}"/>
+        <j2seproject3:depend srcdir="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.src.dir}:${build.generated.subdirs}"/>
     </target>
     <target depends="init,deps-jar,-pre-pre-compile,-pre-compile, -copy-persistence-xml,-compile-depend" if="have.sources" name="-do-compile">
         <j2seproject3:javac gensrcdir="${build.generated.sources.dir}"/>
@@ -609,7 +609,7 @@ is divided into following sections:
             <fileset dir="${src.experimental.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
             <fileset dir="${src.bluecove-bluez.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
             <fileset dir="${src.bluecove.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
-            <fileset dir="${src.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
+            <fileset dir="${src.src.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
         </copy>
     </target>
     <target if="has.persistence.xml" name="-copy-persistence-xml">
@@ -630,7 +630,7 @@ is divided into following sections:
     <target depends="init,deps-jar,-pre-pre-compile" name="-do-compile-single">
         <fail unless="javac.includes">Must select some files in the IDE or set javac.includes</fail>
         <j2seproject3:force-recompile/>
-        <j2seproject3:javac excludes="" gensrcdir="${build.generated.sources.dir}" includes="${javac.includes}" sourcepath="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.dir}"/>
+        <j2seproject3:javac excludes="" gensrcdir="${build.generated.sources.dir}" includes="${javac.includes}" sourcepath="${src.lib.dir}:${src.experimental.dir}:${src.bluecove-bluez.dir}:${src.bluecove.dir}:${src.src.dir}"/>
     </target>
     <target name="-post-compile-single">
         <!-- Empty placeholder for easier customization. -->
@@ -870,7 +870,7 @@ is divided into following sections:
             <fileset dir="${src.bluecove.dir}" excludes="*.java,${excludes}" includes="${includes}">
                 <filename name="**/*.java"/>
             </fileset>
-            <fileset dir="${src.dir}" excludes="*.java,${excludes}" includes="${includes}">
+            <fileset dir="${src.src.dir}" excludes="*.java,${excludes}" includes="${includes}">
                 <filename name="**/*.java"/>
             </fileset>
             <fileset dir="${build.generated.sources.dir}" erroronmissingdir="false">
@@ -892,7 +892,7 @@ is divided into following sections:
             <fileset dir="${src.bluecove.dir}" excludes="${excludes}" includes="${includes}">
                 <filename name="**/doc-files/**"/>
             </fileset>
-            <fileset dir="${src.dir}" excludes="${excludes}" includes="${includes}">
+            <fileset dir="${src.src.dir}" excludes="${excludes}" includes="${includes}">
                 <filename name="**/doc-files/**"/>
             </fileset>
             <fileset dir="${build.generated.sources.dir}" erroronmissingdir="false">

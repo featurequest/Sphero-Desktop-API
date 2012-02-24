@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Test bluetooth</name>
-	<comment></comment>
+	<name>Sphero Site API</name>
+	<comment>Sphero API Desktop Port</comment>
 	<projects>
 	</projects>
 	<buildSpec>

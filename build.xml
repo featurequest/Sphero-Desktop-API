@@ -43,7 +43,7 @@
         <zip destfile="${store.jar}" compress="true">
             <zipfileset src="${store.dir}/temp_final.jar"
                         excludes="META-INF/*.SF, META-INF/*.DSA, META-INF/*.RSA"/>
-            <fileset dir="lib" includes="*.dll, *.so, *.jnilib"/>
+<!--            <fileset dir="natives" includes="*.dll, *.so, *.jnilib"/>-->
             <fileset dir="settings/" includes="bluecove.*, bluecove.*.*"/>
             <fileset file="VERSION"/>
             <fileset file="LICENSE"/>

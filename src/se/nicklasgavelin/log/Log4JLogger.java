@@ -29,6 +29,13 @@ public class Log4JLogger implements Logging.Appender
         logger.addAppender( new ConsoleAppender( new PatternLayout( "[ %C ][ %d ][ %p ] %m\n" ) ) );
     }
 
+    /**
+     * Log a message
+     *
+     * @param l The log level
+     * @param message The log message
+     * @param t Throwable object to log
+     */
     @Override
     public void log( Logging.Level l, String message, Throwable t )
     {

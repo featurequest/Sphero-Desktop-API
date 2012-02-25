@@ -28,13 +28,23 @@ public class BoostCommand extends se.nicklasgavelin.sphero.command.DeviceCommand
     }
 
 
+    /**
+     * Returns the internal heading value
+     *
+     * @return The internal heading value
+     */
     public float getHeading()
     {
         return this.heading;
     }
 
 
-    public float getTime()
+    /**
+     * Returns the internal duration value
+     *
+     * @return The internal duration value
+     */
+    public float getDuration()
     {
         return this.time;
     }

@@ -24,6 +24,13 @@ import se.nicklasgavelin.sphero.macro.RawMotor;
  */
 public class Experimental_Main implements BluetoothDiscoveryListener
 {
+    /**
+     * Main method for experimental stuff
+     *
+     * @param args All arguments are ignored
+     * @throws InvalidRobotAddressException If the address for the robot is invalid
+     * @throws RobotBluetoothException  If there occurs a Bluetooth exception during connecting
+     */
     public static void main( String[] args ) throws InvalidRobotAddressException, RobotBluetoothException
     {
         Experimental_Main experimental_Main = new Experimental_Main();
@@ -62,6 +69,14 @@ public class Experimental_Main implements BluetoothDiscoveryListener
     }
 
 
+    /**
+     * Experimental test method
+     *
+     * @param _maxSpeed Max speed for commands
+     * @param dDelay Delay between swings
+     * @param nSteps Number of steps to perform
+     * @return The macro object
+     */
     public MacroObject createSwingMotionMacro( int _maxSpeed, int dDelay, int nSteps )
     {
         float maxSpeed = ( float ) _maxSpeed;

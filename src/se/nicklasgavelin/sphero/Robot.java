@@ -14,6 +14,7 @@ import se.nicklasgavelin.sphero.command.*;
 import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
 import se.nicklasgavelin.sphero.exception.RobotInitializeConnectionFailed;
+import se.nicklasgavelin.sphero.macro.Emit;
 import se.nicklasgavelin.sphero.macro.MacroCommand;
 import se.nicklasgavelin.sphero.macro.MacroObject;
 import se.nicklasgavelin.sphero.response.DeviceResponse;
@@ -59,7 +60,7 @@ public class Robot
         private Collection<MacroCommand> commands;
         private Collection<Integer> ballMemory;
         private boolean macroRunning, macroStreamingEnabled;
-        private static final int maxMacroSize = 248, robotStorageSpace = 1000, minSpaceToSend = 128;
+        private static final int maxMacroSize = 230, robotStorageSpace = 600, minSpaceToSend = 128;
 
 
         /**
@@ -118,14 +119,16 @@ public class Robot
                         this.commands.clear();
                         this.commands.addAll( macro.getCommands() );
 
+                        this.macroRunning = true;
+
                         // Now empty our queue
                         this.emptyMacroCommandQueue();
 
-                        if ( !this.macroRunning )
-                        {
-                            this.macroRunning = true;
-                            //                        this.sendSystemCommand( new RunMacroCommand( -2 ) );
-                        }
+//                        if ( !this.macroRunning )
+//                        {
+//                            this.macroRunning = true;
+//                            //                        this.sendSystemCommand( new RunMacroCommand( -2 ) );
+//                        }
                     }
                 }
             }
@@ -138,23 +141,27 @@ public class Robot
          */
         private void emptyMacroCommandQueue()
         {
-            // Check if we need or can create more commands
-            if ( this.commands.isEmpty() || freeBallMemory() <= minSpaceToSend )
-                return;
-
             // Calculate number of free bytes that we have
             int ballSpace = freeBallMemory(),
                     freeBytes = (ballSpace > maxMacroSize ? maxMacroSize : ballSpace),
                     chunkSize = 0;
 
+            // Check if we need or can create more commands
+            if ( this.commands.isEmpty() || ballSpace <= minSpaceToSend )
+                return;
+
             // Create our sending collection (stuff that we want to send)
             Collection<MacroCommand> send = new ArrayList<MacroCommand>();
+
+            // Emit marker (we will receive a message from the Sphero when this emit marker is reached)
+            Emit em = new Emit( 1 );
+            int emitLength = em.getLength();
 
             // Go through new commands that we want to send
             for ( MacroCommand cmd : this.commands )
             {
                 // Check if we allow for the new command to be added (that we still got enough space left to add it)
-                if ( freeBytes - (chunkSize + cmd.getLength()) <= 0 || (chunkSize + cmd.getLength()) > maxMacroSize )
+                if ( freeBytes - (chunkSize + cmd.getLength() + emitLength) <= 0 || (chunkSize + cmd.getLength() + emitLength) > maxMacroSize )
                     break;
 
                 // Add the command to the send queue and increase the space we've used
@@ -162,10 +169,12 @@ public class Robot
                 chunkSize += cmd.getLength();
             }
 
-            // Emit marker (we will receive a message from the Sphero when this emit marker is reached)
-//        Emit em = new Emit( 4 );
-//        send.add( em );
-//        chunkSize += em.getLength();
+            // Remove the commands that we can send from the waiting command queue
+            this.commands.removeAll( send );
+
+            // Add emitter
+            send.add( em );
+            chunkSize += em.getLength();
 
             // Create our sending buffer to add commands to
             ByteArrayBuffer sendBuffer = new ByteArrayBuffer( chunkSize );
@@ -174,8 +183,10 @@ public class Robot
             for ( MacroCommand cmd : send )
                 sendBuffer.append( cmd.getByteRepresentation() );
 
-            // Remove the commands that we can send from the waiting command queue
-            this.commands.removeAll( send );
+            if( commands.isEmpty() )
+                sendBuffer.append( MacroCommand.MACRO_COMMAND.MAC_END.getValue() );
+
+            this.ballMemory.add( chunkSize );
 
             // Send a save macro command to the Sphero with the new data
             Robot.this.sendSystemCommand(
@@ -475,30 +486,36 @@ public class Robot
     private BluetoothConnection btc;
     private boolean connected = false;
     // Listener/writer
-    private RobotStreamListener listeningThread;
-    private RobotSendingQueue sendingTimer;
+    private Robot.RobotStreamListener listeningThread;
+    private Robot.RobotSendingQueue sendingTimer;
     private List<RobotListener> listeners;
     // Other
     private String name = null;
     // Robot macro
-    private MACRO_SETTINGS macroSettings;
+    private Robot.MACRO_SETTINGS macroSettings;
     // Robot position and led color
-    private RobotMovement movement;
-    private RobotRawMovement rawMovement;
-    private RobotLED led;
+    private Robot.RobotMovement movement;
+    private Robot.RobotRawMovement rawMovement;
+    private Robot.RobotLED led;
     // Pinger
     private float PING_INTERVAL = 60000; // Time in milliseconds
     // Address
+
+    /**
+     * The start of the Bluetooth address that is describing if the address
+     * belongs to a Sphero device.
+     */
     public static final String ROBOT_ADDRESS_PREFIX = "00066";
+    
     // Robot controller
 //    private RobotController controller;
     private static int error_num = 0;
     private static final String[] invalidAddressResponses = new String[]
     {
-        "The bluetooth address is invalid, the Sphero bluetooth address must start with " + ROBOT_ADDRESS_PREFIX,
-        "Are you serious? The address is still invalid, the Sphero bluetooth address must start with " + ROBOT_ADDRESS_PREFIX,
-        "Are you plain fucking lazy or just stupid? Check your frigging bluetooth address, it still need to start with " + ROBOT_ADDRESS_PREFIX,
-        "I give up... You are not taking me seriously and I'm just getting pissed off. Why would I give a shit about bluetooth addresses anyway"
+        "The bluetooth address is invalid, the Sphero device bluetooth address must start with " + ROBOT_ADDRESS_PREFIX,
+        "The address is still invalid, the Sphero bluetooth address must start with " + ROBOT_ADDRESS_PREFIX,
+        "Check your frigging bluetooth address, it still need to start with " + ROBOT_ADDRESS_PREFIX,
+        "I give up... You are not taking me seriously. Why would I give a hoot about bluetooth addresses anyway (Still need to start with " + ROBOT_ADDRESS_PREFIX + ")"
     };
 
 
@@ -508,6 +525,8 @@ public class Robot
      * given.
      *
      * @param bt The Bluetooth device that represents the robot
+     * @throws InvalidRobotAddressException
+     * @throws RobotBluetoothException
      */
     public Robot( BluetoothDevice bt ) throws InvalidRobotAddressException, RobotBluetoothException
     {
@@ -520,15 +539,15 @@ public class Robot
         if ( !this.bt.getAddress().startsWith( ROBOT_ADDRESS_PREFIX ) )
         {
             String msg = invalidAddressResponses[ Value.clamp( error_num++, 0, invalidAddressResponses.length - 1 )];
-            Logging.warn( msg );
+            Logging.error( msg );
             throw new InvalidRobotAddressException( msg );
         }
 
         // Initialize the position and LEDs
-        this.movement = new RobotMovement();
-        this.rawMovement = new RobotRawMovement();
-        this.led = new RobotLED();
-        this.macroSettings = new MACRO_SETTINGS();
+        this.movement = new Robot.RobotMovement();
+        this.rawMovement = new Robot.RobotRawMovement();
+        this.led = new Robot.RobotLED();
+        this.macroSettings = new Robot.MACRO_SETTINGS();
 
         // Discover the connection services that we can use
         bt.discover();
@@ -635,7 +654,7 @@ public class Robot
      */
 
     /**
-     * Connect to the robot via the bluetooth connection given in the
+     * Connect to the robot via the Bluetooth connection given in the
      * constructor.
      * Will NOT throw any exceptions if connection fails.
      *
@@ -655,7 +674,7 @@ public class Robot
      * @param throwException True to throw exception, false otherwise
      *
      * @throws RobotInitializeConnectionFailed Thrown if throwException is set
-     * to true and intialization failed
+     * to true and initialization failed
      * @return True if connected, will throw exception if not connected
      */
     public boolean connect( boolean throwException )
@@ -680,8 +699,8 @@ public class Robot
 
 
     /**
-     * Connects to the robot via bluetooth. Will return true if the connection
-     * was successfull, throws and exception otherwise.
+     * Connects to the robot via Bluetooth. Will return true if the connection
+     * was successful, throws and exception otherwise.
      *
      * @throws RobotInitializeConnectionFailed If connection failed
      * @return True if connection succeeded
@@ -705,13 +724,13 @@ public class Robot
         // Create a listening thread and close any old ones down
         if ( this.listeningThread != null )
             this.listeningThread.stopThread();
-        this.listeningThread = new RobotStreamListener( btc );
+        this.listeningThread = new Robot.RobotStreamListener( btc );
         this.listeningThread.start();
 
         // Create our sending timer
         if ( this.sendingTimer != null )
             this.sendingTimer.cancel();
-        this.sendingTimer = new RobotSendingQueue( btc );
+        this.sendingTimer = new Robot.RobotSendingQueue( btc );
 
         // Reset the robot
         this.sendSystemCommand( new AbortMacroCommand() );
@@ -1446,7 +1465,7 @@ public class Robot
      *
      * @return The robot led
      */
-    public RobotLED getLed()
+    public Robot.RobotLED getLed()
     {
         return this.led;
     }
@@ -1457,7 +1476,7 @@ public class Robot
      *
      * @return The robot movement
      */
-    public RobotMovement getRobotMovement()
+    public Robot.RobotMovement getRobotMovement()
     {
         return this.movement;
     }
@@ -1468,7 +1487,7 @@ public class Robot
      *
      * @return The raw movements of the robot
      */
-    public RobotRawMovement getRobotRawMovement()
+    public Robot.RobotRawMovement getRobotRawMovement()
     {
         return this.rawMovement;
     }
@@ -1569,9 +1588,9 @@ public class Robot
                     // Start reading messages from the buffer that we got
                     int read2 = 0;
                     for ( int pointer = 0;
-                          pointer < buf.length()
-                          && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH)
-                          && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH + newData[pointer + DeviceResponse.PACKET_LENGTH_INDEX]); )
+                            pointer < buf.length()
+                            && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH)
+                            && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH + newData[pointer + DeviceResponse.PACKET_LENGTH_INDEX]); )
                     {
                         // Copy data
                         DeviceResponseHeader drh = new DeviceResponseHeader( newData, pointer );
@@ -1579,6 +1598,8 @@ public class Robot
                         if ( drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.RESPONSE ) )
                         {
                             Pair<DeviceCommand, Boolean> cmd = waitingForResponse.remove();
+
+                            System.out.println( "REL: " + drh.getData() );
 
                             // Build our Device response
                             byte[] packetData = Arrays.copyOfRange( newData, pointer, pointer + drh.getPacketLength() + DeviceResponse.RESPONSE_HEADER_LENGTH );
@@ -1610,16 +1631,29 @@ public class Robot
                                 notifyListenersDeviceResponse( response, cmd.getFirst() );
                             }
                         }
-                        else if ( drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.INFORMATION ) )
-                        {
-                            // TODO: Received information packet, what should we do, what SHOULD we do?
-                            Logging.debug( "Received information packet: " + drh );
-                        }
                         else
-                        {
-                            // Unknown packet type
-                            //Logging.error( "Received unrecognized packet: " + drh );
-                        }
+                            if ( drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.INFORMATION ) )
+                            {
+                                // TODO: Received information packet, what should we do, what SHOULD we do?
+                                Logging.debug( "Received information packet: " + drh );
+                                if ( macroSettings.macroRunning )
+                                {
+                                    if( drh.getData().toByteArray()[5] == 1 )
+                                    {
+                                        System.err.println( "Running next macro" );
+
+                                        // Macro has been saved, now get the fuck out!
+                                        if ( macroSettings.ballMemory.size() > 0 )
+                                            System.err.println( "Removing: " + macroSettings.ballMemory.remove( (Integer)macroSettings.ballMemory.toArray()[0] ) );
+                                        macroSettings.emptyMacroCommandQueue();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Unknown packet type
+                                //Logging.error( "Received unrecognized packet: " + drh );
+                            }
 
                         // Move our pointer forward
                         pointer += drh.getPacketLength() + DeviceResponse.RESPONSE_HEADER_LENGTH;
@@ -1636,6 +1670,7 @@ public class Robot
                 }
                 catch ( NullPointerException e )
                 {
+                    e.printStackTrace();
                     Logging.error( "NullPointerException", e );
                 }
                 catch ( NoSuchElementException e )
@@ -1679,7 +1714,7 @@ public class Robot
 
     /**
      * Handles the sending of commands to the active robot.
-     * Manages multiple queues (one timer and one sendingqueue). The
+     * Manages multiple queues (one timer and one sending queue). The
      * sending queue is for sending direct messages and the timer queue
      * is used to schedule commands to be sent after a certain delay
      * or with periodic transmissions.
@@ -1692,20 +1727,20 @@ public class Robot
         private boolean stop = false, stopAccepting = false;
         private final BluetoothConnection btc;
         // Writer & queue that the writer uses
-        private Writer w;
+        private Robot.RobotSendingQueue.Writer w;
         private final BlockingQueue<Pair<DeviceCommand, Boolean>> sendingQueue;
 
 
         /**
-         * Create a robot stream writer for a specific bluetooth connection
+         * Create a robot stream writer for a specific Bluetooth connection
          *
-         * @param btc The bluetooth connection to send to
+         * @param btc The Bluetooth connection to send to
          */
         protected RobotSendingQueue( BluetoothConnection btc )
         {
             this.btc = btc;
             this.sendingQueue = new LinkedBlockingQueue<Pair<DeviceCommand, Boolean>>();
-            this.w = new Writer();
+            this.w = new Robot.RobotSendingQueue.Writer();
 
             this.startWriter();
         }
@@ -1804,7 +1839,7 @@ public class Robot
         public void enqueue( DeviceCommand command, boolean systemCommand, float initialDelay, float periodLength )
         {
             if ( !this.stop && !this.stopAccepting )
-                this.schedule( new CommandTask( new Pair<DeviceCommand, Boolean>( command, systemCommand ) ), ( long ) initialDelay, ( long ) periodLength );
+                this.schedule( new Robot.RobotSendingQueue.CommandTask( new Pair<DeviceCommand, Boolean>( command, systemCommand ) ), ( long ) initialDelay, ( long ) periodLength );
         }
 
 
@@ -1816,7 +1851,7 @@ public class Robot
          * @param task  The task to run after the timer runs
          * @param delay The delay before running the task in milliseconds
          */
-        private void enqueue( CommandTask task, float delay )
+        private void enqueue( Robot.RobotSendingQueue.CommandTask task, float delay )
         {
             if ( !this.stop && !this.stopAccepting )
                 this.schedule( task, ( long ) delay );
@@ -1834,7 +1869,7 @@ public class Robot
         public void enqueue( DeviceCommand command, float delay, boolean systemCommand )
         {
             if ( !this.stop && !this.stopAccepting )
-                this.schedule( new CommandTask( new Pair<DeviceCommand, Boolean>( command, systemCommand ) ), ( long ) delay );
+                this.schedule( new Robot.RobotSendingQueue.CommandTask( new Pair<DeviceCommand, Boolean>( command, systemCommand ) ), ( long ) delay );
         }
 
 
@@ -1981,7 +2016,7 @@ public class Robot
                                 btc.write( sendingBuffer.toByteArray() );
                                 btc.flush();
 
-                                update( sent );
+//                                update( sent );
                             }
                             catch ( IOException e )
                             {

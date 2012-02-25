@@ -34,6 +34,10 @@ public class BluetoothConnection
     private StreamConnection con;
     private DataInputStream is;
     private DataOutputStream os;
+
+    /**
+     * The internal Bluetooth device that are used for communication
+     */
     protected BluetoothDevice device;
 
 
@@ -145,6 +149,7 @@ public class BluetoothConnection
     /**
      * Read a boolean value
      *
+     * @throws IOException If failure to read for some stream exception
      * @return True or false
      */
     public boolean readBoolean() throws IOException
@@ -195,7 +200,7 @@ public class BluetoothConnection
 
 
     /**
-     * @see DataInputStream.readInt
+     * @see DataInputStream.
      */
     public int readInt() throws IOException
     {

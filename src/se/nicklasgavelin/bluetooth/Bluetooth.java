@@ -22,6 +22,9 @@ import se.nicklasgavelin.log.Logging;
  */
 public class Bluetooth implements DiscoveryListener, Runnable
 {
+    /**
+     * Value for setting communication mode to serial communication
+     */
     public static final int SERIAL_COM = 0x1101;
 
     // Bluetooth
@@ -56,7 +59,14 @@ public class Bluetooth implements DiscoveryListener, Runnable
          */
         public enum EVENT_CODE
         {
+            /**
+             * Event code for when discovery is canceled
+             */
             ERROR_DISCOVERY_CANCELED,
+
+            /**
+             * Event code for when Bluetooth exception occurs
+             */
             ERROR_BLUETOOTH_EXCEPTION;
         }
 
@@ -359,6 +369,9 @@ public class Bluetooth implements DiscoveryListener, Runnable
 
     /**
      * Called when a device is discovered by the current discovery search
+     *
+     * @param device Discovered device
+     * @param deviceClass Device class
      */
     @Override
     public void deviceDiscovered( RemoteDevice device, DeviceClass deviceClass )

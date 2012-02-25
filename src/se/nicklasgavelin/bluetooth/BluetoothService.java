@@ -34,10 +34,15 @@ import javax.microedition.io.StreamConnection;
  */
 public class BluetoothService extends Observable implements Runnable
 {
+    /**
+     * Name that is set if the Bluetooth device couldn't return the name
+     */
     public static final String UNKNOWN = "(Unknown)";
+
     public static final int ATTR_SERVICENAME = 0x0100;
     public static final int ATTR_SERVICEDESC = 0x0101;
     public static final int ATTR_PROVIDERNAME = 0x0102;
+
     private BluetoothDevice device;
     private ServiceRecord record;
     private final Bluetooth bt;

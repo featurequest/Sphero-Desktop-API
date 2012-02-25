@@ -164,9 +164,11 @@ public class BluetoothDevice implements DiscoveryListener
     }
 
     /**
-     * Connect to the bluetooth device and return the created connection
+     * Connect to the Bluetooth device and return the created connection
      * or null if no connection could be made.
      *
+     * @throws RobotBluetoothException If failure to connect
+     * @return The created Bluetooth connection or null if no connection could be created
      */
     public BluetoothConnection connect() throws RobotBluetoothException
     {
@@ -203,7 +205,9 @@ public class BluetoothDevice implements DiscoveryListener
     }
 
     /**
-     * Start with discovering services available for this bluetooth device.
+     * Start with discovering services available for this Bluetooth device.
+     *
+     * @throws RobotBluetoothException If failure to perform device discovert
      */
     public void discover() throws RobotBluetoothException
     {
@@ -262,6 +266,9 @@ public class BluetoothDevice implements DiscoveryListener
 
     /**
      * Called when the service search is completed
+     *
+     * @param transId -
+     * @param respCode -
      */
     @Override
     public void serviceSearchCompleted( int transId, int respCode )
@@ -302,6 +309,8 @@ public class BluetoothDevice implements DiscoveryListener
      * NOTICE: Only takes the first available service
      *
      * TODO: add functionality for more services
+     * @param transId -
+     * @param records Discovered service records
      */
     @Override
     public void servicesDiscovered( int transId, ServiceRecord[] records )

@@ -37,10 +37,29 @@ public class Logging
      */
     public enum Level
     {
+        /**
+         * Debugging
+         */
         DEBUG,
+
+        /**
+         * Information
+         */
         INFO,
+
+        /**
+         * Errors
+         */
         ERROR,
+
+        /**
+         * Warnings
+         */
         WARN,
+
+        /**
+         * Fatal errors
+         */
         FATAL;
     }
 
@@ -67,8 +86,19 @@ public class Logging
      * ************************************
      * CLASSES
      */
+
+    /**
+     * Log appender interface
+     */
     public static interface Appender
     {
+        /**
+         * Log message
+         *
+         * @param l The log level
+         * @param message The log message
+         * @param t Throwable object to log
+         */
         public void log( Level l, String message, Throwable t );
 
 

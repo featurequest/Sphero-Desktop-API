@@ -18,7 +18,7 @@ public class DeviceResponseHeader
     private int sequenceNumber;
     private int packetLength;
     private ByteArrayBuffer data;
-    private HEADER_TYPE header;
+    private DeviceResponseHeader.HEADER_TYPE header;
 
     public static enum HEADER_TYPE
     {
@@ -42,9 +42,9 @@ public class DeviceResponseHeader
             return b;
         }
 
-        public static HEADER_TYPE valueOf( int a, int b )
+        public static DeviceResponseHeader.HEADER_TYPE valueOf( int a, int b )
         {
-            HEADER_TYPE[] ht = HEADER_TYPE.values();
+            DeviceResponseHeader.HEADER_TYPE[] ht = DeviceResponseHeader.HEADER_TYPE.values();
             for ( int i = 0; i < ht.length; i++ )
                 if ( ht[i].getValue().equals( a + " " + b ) )
                     return ht[i];
@@ -74,7 +74,7 @@ public class DeviceResponseHeader
      */
     public DeviceResponseHeader( byte[] data, int offset )
     {
-        this.header = HEADER_TYPE.valueOf( data[ DeviceResponse.INDEX_START_1 + offset], data[DeviceResponse.INDEX_START_2 + offset] );
+        this.header = DeviceResponseHeader.HEADER_TYPE.valueOf( data[ DeviceResponse.INDEX_START_1 + offset], data[DeviceResponse.INDEX_START_2 + offset] );
         this.code = RESPONSE_CODE.valueOf( data[ DeviceResponse.RESPONSE_CODE_INDEX + offset] );
         this.sequenceNumber = data[ DeviceResponse.SEQUENCE_NUMBER_INDEX + offset];
         this.packetLength = data[ DeviceResponse.PACKET_LENGTH_INDEX + offset];
@@ -117,11 +117,15 @@ public class DeviceResponseHeader
     }
 
 
-    public HEADER_TYPE getHeader()
+    public DeviceResponseHeader.HEADER_TYPE getHeader()
     {
         return this.header;
     }
 
+    public ByteArrayBuffer getData()
+    {
+        return this.data;
+    }
 
     @Override
     public String toString()

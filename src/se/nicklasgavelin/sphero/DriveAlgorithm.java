@@ -10,6 +10,9 @@ package se.nicklasgavelin.sphero;
 public abstract class DriveAlgorithm
 {
     // Internal storage
+    /**
+     * Number of maximum coordinates
+     */
     public static final int MAX_COORDINATES = 3;
     public double heading;
     public double headingOffset;
@@ -83,6 +86,10 @@ public abstract class DriveAlgorithm
     {
         /**
          * Event called when the conversion of the values are done
+         *
+         * @param paramDouble1 x
+         * @param paramDouble2 y
+         * @param paramDouble3 z
          */
         public abstract void onConvert( double paramDouble1, double paramDouble2, double paramDouble3 );
     }

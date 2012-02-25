@@ -3,7 +3,7 @@ package se.nicklasgavelin.sphero.response;
 import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
 
 /**
- * Respons efor the StabilizationCommand
+ * Response error the StabilizationCommand
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */

@@ -3,7 +3,8 @@
 ## Overview
 
 ## Compatibility
-    Works in Windows, MAC and Linux (In linux an extra Bluecove library named Bluecove GPL located at http://bluecove.org/bluecove-gpl/ may be needed to get the API working)
+    Works in Windows, MAC and Linux (In linux an extra Bluecove library named Bluecove GPL located at
+    http://bluecove.org/bluecove-gpl/ may be needed to get the API working)
 
 ## IDE
 	Sphero API Desktop Port will work with Netbeans and Eclipse out of the box (hopefully ;))

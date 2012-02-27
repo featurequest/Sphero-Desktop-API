@@ -1,21 +1,19 @@
 package se.nicklasgavelin.sphero.response;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
-
 /**
  * Response for the RotationRateResponse
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class RotationRateResponse extends DeviceResponse
+public class RotationRateResponse extends ResponseMessage
 {
     /**
      * Create a RotationRateResponse from the received data
      *
      * @param data The received data
      */
-    public RotationRateResponse( byte[] data )
+    public RotationRateResponse( ResponseHeader rh )//byte[] data )
     {
-        super( DEVICE_COMMAND.ROTATION_RATE, data );
+        super( rh );//super( DEVICE_COMMAND.ROTATION_RATE, data );
     }
 }

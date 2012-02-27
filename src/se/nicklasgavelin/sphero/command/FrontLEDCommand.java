@@ -8,7 +8,7 @@ import se.nicklasgavelin.util.Value;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class FrontLEDCommand extends DeviceCommand
+public class FrontLEDCommand extends CommandMessage
 {
     private float brightness = 0;
 
@@ -20,7 +20,7 @@ public class FrontLEDCommand extends DeviceCommand
      */
     public FrontLEDCommand( float brightness )
     {
-        super( DEVICE_COMMAND.FRONT_LED_OUTPUT );
+        super( COMMAND_MESSAGE_TYPE.FRONT_LED_OUTPUT );
         this.brightness = ( float ) Value.clamp( brightness, 0.0D, 1.0D );
     }
 

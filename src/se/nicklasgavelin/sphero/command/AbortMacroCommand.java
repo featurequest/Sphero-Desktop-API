@@ -6,13 +6,13 @@ package se.nicklasgavelin.sphero.command;
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology@
  */
-public class AbortMacroCommand extends DeviceCommand
+public class AbortMacroCommand extends CommandMessage
 {
     /**
      * Create a abort macro command
      */
     public AbortMacroCommand()
     {
-        super( DEVICE_COMMAND.ABORT_MACRO );
+        super( COMMAND_MESSAGE_TYPE.ABORT_MACRO );
     }
 }

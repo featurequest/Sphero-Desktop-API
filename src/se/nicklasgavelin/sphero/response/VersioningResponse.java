@@ -1,14 +1,12 @@
 package se.nicklasgavelin.sphero.response;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
-
 /**
  * Version response giving the version of the Sphero.
  *
  * @author Orbotix
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class VersioningResponse extends DeviceResponse
+public class VersioningResponse extends ResponseMessage
 {
     private int modelNumber = 0;
     // Indexes for version numbers
@@ -34,13 +32,15 @@ public class VersioningResponse extends DeviceResponse
      *
      * @param data The data received
      */
-    public VersioningResponse( byte[] data )
+    public VersioningResponse( ResponseHeader rh )//byte[] data )
     {
-        super( DEVICE_COMMAND.VERSIONING, data );
+        super( rh );//super( DEVICE_COMMAND.VERSIONING, data );
 
         // Check so that we got a valid response
-        if ( !isDataCorrupt() )
+        if ( !isCorrupt() )
         {
+            byte[] data = this.getPacketData();
+
             this.recordVersion = ((data[ RECORD_VERSION_INDEX] >> 4) + "." + (0xF & data[ RECORD_VERSION_INDEX]));
             this.modelNumber = data[ MODEL_VERSION_INDEX];
             this.hardwareVersion = ((data[ HARDWARE_VERSION_INDEX] >> 4) + "." + (0xF & data[ HARDWARE_VERSION_INDEX]));

@@ -8,7 +8,7 @@ import se.nicklasgavelin.util.Value;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class RotationRateCommand extends DeviceCommand
+public class RotationRateCommand extends CommandMessage
 {
     private float rate;
 
@@ -20,7 +20,7 @@ public class RotationRateCommand extends DeviceCommand
      */
     public RotationRateCommand( float rate )
     {
-        super( DEVICE_COMMAND.ROTATION_RATE );
+        super( COMMAND_MESSAGE_TYPE.ROTATION_RATE );
         this.rate = ( float ) Value.clamp( rate, 0.0D, 1.0D );
     }
 

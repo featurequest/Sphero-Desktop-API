@@ -6,13 +6,13 @@ package se.nicklasgavelin.sphero.command;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class JumpToBootloaderCommand extends DeviceCommand
+public class JumpToBootloaderCommand extends CommandMessage
 {
     /**
      * Create a JumpToBootloaderCommand to send to the Sphero
      */
     public JumpToBootloaderCommand()
     {
-        super( DEVICE_COMMAND.JUMP_TO_BOOTLOADER );
+        super( COMMAND_MESSAGE_TYPE.JUMP_TO_BOOTLOADER );
     }
 }

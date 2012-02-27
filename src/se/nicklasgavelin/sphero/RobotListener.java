@@ -1,7 +1,7 @@
 package se.nicklasgavelin.sphero;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand;
-import se.nicklasgavelin.sphero.response.DeviceResponse;
+import se.nicklasgavelin.sphero.command.CommandMessage;
+import se.nicklasgavelin.sphero.response.ResponseMessage;
 
 /**
  * Interface for listening on a robot.
@@ -20,7 +20,8 @@ public interface RobotListener
         DISCONNECTED,
         CONNECTION_FAILED,
         CONNECTION_CLOSED_UNEXPECTED,
-        NO_CONNECTION_EXISTS
+        NO_CONNECTION_EXISTS,
+        MACRO_DONE;
     }
 
 
@@ -32,7 +33,7 @@ public interface RobotListener
      * @param response The response received
      * @param dc       The command the response is for
      */
-    public void responseReceived( Robot r, DeviceResponse response, DeviceCommand dc );
+    public void responseReceived( Robot r, ResponseMessage response, CommandMessage dc );
 
 
     /**

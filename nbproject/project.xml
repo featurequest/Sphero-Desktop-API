@@ -5,6 +5,7 @@
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
             <name>Sphero-Desktop-API</name>
             <source-roots>
+                <root id="src.deprecated.dir"/>
                 <root id="src.experimental.dir"/>
                 <root id="src.natives.dir"/>
                 <root id="src.bluecove-bluez.dir"/>

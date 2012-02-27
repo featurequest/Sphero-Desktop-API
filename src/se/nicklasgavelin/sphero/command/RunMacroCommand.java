@@ -2,14 +2,14 @@ package se.nicklasgavelin.sphero.command;
 
 import se.nicklasgavelin.util.ByteArrayBuffer;
 
-public class RunMacroCommand extends DeviceCommand
+public class RunMacroCommand extends CommandMessage
 {
     private byte identifier;
 
 
     public RunMacroCommand( byte macroId )
     {
-        super( DEVICE_COMMAND.RUN_MACRO );
+        super( COMMAND_MESSAGE_TYPE.RUN_MACRO );
         this.identifier = macroId;
     }
 

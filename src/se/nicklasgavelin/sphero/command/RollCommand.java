@@ -7,7 +7,7 @@ import se.nicklasgavelin.util.Value;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class RollCommand extends DeviceCommand
+public class RollCommand extends CommandMessage
 {
     private final float heading, velocity;
     private final boolean stop;
@@ -22,7 +22,7 @@ public class RollCommand extends DeviceCommand
      */
     public RollCommand( float heading, float velocity, boolean stop )
     {
-        super( DEVICE_COMMAND.ROLL );
+        super( COMMAND_MESSAGE_TYPE.ROLL );
 
         this.heading = (( int ) heading % 360);
         this.velocity = ( float ) Value.clamp( velocity, 0.0D, 1.0D );

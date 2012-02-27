@@ -17,6 +17,7 @@ public class MacroObject
     private Collection<MacroCommand> commands;
     private MacroObjectMode mode = MacroObjectMode.Normal;
 
+    private static final int MAX_MACRO_LENGTH = 256, MAX_TOTAL_COMMAND_LENGTH = 240; // x | (248);
 
     public MacroObject()
     {
@@ -63,7 +64,7 @@ public class MacroObject
     public byte[] generateMacroData()
     {
         // Create a buffer
-        ByteArrayBuffer data = new ByteArrayBuffer( 256 );
+        ByteArrayBuffer data = new ByteArrayBuffer( MAX_MACRO_LENGTH );
         int currentLength = 0;
 
         // Go through all our commands that we got
@@ -73,11 +74,11 @@ public class MacroObject
             MacroCommand command = ( MacroCommand ) i.next();
 
             // Check if we still got space left
-            if ( command.getLength() + currentLength > 248  )
+            if ( command.getLength() + currentLength > MAX_TOTAL_COMMAND_LENGTH  )
             {
                 // TODO: Will this really work??? The command will not be added if the byte array is full
-                Roll stop = new Roll( Double.valueOf( 0.0D ), Integer.valueOf( 0 ), Integer.valueOf( 0 ) );
-                data.append( stop.getByteRepresentation(), 0, stop.getLength() );
+                //Roll stop = new Roll( Double.valueOf( 0.0D ), Integer.valueOf( 0 ), Integer.valueOf( 0 ) );
+                //data.append( stop.getByteRepresentation(), 0, stop.getLength() );
                 break;
             }
 
@@ -89,6 +90,7 @@ public class MacroObject
         }
 
         // Append a end command for the macro
+        data.append( new Emit( 1 ).getByteRepresentation() );
         data.append( MacroCommand.MACRO_COMMAND.MAC_END.getValue() );
 
         // Return the created macro data
@@ -97,17 +99,31 @@ public class MacroObject
     }
 
 
+    /**
+     * Returns the macro mode set for this macro object
+     *
+     * @return The current macro mode
+     */
     public MacroObjectMode getMode()
     {
         return this.mode;
     }
 
 
+    /**
+     * Set the macro mode for this macro object
+     *
+     * @param _mode The new macro mode
+     */
     public void setMode( MacroObjectMode _mode )
     {
         this.mode = _mode;
     }
 
+
+    /**
+     * The available macro modes for the MacroObject class
+     */
     public static enum MacroObjectMode
     {
         Normal,

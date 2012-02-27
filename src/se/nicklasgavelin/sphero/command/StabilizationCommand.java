@@ -10,7 +10,7 @@ package se.nicklasgavelin.sphero.command;
  * commands such as the RollCommand
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class StabilizationCommand extends DeviceCommand
+public class StabilizationCommand extends CommandMessage
 {
     private boolean on;
 
@@ -23,7 +23,7 @@ public class StabilizationCommand extends DeviceCommand
      */
     public StabilizationCommand( boolean on )
     {
-        super( DEVICE_COMMAND.STABILIZATION );
+        super( COMMAND_MESSAGE_TYPE.STABILIZATION );
     }
 
 

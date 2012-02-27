@@ -13,11 +13,11 @@ import se.nicklasgavelin.bluetooth.BluetoothDevice;
 import se.nicklasgavelin.bluetooth.BluetoothDiscoveryListener;
 import se.nicklasgavelin.sphero.Robot;
 import se.nicklasgavelin.sphero.RobotListener;
-import se.nicklasgavelin.sphero.command.DeviceCommand;
+import se.nicklasgavelin.sphero.command.CommandMessage;
 import se.nicklasgavelin.sphero.command.FrontLEDCommand;
 import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
-import se.nicklasgavelin.sphero.response.DeviceResponse;
+import se.nicklasgavelin.sphero.response.ResponseMessage;
 
 /**
  * Simple test class to test the Sphero API
@@ -319,9 +319,9 @@ public class Example_Site_API extends JFrame
          * @param dc       The command the response is concerning
          */
         @Override
-        public void responseReceived( Robot r, DeviceResponse response, DeviceCommand dc )
+        public void responseReceived( Robot r, ResponseMessage response, CommandMessage dc )
         {
-            System.out.println( "(" + (++responses) + ") Received response: " + response.getCode().toString() + " to message " + response.getCommand().toString() );
+            System.out.println( "(" + (++responses) + ") Received response: " + response.getResponseCode() + " to message " + dc.getCommand() );
         }
 
 

@@ -1,21 +1,19 @@
 package se.nicklasgavelin.sphero.response;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
-
 /**
  * Response error the StabilizationCommand
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class StabilizationResponse extends DeviceResponse
+public class StabilizationResponse extends ResponseMessage
 {
     /**
      * Create a StabilizationResponse from the received data
      *
      * @param data The received data
      */
-    public StabilizationResponse( byte[] data )
+    public StabilizationResponse( ResponseHeader rh )//byte[] data )
     {
-        super( DEVICE_COMMAND.STABILIZATION, data );
+        super( rh );//super( DEVICE_COMMAND.STABILIZATION, data );
     }
 }

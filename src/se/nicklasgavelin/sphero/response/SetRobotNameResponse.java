@@ -1,21 +1,19 @@
 package se.nicklasgavelin.sphero.response;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
-
 /**
  * Response for the SetRobotNameCommand
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class SetRobotNameResponse extends DeviceResponse
+public class SetRobotNameResponse extends ResponseMessage
 {
     /**
      * Create a SetRobotNameResponse from the received data
      *
      * @param data The received data
      */
-    public SetRobotNameResponse( byte[] data )
+    public SetRobotNameResponse( ResponseHeader rh )//byte[] data )
     {
-        super( DEVICE_COMMAND.SET_BLUETOOTH_NAME, data );
+        super( rh );//super( DEVICE_COMMAND.SET_BLUETOOTH_NAME, data );
     }
 }

@@ -4,7 +4,7 @@ package se.nicklasgavelin.sphero.command;
  * @deprecated Doesn't do anything atm
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class SetDataStreamingCommand extends DeviceCommand
+public class SetDataStreamingCommand extends CommandMessage
 {
     public static final int DATA_STREAMING_MASK_OFF = 0;
     public static final int DATA_STREAMING_MASK_LEFT_MOTOR_BACK_EMF_FILTERED = 32;
@@ -46,7 +46,7 @@ public class SetDataStreamingCommand extends DeviceCommand
      */
     public SetDataStreamingCommand( int mDivisor, int mPacketFrames, int mSensorMask, int mPacketCount )
     {
-        super( DEVICE_COMMAND.SET_DATA_STREAMING );
+        super( COMMAND_MESSAGE_TYPE.SET_DATA_STREAMING );
 
         // Set internal variables
         this.mDivisor = mDivisor;

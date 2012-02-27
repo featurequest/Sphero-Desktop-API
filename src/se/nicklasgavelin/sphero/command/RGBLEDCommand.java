@@ -9,7 +9,7 @@ import se.nicklasgavelin.util.Value;
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology
  */
-public class RGBLEDCommand extends DeviceCommand
+public class RGBLEDCommand extends CommandMessage
 {
     // Colors
     private byte red, green, blue;
@@ -25,7 +25,7 @@ public class RGBLEDCommand extends DeviceCommand
      */
     public RGBLEDCommand( int red, int green, int blue )
     {
-        super( DEVICE_COMMAND.RGB_LED_OUTPUT );
+        super( COMMAND_MESSAGE_TYPE.RGB_LED_OUTPUT );
         this.red = ( byte ) Value.clamp( red, 0, 255 );
         this.green = ( byte ) Value.clamp( green, 0, 255 );
         this.blue = ( byte ) Value.clamp( blue, 0, 255 );

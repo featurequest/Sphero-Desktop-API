@@ -28,6 +28,11 @@ public class ByteArrayBuffer
     }
 
 
+    /**
+     * Append a single byte to the end of the buffer
+     *
+     * @param b The byte to append
+     */
     public void append( int b )
     {
         this.append( ( byte ) b );
@@ -254,6 +259,9 @@ public class ByteArrayBuffer
     public String toString()
     {
         String s = "";
+        if( this.length() == 0 )
+            return s;
+
         for ( int i = 0; i < this.length(); i++ )
             s += this.buffer[i] + " ";
         return s.substring( 0, s.length() - 1 );

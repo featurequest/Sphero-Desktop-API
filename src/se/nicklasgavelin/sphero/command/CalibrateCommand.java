@@ -8,7 +8,7 @@ package se.nicklasgavelin.sphero.command;
  * @author Orbotix
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class CalibrateCommand extends DeviceCommand
+public class CalibrateCommand extends CommandMessage
 {
     private float heading;
 
@@ -20,7 +20,7 @@ public class CalibrateCommand extends DeviceCommand
      */
     public CalibrateCommand( float heading )
     {
-        super( DEVICE_COMMAND.CALIBRATE );
+        super( COMMAND_MESSAGE_TYPE.CALIBRATE );
         this.heading = heading;
     }
 

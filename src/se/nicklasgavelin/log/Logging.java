@@ -35,7 +35,7 @@ public class Logging
      * Different debug levels,
      * mirrors that of log4j levels
      */
-    public enum Level
+    public static enum Level
     {
         /**
          * Debugging
@@ -48,19 +48,36 @@ public class Logging
         INFO,
 
         /**
-         * Errors
-         */
-        ERROR,
-
-        /**
          * Warnings
          */
         WARN,
 
         /**
+         * Errors
+         */
+        ERROR,
+
+        /**
          * Fatal errors
          */
         FATAL;
+
+        private static int nextVal = 0;
+        private int val;
+        private Level()
+        {
+            this.initialize();
+        }
+
+        private void initialize()
+        {
+            this.val = Level.nextVal++;
+        }
+
+        protected int getValue()
+        {
+            return this.val;
+        }
     }
 
 
@@ -161,9 +178,15 @@ public class Logging
      */
     private static void callAppenders( Level l, String msg, Throwable t )
     {
+        // Perform initialization if not already done
         initialize();
 
+        // Check if we have debug enabled or if the level is fatal
         if ( (!Configuration.debugEnabled && !l.equals( Level.FATAL )) )
+            return;
+
+        // Check if we want the messages of this level to be logged
+        if( l.getValue() < Configuration.debugLevel.getValue() )
             return;
 
         if ( !log4exists )

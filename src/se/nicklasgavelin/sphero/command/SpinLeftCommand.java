@@ -11,7 +11,7 @@ import se.nicklasgavelin.util.Value;
  * on the Sphero
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class SpinLeftCommand extends DeviceCommand
+public class SpinLeftCommand extends CommandMessage
 {
     private int speed;
 
@@ -24,7 +24,7 @@ public class SpinLeftCommand extends DeviceCommand
      */
     public SpinLeftCommand( int speed )
     {
-        super( DEVICE_COMMAND.SPIN_LEFT );
+        super( COMMAND_MESSAGE_TYPE.SPIN_LEFT );
         this.speed = Value.clamp( speed, 0, 255 );
     }
 

@@ -9,7 +9,7 @@ import se.nicklasgavelin.sphero.Robot;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class PingCommand extends DeviceCommand
+public class PingCommand extends CommandMessage
 {
     private float brightness;
 
@@ -20,7 +20,7 @@ public class PingCommand extends DeviceCommand
      */
     public PingCommand( Robot r )
     {
-        super( DEVICE_COMMAND.CUSTOM_PING ); //CoreCommandPing, CoreDeviceId );
+        super( COMMAND_MESSAGE_TYPE.CUSTOM_PING ); //CoreCommandPing, CoreDeviceId );
         this.brightness = r.getLed().getFrontLEDBrightness();
     }
 

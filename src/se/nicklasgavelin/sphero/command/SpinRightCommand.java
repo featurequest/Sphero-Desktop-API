@@ -10,7 +10,7 @@ import se.nicklasgavelin.sphero.command.RawMotorCommand.MOTOR_MODE;
  * on the Sphero
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class SpinRightCommand extends DeviceCommand
+public class SpinRightCommand extends CommandMessage
 {
     private int speed;
 
@@ -22,7 +22,7 @@ public class SpinRightCommand extends DeviceCommand
      */
     public SpinRightCommand( int speed )
     {
-        super( DEVICE_COMMAND.SPIN_RIGHT );
+        super( COMMAND_MESSAGE_TYPE.SPIN_RIGHT );
         this.speed = speed;
     }
 

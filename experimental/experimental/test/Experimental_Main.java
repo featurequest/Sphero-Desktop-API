@@ -4,12 +4,14 @@
  */
 package experimental.test;
 
+import java.awt.Color;
 import java.util.Collection;
 import se.nicklasgavelin.bluetooth.Bluetooth;
 import se.nicklasgavelin.bluetooth.Bluetooth.EVENT;
 import se.nicklasgavelin.bluetooth.BluetoothDevice;
 import se.nicklasgavelin.bluetooth.BluetoothDiscoveryListener;
 import se.nicklasgavelin.sphero.Robot;
+import se.nicklasgavelin.sphero.command.RGBLEDCommand;
 import se.nicklasgavelin.sphero.command.RawMotorCommand;
 import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
@@ -33,9 +35,24 @@ public class Experimental_Main implements BluetoothDiscoveryListener
      */
     public static void main( String[] args ) throws InvalidRobotAddressException, RobotBluetoothException
     {
+//        String data = "2 82 9 -107 -2 1 7 -1 114 0 0 11 0 56 7 -1 116 0 0 11 0 57 7 -1 118 0 0 11 0 58 7 -1 120 0 0 11 0 59 7 -1 122 0 0 11 0 60 7 -1 124 0 0 11 0 61 7 -1 126 0 0 11 0 62 7 -1 -127 0 0 11 0 63 7 -1 -125 0 0 11 0 64 7 -1 -123 0 0 11 0 65 7 -1 -121 0 0 11 0 66 7 -1 -119 0 0 11 0 67 7 -1 -117 0 0 11 0 68 7 -1 -115 0 0 11 0 69 7 -1 -113 0 0 11 0 70 7 -1 -111 0 0 11 0 71 7 -1 -109 0 0 11 0 72 7 -1 -107 0 0 11 0 73 21 1";// -4";
+//        System.out.println( calculateChecksum( data ) );
         Experimental_Main experimental_Main = new Experimental_Main();
     }
 
+    private static byte calculateChecksum( String data )
+    {
+        String[] s = data.split( " " );
+
+        int checksum = 0;
+        for( String b : s )
+        {
+            byte by = Byte.parseByte( b );
+            checksum += by;
+        }
+
+        return (byte)(checksum ^ 0xFFFFFFFF);
+    }
 
     private Experimental_Main() throws InvalidRobotAddressException, RobotBluetoothException
     {
@@ -49,9 +66,12 @@ public class Experimental_Main implements BluetoothDiscoveryListener
         {
             System.out.println( "Connected" );
             r.stopMacro();
-            MacroObject mo = this.createSwingMotionMacro( 255, 1, 50 );
-            mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
-            r.sendCommand( mo );
+            r.sendCommandAfterMacro( new RGBLEDCommand( Color.BLUE ) );
+            r.rgbTransition( Color.RED, Color.BLUE, 300, 25 );
+
+            //MacroObject mo = this.createSwingMotionMacro( 255, 1, 50 );
+            //mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
+            //r.sendCommand( mo );
 //            MacroObject mo = new MacroObject();
 //            mo.addCommand( new RawMotor( RawMotorCommand.MOTOR_MODE.FORWARD, 100, RawMotorCommand.MOTOR_MODE.FORWARD, 100 ) );
 //            mo.addCommand( new Delay( 5000 ) );

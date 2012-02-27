@@ -7,10 +7,10 @@ package se.nicklasgavelin.sphero.command;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class VersioningCommand extends DeviceCommand
+public class VersioningCommand extends CommandMessage
 {
     public VersioningCommand()
     {
-        super( DEVICE_COMMAND.VERSIONING );
+        super( COMMAND_MESSAGE_TYPE.VERSIONING );
     }
 }

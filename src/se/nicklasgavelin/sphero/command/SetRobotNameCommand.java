@@ -8,7 +8,7 @@ import java.util.Arrays;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class SetRobotNameCommand extends DeviceCommand
+public class SetRobotNameCommand extends CommandMessage
 {
     private String name;
 
@@ -20,7 +20,7 @@ public class SetRobotNameCommand extends DeviceCommand
      */
     public SetRobotNameCommand( String name )
     {
-        super( DEVICE_COMMAND.SET_BLUETOOTH_NAME );
+        super( COMMAND_MESSAGE_TYPE.SET_BLUETOOTH_NAME );
         this.name = name;
     }
 

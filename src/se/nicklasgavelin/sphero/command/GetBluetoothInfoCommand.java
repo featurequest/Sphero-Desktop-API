@@ -5,13 +5,13 @@ package se.nicklasgavelin.sphero.command;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class GetBluetoothInfoCommand extends DeviceCommand
+public class GetBluetoothInfoCommand extends CommandMessage
 {
     /**
      * Create a GetBluetoothInfoCommand
      */
     public GetBluetoothInfoCommand()
     {
-        super( DEVICE_COMMAND.GET_BLUETOOTH_INFO );
+        super( COMMAND_MESSAGE_TYPE.GET_BLUETOOTH_INFO );
     }
 }

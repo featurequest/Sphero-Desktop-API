@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import se.nicklasgavelin.bluetooth.BluetoothConnection;
 import se.nicklasgavelin.bluetooth.BluetoothDevice;
 import se.nicklasgavelin.log.Logging;
@@ -14,13 +16,11 @@ import se.nicklasgavelin.sphero.command.*;
 import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
 import se.nicklasgavelin.sphero.exception.RobotInitializeConnectionFailed;
-import se.nicklasgavelin.sphero.macro.Emit;
-import se.nicklasgavelin.sphero.macro.MacroCommand;
-import se.nicklasgavelin.sphero.macro.MacroObject;
-import se.nicklasgavelin.sphero.response.DeviceResponse;
-import se.nicklasgavelin.sphero.response.DeviceResponse.RESPONSE_CODE;
-import se.nicklasgavelin.sphero.response.DeviceResponseHeader;
-import se.nicklasgavelin.sphero.response.GetBluetoothInfoResponse;
+import se.nicklasgavelin.sphero.macro.*;
+import se.nicklasgavelin.sphero.response.*;
+import se.nicklasgavelin.sphero.response.information.DeviceInformationResponse;
+import se.nicklasgavelin.sphero.response.information.EmitResponse;
+import se.nicklasgavelin.util.Array;
 import se.nicklasgavelin.util.ByteArrayBuffer;
 import se.nicklasgavelin.util.Pair;
 import se.nicklasgavelin.util.Value;
@@ -57,11 +57,13 @@ public class Robot
      */
     private class MACRO_SETTINGS
     {
-        private Collection<MacroCommand> commands;
-        private Collection<Integer> ballMemory;
+        private final Collection<MacroCommand> commands;
+        private final Collection<CommandMessage> sendingQueue;
+        private final Collection<Integer> ballMemory;
         private boolean macroRunning, macroStreamingEnabled;
-        private static final int maxMacroSize = 230, robotStorageSpace = 600, minSpaceToSend = 128;
+        private static final int maxMacroSize = 100, robotStorageSpace = 900, minSpaceToSend = 50;
 
+        private int emits = 0;
 
         /**
          * Create a macro settings object
@@ -69,6 +71,7 @@ public class Robot
         private MACRO_SETTINGS()
         {
             commands = new ArrayList<MacroCommand>();
+            sendingQueue = new ArrayList<CommandMessage>();
             ballMemory = new ArrayList<Integer>();
             macroRunning = false;
             macroStreamingEnabled = true;
@@ -89,6 +92,25 @@ public class Robot
 
             // Set stop flag
             this.macroRunning = false;
+        }
+
+
+        /**
+         * Stop macro from executing (finished)
+         */
+        protected void stopIfFinished()
+        {
+            emits = (emits > 0 ? emits - 1 : 0 );
+            if ( this.commands.isEmpty() && this.macroRunning && emits == 0)
+            {
+                for ( CommandMessage cmd : this.sendingQueue )
+                    sendCommand( cmd );
+                this.sendingQueue.clear();
+                this.stopMacro();
+
+                // Notify listeners about macro done event
+                Robot.this.notifyListenerEvent( EVENT_CODE.MACRO_DONE );
+            }
         }
 
 
@@ -136,10 +158,32 @@ public class Robot
 
 
         /**
+         * Send a command after a CachedStreaming macro has run
+         *
+         * @param command The command to send after the macro is finished
+         * running
+         */
+        public void sendCommandAfterMacro( CommandMessage command )
+        {
+            this.sendingQueue.add( command );
+        }
+
+
+        /**
+         * Clears the queue used for storing commands to send after the macro
+         * has finished running
+         */
+        public void clearSendingQueue()
+        {
+            this.sendingQueue.clear();
+        }
+
+
+        /**
          * Continue emptying the macro command queue by creating new commands
          * and sending them to the Sphero device
          */
-        private void emptyMacroCommandQueue()
+        private synchronized void emptyMacroCommandQueue()
         {
             // Calculate number of free bytes that we have
             int ballSpace = freeBallMemory(),
@@ -183,17 +227,20 @@ public class Robot
             for ( MacroCommand cmd : send )
                 sendBuffer.append( cmd.getByteRepresentation() );
 
-            if( commands.isEmpty() )
+            if ( commands.isEmpty() )
                 sendBuffer.append( MacroCommand.MACRO_COMMAND.MAC_END.getValue() );
 
             this.ballMemory.add( chunkSize );
 
             // Send a save macro command to the Sphero with the new data
-            Robot.this.sendSystemCommand(
-                    new SaveMacroCommand(
+            SaveMacroCommand svc = new SaveMacroCommand(
                     SaveMacroCommand.MacroFlagMotorControl,
                     SaveMacroCommand.MACRO_STREAMING_DESTINATION,
-                    sendBuffer.toByteArray() ) );
+                    sendBuffer.toByteArray() );
+
+            emits++;
+            Robot.this.sendSystemCommand(
+                    svc );
 
             // Check if we can continue creating more messages to send
             if ( !this.commands.isEmpty() && freeBallMemory() > minSpaceToSend )
@@ -500,13 +547,11 @@ public class Robot
     // Pinger
     private float PING_INTERVAL = 60000; // Time in milliseconds
     // Address
-
     /**
      * The start of the Bluetooth address that is describing if the address
      * belongs to a Sphero device.
      */
     public static final String ROBOT_ADDRESS_PREFIX = "00066";
-    
     // Robot controller
 //    private RobotController controller;
     private static int error_num = 0;
@@ -525,8 +570,10 @@ public class Robot
      * given.
      *
      * @param bt The Bluetooth device that represents the robot
+     *
      * @throws InvalidRobotAddressException
-     * @throws RobotBluetoothException
+     * throws
+     * RobotBluetoothException
      */
     public Robot( BluetoothDevice bt ) throws InvalidRobotAddressException, RobotBluetoothException
     {
@@ -598,13 +645,15 @@ public class Robot
      * @param dr The device response that was received
      * @param dc The device command belonging to the device response
      */
-    private void notifyListenersDeviceResponse( DeviceResponse dr, DeviceCommand dc )
+    private void notifyListenersDeviceResponse( ResponseMessage dr, CommandMessage dc )
     {
         Logging.debug( "Notifying listeners about device respose " + dr + " for device command " + dc );
 
         // Go through all listeners and notify them
         for ( RobotListener r : this.listeners )
             r.responseReceived( this, dr, dc );
+
+        Logger.getLogger( Robot.class.getName() ).log( Level.INFO, "message" );
     }
 
 
@@ -819,9 +868,32 @@ public class Robot
      *
      * @param command The command to send
      */
-    public void sendCommand( DeviceCommand command )
+    public void sendCommand( CommandMessage command )
     {
         this.sendingTimer.enqueue( command, false );
+    }
+
+
+    /**
+     * Enqueue a command to be sent after a macro has finished execution
+     *
+     * @param command The command to run after macro command execution
+     */
+    public void sendCommandAfterMacro( CommandMessage command )
+    {
+        this.macroSettings.sendCommandAfterMacro( command );
+    }
+
+
+    /**
+     * Stops the commands entered to be sent after the macro is finished
+     * running.
+     * To send new commands they have to be re-entered into the
+     * sendCommandAfterMacro method.
+     */
+    public void cancelSendCommandAfterMacro()
+    {
+        this.macroSettings.clearSendingQueue();
     }
 
 
@@ -831,7 +903,7 @@ public class Robot
      * @param command The command to send
      * @param delay   The delay before the command is sent
      */
-    public void sendCommand( DeviceCommand command, float delay )
+    public void sendCommand( CommandMessage command, float delay )
     {
         this.sendingTimer.enqueue( command, delay );
     }
@@ -846,7 +918,7 @@ public class Robot
      * (in milliseconds)
      * @param periodLength The length between the transmissions
      */
-    public void sendPeriodicCommand( DeviceCommand command, float initialDelay, float periodLength )
+    public void sendPeriodicCommand( CommandMessage command, float initialDelay, float periodLength )
     {
         this.sendingTimer.enqueue( command, false, initialDelay, periodLength );
     }
@@ -857,7 +929,7 @@ public class Robot
      *
      * @param command The command to send
      */
-    private void sendSystemCommand( DeviceCommand command )
+    private void sendSystemCommand( CommandMessage command )
     {
         this.sendingTimer.enqueue( command, true );
     }
@@ -869,7 +941,7 @@ public class Robot
      * @param command The command to send
      * @param delay   The delay before sending the message
      */
-    private void sendSystemCommand( DeviceCommand command, float delay )
+    private void sendSystemCommand( CommandMessage command, float delay )
     {
         this.sendingTimer.enqueue( command, delay, true );
     }
@@ -884,7 +956,7 @@ public class Robot
      * (in milliseconds)
      * @param periodLength The length between the transmissions
      */
-    private void sendSystemCommand( DeviceCommand command, float initialDelay, float periodLength )
+    private void sendSystemCommand( CommandMessage command, float initialDelay, float periodLength )
     {
         this.sendingTimer.enqueue( command, true, initialDelay, periodLength );
     }
@@ -897,7 +969,7 @@ public class Robot
      *
      * @param command The command that is suppose to be sent
      */
-    private void updateInternalValues( DeviceCommand command )
+    private void updateInternalValues( CommandMessage command )
     {
         // Disconnect event, we will disconnect if we are not connected and
         // we have sent both a roll stop command and a front led turn off command
@@ -1049,7 +1121,24 @@ public class Robot
 
     /**
      * Creates a transition between two different colors with a number of
-     * changes between the colors (the transition itself).
+     * changes between the colors (the transition itself). The delay between
+     * each step is set to 25 ms.
+     *
+     * @param from  The color to go from
+     * @param to    The color to end up with
+     * @param steps The number of steps to take between the change between the
+     * two colors
+     */
+    public void rgbTransition( Color from, Color to, int steps )
+    {
+        this.rgbTransition( from, to, steps, 25 );
+    }
+
+
+    /**
+     * Creates a transition between two different colors with a number of
+     * changes between the colors (the transition itself). The delay between
+     * each color shift is set to 25 ms.
      *
      * @param fRed   The initial red color value
      * @param fGreen The initial green color value
@@ -1060,9 +1149,45 @@ public class Robot
      * @param steps  Number of steps to take (The number of times to change
      * color until reaching the final color)
      */
-    public void rgbTransition( int fRed, int fGreen, int fBlue, int tRed, int tGreen, int tBlue, float steps )
+    public void rgbTransition( int fRed, int fGreen, int fBlue, int tRed, int tGreen, int tBlue, int steps )
     {
-        int tdelay = 55;
+        this.rgbTransition( fRed, fGreen, fBlue, tRed, tGreen, tBlue, steps, 25 );
+    }
+
+
+    /**
+     * Creates a transition between two different colors with a number of
+     * changes between the colors (the transition itself).
+     *
+     * @param from   The color to go from
+     * @param to     The color to end up with
+     * @param steps  The number of steps to take between the change between the
+     * two colors
+     * @param dDelay Delay between the color shifts
+     */
+    public void rgbTransition( Color from, Color to, int steps, int dDelay )
+    {
+        this.rgbTransition( from.getRed(), from.getGreen(), from.getBlue(), to.getRed(), to.getGreen(), to.getBlue(), steps, dDelay );
+    }
+
+
+    /**
+     * Creates a transition between two different colors with a number of
+     * changes between the colors (the transition itself).
+     *
+     * @param fRed   The initial red color value
+     * @param fGreen The initial green color value
+     * @param fBlue  The initial blue color value
+     * @param tRed   The final red color value
+     * @param tGreen The final green color value
+     * @param tBlue  The final blue color value
+     * @param steps  Number of steps to take (The number of times to change
+     * color until reaching the final color)
+     * @param dDelay Delay between the color shifts
+     */
+    public void rgbTransition( int fRed, int fGreen, int fBlue, int tRed, int tGreen, int tBlue, int steps, int dDelay )
+    {
+        int tdelay = dDelay;
 
         // Hue, saturation, intensity
         float[] fHSB = Color.RGBtoHSB( fRed, fGreen, fBlue, null );
@@ -1083,6 +1208,9 @@ public class Robot
         Color c;
         float[] n = new float[ 3 ];
 
+        // Create macro
+        MacroObject mo = new MacroObject();
+
         // Go through all steps
         for ( int i = 0; i < steps; i++ )
         {
@@ -1095,9 +1223,19 @@ public class Robot
             int ik = Color.HSBtoRGB( n[0], n[1], n[2] );
             c = new Color( ik );
 
+            // Add new RGB commands
+            mo.addCommand( new RGB( c, 0 ) );
+            mo.addCommand( new Delay( tdelay ) );
+
             // Send new values
-            this.sendingTimer.enqueue( new RGBLEDCommand( c.getRed(), c.getGreen(), c.getBlue() ), tdelay * i );
+            //this.sendingTimer.enqueue( new RGBLEDCommand( c.getRed(), c.getGreen(), c.getBlue() ), tdelay * i );
         }
+
+        // Set streaming as we don't know if we can fit all macro commands in one message
+        mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
+
+        // Send macro to the Sphero device
+        this.sendCommand( mo );
     }
 
 
@@ -1509,7 +1647,7 @@ public class Robot
         // Bluetooth connection to use
         private BluetoothConnection btc;
         // Queue for commands that are waiting for responses
-        private LinkedList<Pair<DeviceCommand, Boolean>> waitingForResponse;
+        private LinkedList<Pair<CommandMessage, Boolean>> waitingForResponse;
         // Buffers
         private static final int BUFFER_SIZE = 256;
 
@@ -1522,7 +1660,7 @@ public class Robot
         public RobotStreamListener( BluetoothConnection btc )
         {
             this.btc = btc;
-            this.waitingForResponse = new LinkedList<Pair<DeviceCommand, Boolean>>();
+            this.waitingForResponse = new LinkedList<Pair<CommandMessage, Boolean>>();
         }
 
 
@@ -1532,7 +1670,7 @@ public class Robot
          * @param cmd The pair of the command and the flag that tells if it's a
          * system command or not
          */
-        protected void enqueue( Pair<DeviceCommand, Boolean> cmd )
+        protected void enqueue( Pair<CommandMessage, Boolean> cmd )
         {
             this.waitingForResponse.add( cmd );
         }
@@ -1573,13 +1711,13 @@ public class Robot
 
                     // Read until we get the header
                     int dataLength = 0;
-                    while ( buf.length() < DeviceResponse.RESPONSE_HEADER_LENGTH + dataLength ) // Header length + checksum length + data length
+                    while ( buf.length() < ResponseMessage.RESPONSE_HEADER_LENGTH + dataLength ) // Header length + checksum length + data length
                     {
                         read = this.btc.read( data );
                         buf.append( data, 0, read );
 
-                        if ( buf.length() > DeviceResponse.PACKET_LENGTH_INDEX ) // Set data length
-                            dataLength = buf.toByteArray()[ DeviceResponse.PACKET_LENGTH_INDEX];
+                        if ( buf.length() > ResponseMessage.PACKET_LENGTH_INDEX ) // Set data length
+                            dataLength = buf.toByteArray()[ ResponseMessage.PACKET_LENGTH_INDEX];
                     }
 
                     // Fetch all our data that we got in our buffer
@@ -1588,26 +1726,26 @@ public class Robot
                     // Start reading messages from the buffer that we got
                     int read2 = 0;
                     for ( int pointer = 0;
-                            pointer < buf.length()
-                            && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH)
-                            && (newData.length - pointer >= DeviceResponse.RESPONSE_HEADER_LENGTH + newData[pointer + DeviceResponse.PACKET_LENGTH_INDEX]); )
+                          pointer < buf.length()
+                          && (newData.length - pointer >= ResponseMessage.RESPONSE_HEADER_LENGTH)
+                          && (newData.length - pointer >= ResponseMessage.RESPONSE_HEADER_LENGTH + newData[pointer + ResponseMessage.PACKET_LENGTH_INDEX]); )
                     {
                         // Copy data
-                        DeviceResponseHeader drh = new DeviceResponseHeader( newData, pointer );
+                        ResponseMessage.ResponseHeader drh = new ResponseMessage.ResponseHeader( newData, pointer );
 
-                        if ( drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.RESPONSE ) )
+                        if ( drh.getResponseType().equals( ResponseMessage.ResponseHeader.RESPONSE_TYPE.RESPONSE ) )
                         {
-                            Pair<DeviceCommand, Boolean> cmd = waitingForResponse.remove();
-
-                            System.out.println( "REL: " + drh.getData() );
+                            Pair<CommandMessage, Boolean> cmd = waitingForResponse.remove();
 
                             // Build our Device response
-                            byte[] packetData = Arrays.copyOfRange( newData, pointer, pointer + drh.getPacketLength() + DeviceResponse.RESPONSE_HEADER_LENGTH );
-                            DeviceResponse response = DeviceResponse.valueOf( cmd.getFirst(), packetData ); //, cmd.getFirst() );
+                            ResponseMessage response = ResponseMessage.valueOf( cmd.getFirst(), drh );
+                            CommandMessage.COMMAND_MESSAGE_TYPE cmd_type = cmd.getFirst().getCommand();
 
                             // Update internal values if we got an OK from the robot
-                            if ( drh.getResponseCode().equals( RESPONSE_CODE.CODE_OK ) )
+                            if ( drh.getResponseCode().equals( ResponseMessage.RESPONSE_CODE.CODE_OK ) )
                                 updateInternalValues( cmd.getFirst() );
+                            else
+                                Logging.error("FAIL : " + drh );//Logging.error( "Received error message " + drh + "\n\t as response to " + cmd_type + "( " + Array.stringify( cmd.getFirst().getPacket() ) + " ) with code " + response.getResponseCode() );
 
                             Logging.debug( "Received " + response + (cmd.getSecond() ? " as a SYSTEM RESPONSE" : "") );
 
@@ -1615,12 +1753,12 @@ public class Robot
                             if ( cmd.getSecond() )
                             {
                                 // System command
-                                switch ( response.getCommand() )
+                                switch ( cmd_type )
                                 {
                                     case GET_BLUETOOTH_INFO:
                                         // Update Sphero name
                                         GetBluetoothInfoResponse gb = ( GetBluetoothInfoResponse ) response;
-                                        if ( !gb.isDataCorrupt() )
+                                        if ( !gb.isCorrupt() )
                                             name = gb.getName();
                                         break;
                                 }
@@ -1631,32 +1769,38 @@ public class Robot
                                 notifyListenersDeviceResponse( response, cmd.getFirst() );
                             }
                         }
-                        else
-                            if ( drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.INFORMATION ) )
-                            {
-                                // TODO: Received information packet, what should we do, what SHOULD we do?
-                                Logging.debug( "Received information packet: " + drh );
-                                if ( macroSettings.macroRunning )
-                                {
-                                    if( drh.getData().toByteArray()[5] == 1 )
-                                    {
-                                        System.err.println( "Running next macro" );
+                        else if ( drh.getResponseType().equals( ResponseMessage.ResponseHeader.RESPONSE_TYPE.INFORMATION ) )//drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.INFORMATION ) )
+                        {
 
-                                        // Macro has been saved, now get the fuck out!
-                                        if ( macroSettings.ballMemory.size() > 0 )
-                                            System.err.println( "Removing: " + macroSettings.ballMemory.remove( (Integer)macroSettings.ballMemory.toArray()[0] ) );
-                                        macroSettings.emptyMacroCommandQueue();
-                                    }
+                            // Fetch our information response
+                            DeviceInformationResponse dir = DeviceInformationResponse.valueOf( drh );
+
+                            // TODO: Received information packet, what should we do, what SHOULD we do?
+                            Logging.error( "Received information packet: " + dir );
+
+                            if ( Robot.this.macroSettings.macroRunning )
+                            {
+                                if ( dir instanceof EmitResponse )
+                                {
+                                    // Check if we want to abort macro execution
+                                    // Macro has been saved, now get the fuck out!
+                                    if ( Robot.this.macroSettings.ballMemory.size() > 0 )
+                                        Robot.this.macroSettings.ballMemory.remove( ( Integer ) macroSettings.ballMemory.toArray()[0] );
+                                    Robot.this.macroSettings.emptyMacroCommandQueue();
+
+                                    // Stop macro execution if the macro is not running any longer
+                                    Robot.this.macroSettings.stopIfFinished();
                                 }
                             }
-                            else
-                            {
-                                // Unknown packet type
-                                //Logging.error( "Received unrecognized packet: " + drh );
-                            }
+                        }
+                        else
+                        {
+                            // Unknown packet type
+                            Logging.error( "Received unrecognized packet: " + drh );
+                        }
 
                         // Move our pointer forward
-                        pointer += drh.getPacketLength() + DeviceResponse.RESPONSE_HEADER_LENGTH;
+                        pointer += drh.getPacketLength() + ResponseMessage.RESPONSE_HEADER_LENGTH;
                         read2 = pointer;
                     }
 
@@ -1679,6 +1823,7 @@ public class Robot
                 }
                 catch ( Exception e )
                 {
+                    e.printStackTrace();
                     if ( connected )
                         Logging.fatal( "Listening thread closed down unexpectedly", e );
                     connectionClosedUnexpected();
@@ -1693,9 +1838,9 @@ public class Robot
      *
      * @param sent The sent messages
      */
-    private void update( Collection<Pair<DeviceCommand, Boolean>> sent )
+    private void update( Collection<Pair<CommandMessage, Boolean>> sent )
     {
-        for ( Pair<DeviceCommand, Boolean> p : sent )
+        for ( Pair<CommandMessage, Boolean> p : sent )
         {
             switch ( p.getFirst().getCommand() )
             {
@@ -1728,7 +1873,7 @@ public class Robot
         private final BluetoothConnection btc;
         // Writer & queue that the writer uses
         private Robot.RobotSendingQueue.Writer w;
-        private final BlockingQueue<Pair<DeviceCommand, Boolean>> sendingQueue;
+        private final BlockingQueue<Pair<CommandMessage, Boolean>> sendingQueue;
 
 
         /**
@@ -1739,7 +1884,7 @@ public class Robot
         protected RobotSendingQueue( BluetoothConnection btc )
         {
             this.btc = btc;
-            this.sendingQueue = new LinkedBlockingQueue<Pair<DeviceCommand, Boolean>>();
+            this.sendingQueue = new LinkedBlockingQueue<Pair<CommandMessage, Boolean>>();
             this.w = new Robot.RobotSendingQueue.Writer();
 
             this.startWriter();
@@ -1763,9 +1908,9 @@ public class Robot
          *
          * @param command The command to enqueue
          */
-        public void forceCommand( DeviceCommand command )
+        public void forceCommand( CommandMessage command )
         {
-            this.sendingQueue.add( new Pair<DeviceCommand, Boolean>( command, true ) );
+            this.sendingQueue.add( new Pair<CommandMessage, Boolean>( command, true ) );
         }
 
 
@@ -1778,14 +1923,14 @@ public class Robot
          * @param systemCommand True if the command is a system command, false
          * otherwise
          */
-        public void enqueue( DeviceCommand command, boolean systemCommand )
+        public void enqueue( CommandMessage command, boolean systemCommand )
         {
             synchronized ( sendingQueue )
             {
                 try
                 {
                     if ( !this.stop && !this.stopAccepting )
-                        this.sendingQueue.put( new Pair<DeviceCommand, Boolean>( command, systemCommand ) );
+                        this.sendingQueue.put( new Pair<CommandMessage, Boolean>( command, systemCommand ) );
                 }
                 catch ( InterruptedException e )
                 {
@@ -1803,7 +1948,7 @@ public class Robot
          * @param command The command to send
          * @param delay   The delay to send the command after (in ms)
          */
-        public void enqueue( DeviceCommand command, float delay )
+        public void enqueue( CommandMessage command, float delay )
         {
             this.enqueue( command, delay, false );
         }
@@ -1819,7 +1964,7 @@ public class Robot
          * @param initialDelay The initial delay before sending the first one
          * @param periodLength The period length between the transmissions
          */
-        public void enqueue( DeviceCommand command, float initialDelay, float periodLength )
+        public void enqueue( CommandMessage command, float initialDelay, float periodLength )
         {
             this.enqueue( command, false, initialDelay, periodLength );
         }
@@ -1836,10 +1981,10 @@ public class Robot
          * @param initialDelay  The initial delay for sending
          * @param periodLength  The period length between transmissions
          */
-        public void enqueue( DeviceCommand command, boolean systemCommand, float initialDelay, float periodLength )
+        public void enqueue( CommandMessage command, boolean systemCommand, float initialDelay, float periodLength )
         {
             if ( !this.stop && !this.stopAccepting )
-                this.schedule( new Robot.RobotSendingQueue.CommandTask( new Pair<DeviceCommand, Boolean>( command, systemCommand ) ), ( long ) initialDelay, ( long ) periodLength );
+                this.schedule( new Robot.RobotSendingQueue.CommandTask( new Pair<CommandMessage, Boolean>( command, systemCommand ) ), ( long ) initialDelay, ( long ) periodLength );
         }
 
 
@@ -1866,10 +2011,10 @@ public class Robot
          * @param systemCommand True if the command is a system command, false
          * otherwise
          */
-        public void enqueue( DeviceCommand command, float delay, boolean systemCommand )
+        public void enqueue( CommandMessage command, float delay, boolean systemCommand )
         {
             if ( !this.stop && !this.stopAccepting )
-                this.schedule( new Robot.RobotSendingQueue.CommandTask( new Pair<DeviceCommand, Boolean>( command, systemCommand ) ), ( long ) delay );
+                this.schedule( new Robot.RobotSendingQueue.CommandTask( new Pair<CommandMessage, Boolean>( command, systemCommand ) ), ( long ) delay );
         }
 
 
@@ -1901,7 +2046,7 @@ public class Robot
         private class CommandTask extends TimerTask
         {
             // Storage of the command to send
-            private Pair<DeviceCommand, Boolean> execute;
+            private Pair<CommandMessage, Boolean> execute;
             private int repeat = 0;
             private float delay;
             private boolean repeating = false;
@@ -1913,7 +2058,7 @@ public class Robot
              * @param execute The command together with a boolean value
              * describing if it's a system message or not
              */
-            private CommandTask( Pair<DeviceCommand, Boolean> execute )
+            private CommandTask( Pair<CommandMessage, Boolean> execute )
             {
                 this.execute = execute;
             }
@@ -1927,7 +2072,7 @@ public class Robot
              * @param repeat  The number of repeats to perform (-1 for infinite
              * repeats)
              */
-            private CommandTask( Pair<DeviceCommand, Boolean> execute, float delay, int repeat )
+            private CommandTask( Pair<CommandMessage, Boolean> execute, float delay, int repeat )
             {
                 this( execute );
                 this.repeat = repeat;
@@ -1971,9 +2116,9 @@ public class Robot
                     try
                     {
                         // Try and fetch some message
-                        Pair<DeviceCommand, Boolean> p = sendingQueue.take();
+                        Pair<CommandMessage, Boolean> p = sendingQueue.take();
 
-                        Collection<Pair<DeviceCommand, Boolean>> sent = new ArrayList<Pair<DeviceCommand, Boolean>>();
+                        Collection<Pair<CommandMessage, Boolean>> sent = new ArrayList<Pair<CommandMessage, Boolean>>();
 
                         // Append message to sending buffer
                         sendingBuffer.append( p.getFirst().getPacket(), 0, p.getFirst().getPacketLength() );
@@ -1981,6 +2126,8 @@ public class Robot
                         // Add command to listening queue
                         listeningThread.enqueue( p );
                         sent.add( p );
+
+                        Logging.debug( "Queueing " + p.getFirst() );
 
                         // Lock until we have sent our messages in-case someone
                         // else tries to do this at the same time
@@ -1994,7 +2141,7 @@ public class Robot
                                     // Go through all the messages that we can
                                     for ( int i = 0; i < sendingQueue.size(); i++ )
                                     {
-                                        Pair<DeviceCommand, Boolean> c = sendingQueue.peek();
+                                        Pair<CommandMessage, Boolean> c = sendingQueue.peek();
 
                                         // Peek at the the rest of the messages
                                         int length = c.getFirst().getPacketLength();
@@ -2009,10 +2156,13 @@ public class Robot
                                         listeningThread.enqueue( c );
                                         sent.add( c );
                                         sendingQueue.remove();
+
+                                        Logging.debug( "Queueing " + c.getFirst() );
                                     }
                                 }
 
                                 // Write to socket
+                                Logging.debug( "Sending " + sendingBuffer );
                                 btc.write( sendingBuffer.toByteArray() );
                                 btc.flush();
 

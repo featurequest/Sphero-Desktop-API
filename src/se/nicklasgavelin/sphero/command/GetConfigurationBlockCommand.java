@@ -6,7 +6,7 @@ package se.nicklasgavelin.sphero.command;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class GetConfigurationBlockCommand extends DeviceCommand
+public class GetConfigurationBlockCommand extends CommandMessage
 {
     /**
      * Specifies the block
@@ -69,7 +69,7 @@ public class GetConfigurationBlockCommand extends DeviceCommand
      */
     public GetConfigurationBlockCommand( BLOCK_SPECIFIER block )
     {
-        super( DEVICE_COMMAND.GET_CONFIGURATION_BLOCK );
+        super( COMMAND_MESSAGE_TYPE.GET_CONFIGURATION_BLOCK );
         this.block = block;
     }
 

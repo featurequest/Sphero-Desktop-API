@@ -9,6 +9,17 @@ import java.util.Arrays;
  */
 public class Array
 {
+    public static String stringify( byte[] data )
+    {
+        String s = "";
+        for( byte b : data )
+            s += b + " ";
+        s = s.substring( 0, s.length() - 1 );
+
+        return s;
+    }
+
+
     /**
      * Concatenate two arrays together
      *

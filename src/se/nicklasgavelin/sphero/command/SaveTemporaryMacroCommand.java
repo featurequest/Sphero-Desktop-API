@@ -1,8 +1,7 @@
 package se.nicklasgavelin.sphero.command;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand;
 
-public class SaveTemporaryMacroCommand extends DeviceCommand
+public class SaveTemporaryMacroCommand extends CommandMessage
 {
     public static final byte MacroFlagNone = 0;
     public static final byte MacroFlagMotorControl = 1;
@@ -25,7 +24,7 @@ public class SaveTemporaryMacroCommand extends DeviceCommand
 
     public SaveTemporaryMacroCommand( byte flags, byte[] macro )
     {
-        super( DEVICE_COMMAND.MACRO );
+        super( COMMAND_MESSAGE_TYPE.MACRO );
         this.macroData = macro;
         this.flags = flags;
     }

@@ -1,7 +1,6 @@
 package se.nicklasgavelin.sphero.response;
 
 import java.io.UnsupportedEncodingException;
-import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
 
 /**
  * A response for the GetBluetoothInfoCommand. Will be created
@@ -10,7 +9,7 @@ import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
  * @author Orbotix
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class GetBluetoothInfoResponse extends DeviceResponse
+public class GetBluetoothInfoResponse extends ResponseMessage
 {
     private static final int INFO_DATA_LENGTH = 64,
             OLD_INFO_DATA_LENGTH = 32,
@@ -26,12 +25,13 @@ public class GetBluetoothInfoResponse extends DeviceResponse
      *
      * @param data The received data
      */
-    public GetBluetoothInfoResponse( byte[] data )
+    public GetBluetoothInfoResponse( ResponseHeader rh )//byte[] data )
     {
-        super( DEVICE_COMMAND.GET_BLUETOOTH_INFO, data );
+        super( rh );// super( DEVICE_COMMAND.GET_BLUETOOTH_INFO, data );
 
-        if ( !isDataCorrupt() )
+        if ( !isCorrupt() )
         {
+            byte[] data = this.getPacketData();
             if ( data == null || (data.length != INFO_DATA_LENGTH && data.length != OLD_INFO_DATA_LENGTH) )
             {
                 System.err.println( "Data is corrupt" );

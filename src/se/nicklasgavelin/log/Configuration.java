@@ -30,7 +30,7 @@ public class Configuration
     /**
      * The logging level during runtime
      */
-    public static Logging.Level debugLevel = Logging.Level.INFO;
+    public static Logging.Level debugLevel = Logging.Level.ERROR;
 
     static
     {

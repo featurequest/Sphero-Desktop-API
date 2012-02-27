@@ -10,7 +10,7 @@ package se.nicklasgavelin.sphero.command;
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class RawMotorCommand extends DeviceCommand
+public class RawMotorCommand extends CommandMessage
 {
     /**
      * Possible motor modes
@@ -78,7 +78,7 @@ public class RawMotorCommand extends DeviceCommand
      */
     public RawMotorCommand( MOTOR_MODE leftMode, int leftSpeed, MOTOR_MODE rightMode, int rightSpeed )
     {
-        super( DEVICE_COMMAND.RAW_MOTOR );
+        super( COMMAND_MESSAGE_TYPE.RAW_MOTOR );
 
         this.leftMode = leftMode;
         this.rightMode = rightMode;

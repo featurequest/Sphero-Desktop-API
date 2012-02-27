@@ -1,16 +1,14 @@
 package se.nicklasgavelin.sphero.response;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand;
-
 /**
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology
  */
-public class SaveTemporaryMacroResponse extends DeviceResponse
+public class SaveTemporaryMacroResponse extends ResponseMessage
 {
-    public SaveTemporaryMacroResponse( byte[] data )
+    public SaveTemporaryMacroResponse( ResponseHeader rh )//byte[] data )
     {
-        super( DeviceCommand.DEVICE_COMMAND.MACRO, data );
+        super( rh );//super( DeviceCommand.DEVICE_COMMAND.MACRO, data );
     }
 }

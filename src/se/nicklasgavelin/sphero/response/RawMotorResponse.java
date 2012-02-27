@@ -1,21 +1,19 @@
 package se.nicklasgavelin.sphero.response;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand.DEVICE_COMMAND;
-
 /**
  * Create a respons for the RawMotorCommand
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class RawMotorResponse extends DeviceResponse
+public class RawMotorResponse extends ResponseMessage
 {
     /**
      * Create a RawMotorResponse from the received data
      *
      * @param data The received data
      */
-    public RawMotorResponse( byte[] data )
+    public RawMotorResponse( ResponseHeader rh )//byte[] data )
     {
-        super( DEVICE_COMMAND.RAW_MOTOR, data );
+        super( rh );//super( DEVICE_COMMAND.RAW_MOTOR, data );
     }
 }

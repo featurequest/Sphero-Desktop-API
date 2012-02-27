@@ -10,7 +10,7 @@ package se.nicklasgavelin.sphero.command;
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  *
  */
-public class SleepCommand extends DeviceCommand
+public class SleepCommand extends CommandMessage
 {
     private int time;
 
@@ -22,7 +22,7 @@ public class SleepCommand extends DeviceCommand
      */
     public SleepCommand( int time )
     {
-        super( DEVICE_COMMAND.GO_TO_SLEEP );
+        super( COMMAND_MESSAGE_TYPE.GO_TO_SLEEP );
         this.time = time;
     }
 

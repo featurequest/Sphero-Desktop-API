@@ -1,6 +1,5 @@
 package se.nicklasgavelin.sphero.command;
 
-import se.nicklasgavelin.sphero.command.DeviceCommand;
 import se.nicklasgavelin.util.ByteArrayBuffer;
 
 /**
@@ -10,7 +9,7 @@ import se.nicklasgavelin.util.ByteArrayBuffer;
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology
  */
-public class SaveMacroCommand extends DeviceCommand
+public class SaveMacroCommand extends CommandMessage
 {
     public static final byte MacroFlagNone = 0;
     public static final byte MacroFlagMotorControl = 1;
@@ -36,7 +35,7 @@ public class SaveMacroCommand extends DeviceCommand
      */
     public SaveMacroCommand( byte flags, byte destination, byte[] macro )
     {
-        super( DEVICE_COMMAND.SAVE_MACRO );
+        super( COMMAND_MESSAGE_TYPE.SAVE_MACRO );
 
         this.macroFlags = flags;
         this.destination = destination;

@@ -40,6 +40,7 @@ public abstract class DeviceResponse extends DeviceMessage
         CODE_ERROR_EXECUTE( 8 ),
         CODE_ERROR_MAIN_APP_CORRUPT( 52 ),
         CODE_ERROR_TIME_OUT( -1 ),
+        CODE_ERROR_UNKNOWN(53),
         UNKNOWN_RESPONSE_CODE( -2 );
         private byte code;
 
@@ -68,7 +69,7 @@ public abstract class DeviceResponse extends DeviceMessage
 
 
         /**
-         * Return the enum representation of the code value
+         * Return the ENUM representation of the code value
          *
          * @author Nicklas Gavelin
          * @param code The code

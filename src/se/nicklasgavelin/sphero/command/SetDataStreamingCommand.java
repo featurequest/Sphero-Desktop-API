@@ -1,58 +1,114 @@
+
 package se.nicklasgavelin.sphero.command;
 
 /**
- * @deprecated Doesn't do anything atm
- * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
+ * Set data streaming to received data from the Sphero device.
+ * For masks perform bitwise or to get multiple sensor values.
+ *
+ * Masks are found under the class SetDataStreamingCommand.DATA_STREAMING_MASKS
+ *
+ * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
+ * Technology
  */
 public class SetDataStreamingCommand extends CommandMessage
 {
-    public static final int DATA_STREAMING_MASK_OFF = 0;
-    public static final int DATA_STREAMING_MASK_LEFT_MOTOR_BACK_EMF_FILTERED = 32;
-    public static final int DATA_STREAMING_MASK_RIGHT_MOTOR_BACK_EMF_FILTERED = 64;
-    public static final int DATA_STREAMING_MASK_MAGNETOMETER_Z_FILTERED = 128;
-    public static final int DATA_STREAMING_MASK_MAGNETOMETER_Y_FILTERED = 256;
-    public static final int DATA_STREAMING_MASK_MAGNETOMETER_X_FILTERED = 512;
-    public static final int DATA_STREAMING_MASK_GYRO_Z_FILTERED = 1024;
-    public static final int DATA_STREAMING_MASK_GYRO_Y_FILTERED = 2048;
-    public static final int DATA_STREAMING_MASK_GYRO_X_FILTERED = 4096;
-    public static final int DATA_STREAMING_MASK_ACCELEROMETER_Z_FILTERED = 8192;
-    public static final int DATA_STREAMING_MASK_ACCELEROMETER_Y_FILTERED = 16384;
-    public static final int DATA_STREAMING_MASK_ACCELEROMETER_X_FILTERED = 32768;
-    public static final int DATA_STREAMING_MASK_IMU_YAW_ANGLE_FILTERED = 65536;
-    public static final int DATA_STREAMING_MASK_IMU_ROLL_ANGLE_FILTERED = 131072;
-    public static final int DATA_STREAMING_MASK_IMU_PITCH_ANGLE_FILTERED = 262144;
-    public static final int DATA_STREAMING_MASK_LEFT_MOTOR_BACK_EMF_RAW = 2097152;
-    public static final int DATA_STREAMING_MASK_RIGHT_MOTOR_BACK_EMF_RAW = 4194304;
-    public static final int DATA_STREAMING_MASK_MAGNETOMETER_Z_RAW = 8388608;
-    public static final int DATA_STREAMING_MASK_MAGNETOMETER_Y_RAW = 16777216;
-    public static final int DATA_STREAMING_MASK_MAGNETOMETER_X_RAW = 33554432;
-    public static final int DATA_STREAMING_MASK_GYRO_Z_RAW = 67108864;
-    public static final int DATA_STREAMING_MASK_GYRO_Y_RAW = 134217728;
-    public static final int DATA_STREAMING_MASK_GYRO_X_RAW = 268435456;
-    public static final int DATA_STREAMING_MASK_ACCELEROMETER_Z_RAW = 536870912;
-    public static final int DATA_STREAMING_MASK_ACCELEROMETER_Y_RAW = 1073741824;
-    public static final int DATA_STREAMING_MASK_ACCELEROMETER_X_RAW = -2147483648;
+    // Internal storage
     private int mDivisor, mPacketFrames, mSensorMask, mPacketCount;
+
+
+    /**
+     * Create a data streaming command without first setting the mask.
+     * Call the .addMask to add more masks to the packet. If no call to
+     * .addMask is performed before this packet is sent the mask that is set
+     * is the OFF mask (that will turn a current streaming off)
+     *
+     * @param mDivisor      Divisor to divide the default sampling rate of 400
+     *                      Hz
+     * @param mPacketFrames Number of frames per packet
+     * @param mPacketCount  Number of packets to receive from the moment data is
+     *                      started being captured
+     */
+    public SetDataStreamingCommand( int mDivisor, int mPacketFrames, int mPacketCount )
+    {
+        this( mDivisor, mPacketFrames, 0, mPacketCount );
+    }
 
 
     /**
      * Create a data streaming command
      *
-     * @param mDivisor      Divisor to divice the default sampling rate of 400
-     *                      Hz
-     * @param mPacketFrames Number of packet frames
-     * @param mSensorMask   Sensor mask for, bitwise or
-     * @param mPacketCount  Number of packets to receive
+     * @param mDivisor      Divisor to divide the default sampling rate of 400
+     * Hz
+     * @param mPacketFrames Number of frames per packet
+     * @param mSensorMask   Sensor mask for, bitwise or for multiple sensor
+     *                      values
+     * @param mPacketCount  Number of packets to receive from the moment data is
+     *                      started being captured
      */
-    public SetDataStreamingCommand( int mDivisor, int mPacketFrames, int mSensorMask, int mPacketCount )
+    public SetDataStreamingCommand( int mDivisor, int mPacketFrames, int mSensorMask, int mPacketCount )//int mDivisor, int mPacketFrames, int mSensorMask, int mPacketCount )
     {
         super( COMMAND_MESSAGE_TYPE.SET_DATA_STREAMING );
 
         // Set internal variables
         this.mDivisor = mDivisor;
-        this.mPacketCount = mPacketCount;
+        this.mPacketFrames = mPacketFrames;
         this.mSensorMask = mSensorMask;
         this.mPacketCount = mPacketCount;
+    }
+
+
+    /**
+     * Returns the internal packet count value
+     *
+     * @return Packet count value
+     */
+    public int getPacketCount()
+    {
+        return this.mPacketCount;
+    }
+
+
+    /**
+     * Returns the internal divisor value
+     *
+     * @return Divisor value
+     */
+    public int getDivisor()
+    {
+        return this.mDivisor;
+    }
+
+
+    /**
+     * Returns the internal packet frames value
+     *
+     * @return Packet frames value
+     */
+    public int getPacketFrames()
+    {
+        return this.mPacketFrames;
+    }
+
+
+    /**
+     * Add mask to the already existing one
+     *
+     * @param mask The mask to add
+     */
+    public void addMask( int mask )
+    {
+        this.mSensorMask |= mask;
+    }
+
+
+    /**
+     * Returns the internal sensor mask value
+     *
+     * @return The sensor mask value
+     */
+    public int getMask()
+    {
+        return this.mSensorMask;
     }
 
 
@@ -71,5 +127,200 @@ public class SetDataStreamingCommand extends CommandMessage
         data[8] = ( byte ) this.mPacketCount;
 
         return data;
+    }
+
+
+    /* ******************
+     * INNER CLASSES
+     */
+
+    /**
+     * Mask values for the data streaming
+     */
+    public static final class DATA_STREAMING_MASKS
+    {
+        public static final int OFF = 0;
+
+        /**
+         * Motor masks
+         */
+        public static final class MOTOR_BACK_EMF
+        {
+            /**
+             * Both left and right filtered/raw
+             */
+            public static final class ALL
+            {
+                public static final int FILTERED = LEFT.FILTERED | RIGHT.FILTERED, RAW = LEFT.RAW | RIGHT.RAW;
+            }
+
+            /**
+             * Left motor masks
+             */
+            public static final class LEFT
+            {
+                public static final int FILTERED = 0x20, RAW = 0x200000;
+            }
+
+
+            /**
+             * Right motor mask
+             */
+            public static final class RIGHT
+            {
+                public static final int FILTERED = 0x40, RAW = 0x400000;
+            }
+        }
+
+        /**
+         * Magnetometer masks
+         */
+        public static final class MAGNETOMETER
+        {
+            /**
+             * All axis, filtered/raw
+             */
+            public static final class ALL
+            {
+                public static final int FILTERED = X.FILTERED | Y.FILTERED | Z.FILTERED, RAW = X.RAW | Y.RAW  | Z.RAW;
+            }
+
+            /**
+             * X-axis
+             */
+            public static final class X
+            {
+                public static final int FILTERED = 0x200, RAW = 0x2000000;
+            }
+
+
+            /**
+             * Y-axis
+             */
+            public static final class Y
+            {
+                public static final int FILTERED = 0x100, RAW = 0x1000000;
+            }
+
+
+            /**
+             * Z-axis
+             */
+            public static final class Z
+            {
+                public static final int FILTERED = 0x80, RAW = 0x800000;
+            }
+        }
+
+        /**
+         * Accelerometer masks
+         */
+        public static final class ACCELEROMETER
+        {
+            /**
+             * All axis filtered/raw
+             */
+            public static final class ALL
+            {
+                public static final int FILTERED = X.FILTERED | Y.FILTERED  | Z.FILTERED, RAW = X.RAW | Y.RAW | Z.RAW;
+            }
+
+            /**
+             * X-axis filtered/raw
+             */
+            public static final class X
+            {
+                public static final int FILTERED = 0x8000, RAW = 0x80000000;
+            }
+
+
+            /**
+             * Y-axis filtered/raw
+             */
+            public static final class Y
+            {
+                public static final int FILTERED = 0x4000, RAW = 0x40000000;
+            }
+
+
+            /**
+             * Z-axis filtered/raw
+             */
+            public static final class Z
+            {
+                public static final int FILTERED = 0x2000, RAW = 0x20000000;
+            }
+        }
+
+        /**
+         * Gyro masks
+         */
+        public static final class GYRO
+        {
+            /**
+             * All axis filtered/raw
+             */
+            public static final class ALL
+            {
+                public static final int FILTERED = X.FILTERED | Y.FILTERED  | Z.FILTERED, RAW = X.RAW | Y.RAW | Z.RAW;
+            }
+
+            /**
+             * Gyro X-axis value masks
+             */
+            public static final class X
+            {
+                public static final int FILTERED = 0x1000, RAW = 0x10000000;
+            }
+
+            /**
+             * Gyro Y-axis value masks
+             */
+            public static final class Y
+            {
+                public static final int FILTERED = 0x800, RAW = 0x8000000;
+            }
+
+            /**
+             * Gyro Z-axis value masks
+             */
+            public static final class Z
+            {
+                public static final int FILTERED = 0x400, RAW = 0x4000000;
+            }
+        }
+
+        /**
+         * IMU masks
+         */
+        public static final class IMU
+        {
+            /**
+             * All settings filtered/raw
+             */
+            public static final class ALL
+            {
+                public static final int FILTERED = YAW.FILTERED | ROLL.FILTERED  | PITCH.FILTERED;
+            }
+
+            /**
+             * IMU yaw value masks
+             */
+            public static final class YAW
+            {
+                public static final int FILTERED = 0x10000;
+            }
+
+
+            public static final class ROLL
+            {
+                public static final int FILTERED = 0x20000;
+            }
+
+            public static final class PITCH
+            {
+                public static final int FILTERED = 0x40000;
+            }
+        }
     }
 }

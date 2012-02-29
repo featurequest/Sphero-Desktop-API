@@ -20,7 +20,12 @@ public class Configuration
     /**
      * Flag for turning on/off debugging
      */
-    public static boolean debugEnabled = false;
+    public static boolean debugEnabled = true;
+
+    /**
+     * Name of logger
+     */
+    public static final String loggerName = "mohahha";
 
     /**
      * Value for turning on/off Bluecove library debugging
@@ -30,7 +35,7 @@ public class Configuration
     /**
      * The logging level during runtime
      */
-    public static Logging.Level debugLevel = Logging.Level.ERROR;
+    public static Logging.Level debugLevel = Logging.Level.DEBUG;
 
     static
     {

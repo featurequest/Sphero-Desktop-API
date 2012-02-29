@@ -2,36 +2,46 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package experimental.test;
 
-import java.awt.Color;
 import java.util.Collection;
+import java.util.logging.Logger;
 import se.nicklasgavelin.bluetooth.Bluetooth;
 import se.nicklasgavelin.bluetooth.Bluetooth.EVENT;
 import se.nicklasgavelin.bluetooth.BluetoothDevice;
 import se.nicklasgavelin.bluetooth.BluetoothDiscoveryListener;
+import se.nicklasgavelin.log.Logging;
 import se.nicklasgavelin.sphero.Robot;
-import se.nicklasgavelin.sphero.command.RGBLEDCommand;
+import se.nicklasgavelin.sphero.RobotListener;
+import se.nicklasgavelin.sphero.command.CommandMessage;
 import se.nicklasgavelin.sphero.command.RawMotorCommand;
+import se.nicklasgavelin.sphero.command.SetDataStreamingCommand;
 import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
 import se.nicklasgavelin.sphero.macro.Delay;
 import se.nicklasgavelin.sphero.macro.MacroObject;
 import se.nicklasgavelin.sphero.macro.RawMotor;
+import se.nicklasgavelin.sphero.response.ResponseMessage;
+import se.nicklasgavelin.sphero.response.information.DataResponse;
+import se.nicklasgavelin.sphero.response.information.DeviceInformationResponse;
 
 /**
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology
  */
-public class Experimental_Main implements BluetoothDiscoveryListener
+public class Experimental_Main implements BluetoothDiscoveryListener, RobotListener
 {
     /**
      * Main method for experimental stuff
      *
      * @param args All arguments are ignored
-     * @throws InvalidRobotAddressException If the address for the robot is invalid
-     * @throws RobotBluetoothException  If there occurs a Bluetooth exception during connecting
+     *
+     * @throws InvalidRobotAddressException If the address for the robot is
+     *                                      invalid
+     * @throws RobotBluetoothException      If there occurs a Bluetooth
+     *                                      exception during connecting
      */
     public static void main( String[] args ) throws InvalidRobotAddressException, RobotBluetoothException
     {
@@ -40,22 +50,26 @@ public class Experimental_Main implements BluetoothDiscoveryListener
         Experimental_Main experimental_Main = new Experimental_Main();
     }
 
+
+
     private static byte calculateChecksum( String data )
     {
         String[] s = data.split( " " );
 
         int checksum = 0;
-        for( String b : s )
+        for ( String b : s )
         {
             byte by = Byte.parseByte( b );
             checksum += by;
         }
 
-        return (byte)(checksum ^ 0xFFFFFFFF);
+        return ( byte ) (checksum ^ 0xFFFFFFFF);
     }
+
 
     private Experimental_Main() throws InvalidRobotAddressException, RobotBluetoothException
     {
+        Logging.debug( "test" );
         String id = "00066644390F";// ( - | x | - ) // "000666440DB8"; // ( x | - | - )
         Robot r = new Robot(
                 new BluetoothDevice(
@@ -64,10 +78,22 @@ public class Experimental_Main implements BluetoothDiscoveryListener
 
         if ( r.connect() )
         {
+            r.addListener( this );
             System.out.println( "Connected" );
-            r.stopMacro();
-            r.sendCommandAfterMacro( new RGBLEDCommand( Color.BLUE ) );
-            r.rgbTransition( Color.RED, Color.BLUE, 300, 25 );
+            r.sendCommand( new RawMotorCommand( RawMotorCommand.MOTOR_MODE.FORWARD, 0, RawMotorCommand.MOTOR_MODE.FORWARD, 0 ) );
+            SetDataStreamingCommand sds = new SetDataStreamingCommand( 100, 1, SetDataStreamingCommand.DATA_STREAMING_MASKS.ACCELEROMETER.ALL.RAW, 65534 );
+            r.sendCommand( new SetDataStreamingCommand(
+                    100,
+                    1,
+                    65534 ) );
+
+
+
+
+//            r.sendCommand( new SetDataStreamingCommand( 100, 1, SetDataStreamingCommand.DATA_STREAMING_MASK_ACCELEROMETER_X_RAW | SetDataStreamingCommand.DATA_STREAMING_MASK_ACCELEROMETER_Y_RAW | SetDataStreamingCommand.DATA_STREAMING_MASK_ACCELEROMETER_Z_RAW, 65534 ) );
+//            r.stopMacro();
+//            r.sendCommandAfterMacro( new RGBLEDCommand( Color.BLUE ) );
+//            r.rgbTransition( Color.RED, Color.BLUE, 300, 25 );
 
             //MacroObject mo = this.createSwingMotionMacro( 255, 1, 50 );
             //mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
@@ -89,14 +115,6 @@ public class Experimental_Main implements BluetoothDiscoveryListener
     }
 
 
-    /**
-     * Experimental test method
-     *
-     * @param _maxSpeed Max speed for commands
-     * @param dDelay Delay between swings
-     * @param nSteps Number of steps to perform
-     * @return The macro object
-     */
     public MacroObject createSwingMotionMacro( int _maxSpeed, int dDelay, int nSteps )
     {
         float maxSpeed = ( float ) _maxSpeed;
@@ -156,5 +174,28 @@ public class Experimental_Main implements BluetoothDiscoveryListener
     @Override
     public void deviceSearchStarted()
     {
+    }
+
+
+    @Override
+    public void responseReceived( Robot r, ResponseMessage response, CommandMessage dc )
+    {
+    }
+
+
+    @Override
+    public void event( Robot r, EVENT_CODE code )
+    {
+    }
+
+
+    @Override
+    public void informationResponseReceived( Robot r, DeviceInformationResponse response )
+    {
+        if ( response instanceof DataResponse )
+        {
+            DataResponse dr = ( DataResponse ) response;
+            byte[] data = dr.getSensorData();
+        }
     }
 }

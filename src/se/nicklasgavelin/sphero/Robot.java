@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import se.nicklasgavelin.bluetooth.BluetoothConnection;
 import se.nicklasgavelin.bluetooth.BluetoothDevice;
 import se.nicklasgavelin.log.Logging;
@@ -17,10 +15,10 @@ import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
 import se.nicklasgavelin.sphero.exception.RobotInitializeConnectionFailed;
 import se.nicklasgavelin.sphero.macro.*;
-import se.nicklasgavelin.sphero.response.*;
+import se.nicklasgavelin.sphero.response.GetBluetoothInfoResponse;
+import se.nicklasgavelin.sphero.response.ResponseMessage;
 import se.nicklasgavelin.sphero.response.information.DeviceInformationResponse;
 import se.nicklasgavelin.sphero.response.information.EmitResponse;
-import se.nicklasgavelin.util.Array;
 import se.nicklasgavelin.util.ByteArrayBuffer;
 import se.nicklasgavelin.util.Pair;
 import se.nicklasgavelin.util.Value;
@@ -652,8 +650,15 @@ public class Robot
         // Go through all listeners and notify them
         for ( RobotListener r : this.listeners )
             r.responseReceived( this, dr, dc );
+    }
 
-        Logger.getLogger( Robot.class.getName() ).log( Level.INFO, "message" );
+
+    private void notifyListenersInformationResponse( DeviceInformationResponse dir )
+    {
+        Logging.debug( "Nofifying listeners about information response " + dir );
+
+        for( RobotListener r : this.listeners )
+            r.informationResponseReceived( this, dir );
     }
 
 
@@ -1741,13 +1746,13 @@ public class Robot
                             ResponseMessage response = ResponseMessage.valueOf( cmd.getFirst(), drh );
                             CommandMessage.COMMAND_MESSAGE_TYPE cmd_type = cmd.getFirst().getCommand();
 
+                            Logging.debug( "Received response packet: " + response + (cmd.getSecond() ? " as a SYSTEM RESPONSE" : "") );
+
                             // Update internal values if we got an OK from the robot
                             if ( drh.getResponseCode().equals( ResponseMessage.RESPONSE_CODE.CODE_OK ) )
                                 updateInternalValues( cmd.getFirst() );
                             else
-                                Logging.error("FAIL : " + drh );//Logging.error( "Received error message " + drh + "\n\t as response to " + cmd_type + "( " + Array.stringify( cmd.getFirst().getPacket() ) + " ) with code " + response.getResponseCode() );
-
-                            Logging.debug( "Received " + response + (cmd.getSecond() ? " as a SYSTEM RESPONSE" : "") );
+                                Logging.error( "Received response code " + drh.getResponseCode() + " for " + cmd_type );
 
                             // Check if we got a system command or not
                             if ( cmd.getSecond() )
@@ -1766,7 +1771,7 @@ public class Robot
                             else
                             {
                                 // Ordinary command, notify listeners
-                                notifyListenersDeviceResponse( response, cmd.getFirst() );
+                                Robot.this.notifyListenersDeviceResponse( response, cmd.getFirst() );
                             }
                         }
                         else if ( drh.getResponseType().equals( ResponseMessage.ResponseHeader.RESPONSE_TYPE.INFORMATION ) )//drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.INFORMATION ) )
@@ -1776,21 +1781,23 @@ public class Robot
                             DeviceInformationResponse dir = DeviceInformationResponse.valueOf( drh );
 
                             // TODO: Received information packet, what should we do, what SHOULD we do?
-                            Logging.error( "Received information packet: " + dir );
+                            Logging.debug( "Received information packet: " + dir );
 
-                            if ( Robot.this.macroSettings.macroRunning )
+                            if ( Robot.this.macroSettings.macroRunning && dir instanceof EmitResponse )
                             {
-                                if ( dir instanceof EmitResponse )
-                                {
-                                    // Check if we want to abort macro execution
-                                    // Macro has been saved, now get the fuck out!
-                                    if ( Robot.this.macroSettings.ballMemory.size() > 0 )
-                                        Robot.this.macroSettings.ballMemory.remove( ( Integer ) macroSettings.ballMemory.toArray()[0] );
-                                    Robot.this.macroSettings.emptyMacroCommandQueue();
+                                // Check if we want to abort macro execution
+                                // Macro has been saved, now get the fuck out!
+                                if ( Robot.this.macroSettings.ballMemory.size() > 0 )
+                                    Robot.this.macroSettings.ballMemory.remove( ( Integer ) macroSettings.ballMemory.toArray()[0] );
+                                Robot.this.macroSettings.emptyMacroCommandQueue();
 
-                                    // Stop macro execution if the macro is not running any longer
-                                    Robot.this.macroSettings.stopIfFinished();
-                                }
+                                // Stop macro execution if the macro is not running any longer
+                                Robot.this.macroSettings.stopIfFinished();
+                            }
+                            else
+                            {
+                                // Notify listeners about a new information response as long it's not an internal response
+                                Robot.this.notifyListenersInformationResponse( dir );
                             }
                         }
                         else
@@ -1814,7 +1821,6 @@ public class Robot
                 }
                 catch ( NullPointerException e )
                 {
-                    e.printStackTrace();
                     Logging.error( "NullPointerException", e );
                 }
                 catch ( NoSuchElementException e )
@@ -1823,7 +1829,6 @@ public class Robot
                 }
                 catch ( Exception e )
                 {
-                    e.printStackTrace();
                     if ( connected )
                         Logging.fatal( "Listening thread closed down unexpectedly", e );
                     connectionClosedUnexpected();

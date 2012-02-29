@@ -13,12 +13,16 @@ import se.nicklasgavelin.sphero.response.ResponseMessage;
  */
 public class DeviceInformationResponse extends ResponseMessage
 {
+//    private static final int INFORMATION_RESPONSE_CODE_INDEX = 2;
+
     /**
      * Response codes for the information response messages
      */
     public enum INFORMATION_RESPONSE_CODE
     {
-        EMIT( 6 );
+        EMIT( 6 ),
+        DATA( 3 );
+
         private byte code;
 
 
@@ -62,7 +66,17 @@ public class DeviceInformationResponse extends ResponseMessage
     public DeviceInformationResponse( ResponseHeader rh )
     {
         super( rh );
-        this.responseType = INFORMATION_RESPONSE_CODE.valueOf( rh.getPacketData().toByteArray()[ResponseMessage.RESPONSE_CODE_INDEX] );
+        this.responseType = INFORMATION_RESPONSE_CODE.valueOf( rh.getPacketData().toByteArray()[DeviceInformationResponse.INFORMATION_RESPONSE_CODE_INDEX] );
+    }
+
+    /**
+     * Returns the information response type
+     *
+     * @return The information response type
+     */
+    public INFORMATION_RESPONSE_CODE getInformationResponseType()
+    {
+        return this.responseType;
     }
 
     /**

@@ -18,6 +18,7 @@ import se.nicklasgavelin.sphero.command.FrontLEDCommand;
 import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
 import se.nicklasgavelin.sphero.response.ResponseMessage;
+import se.nicklasgavelin.sphero.response.information.DeviceInformationResponse;
 
 /**
  * Simple test class to test the Sphero API
@@ -335,6 +336,13 @@ public class Example_Site_API extends JFrame
         public void event( Robot r, EVENT_CODE code )
         {
             System.out.println( "Received event: " + code );
+        }
+
+
+        @Override
+        public void informationResponseReceived( Robot r, DeviceInformationResponse response )
+        {
+            // Information response (Ex. Sensor data)
         }
     }
 }

@@ -1,7 +1,11 @@
+
 package se.nicklasgavelin.log;
 
 import java.io.PrintStream;
 import java.util.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 
 /**
  * Manages the logging of the application.
@@ -24,6 +28,7 @@ public class Logging
     private static final String log4logger = "site.nicklas.log.Log4JLogger";
     private static final String from = Logging.class.getName();
     private static final Collection<String> fromCollection = new ArrayList<String>();
+    private static final Logger logger = Logger.getLogger( Configuration.loggerName );
 
 
     static
@@ -40,43 +45,50 @@ public class Logging
         /**
          * Debugging
          */
-        DEBUG,
-
+        DEBUG( java.util.logging.Level.FINE ),
         /**
          * Information
          */
-        INFO,
-
+        INFO( java.util.logging.Level.FINEST ),
         /**
          * Warnings
          */
-        WARN,
-
+        WARN( java.util.logging.Level.WARNING ),
         /**
          * Errors
          */
-        ERROR,
-
+        ERROR( java.util.logging.Level.SEVERE ),
         /**
          * Fatal errors
          */
-        FATAL;
-
+        FATAL( java.util.logging.Level.SEVERE );
         private static int nextVal = 0;
         private int val;
-        private Level()
+        private java.util.logging.Level l;
+
+
+        private Level( java.util.logging.Level _l )
         {
             this.initialize();
+            this.l = _l;
         }
+
 
         private void initialize()
         {
             this.val = Level.nextVal++;
         }
 
+
         protected int getValue()
         {
             return this.val;
+        }
+
+
+        protected java.util.logging.Level getLevel()
+        {
+            return this.l;
         }
     }
 
@@ -103,7 +115,6 @@ public class Logging
      * ************************************
      * CLASSES
      */
-
     /**
      * Log appender interface
      */
@@ -112,9 +123,9 @@ public class Logging
         /**
          * Log message
          *
-         * @param l The log level
+         * @param l       The log level
          * @param message The log message
-         * @param t Throwable object to log
+         * @param t       Throwable object to log
          */
         public void log( Level l, String message, Throwable t );
 
@@ -130,7 +141,7 @@ public class Logging
     /**
      * Initialize the debugger
      */
-    private synchronized static void initialize()
+    private static void initialize()
     {
         // Check if we have initialized earlier
         if ( initialized )
@@ -152,8 +163,44 @@ public class Logging
         catch ( Throwable e )
         {
             log4exists = false;
-//            System.out.println( "[" + Logging.class.getCanonicalName() + "] Turning off debug as no log4j instance could be created" );
+
+            setLevel();
+
+            Logging.logger.fine( "test " );
+
+            Logging.debug( "[" + Logging.class.getCanonicalName() + "] Turning off debug as no log4j instance could be created" );
         }
+    }
+
+
+    private static void setLevel()
+    {
+        //get the top Logger:
+        Logger topLogger = java.util.logging.Logger.getLogger( Configuration.loggerName );
+        topLogger.setLevel( Configuration.debugLevel.getLevel() );
+
+        // Handler for console (reuse it if it already exists)
+        Handler consoleHandler = null;
+        //see if there is already a console handler
+        for ( Handler handler : topLogger.getHandlers() )
+        {
+            if ( handler instanceof ConsoleHandler )
+            {
+                //found the console handler
+                consoleHandler = handler;
+                break;
+            }
+        }
+
+        if ( consoleHandler == null )
+        {
+            //there was no console handler found, create a new one
+            consoleHandler = new ConsoleHandler();
+            topLogger.addHandler( consoleHandler );
+        }
+
+        //set the console handler to fine:
+        consoleHandler.setLevel( Configuration.debugLevel.getLevel() );
     }
 
 
@@ -186,7 +233,7 @@ public class Logging
             return;
 
         // Check if we want the messages of this level to be logged
-        if( l.getValue() < Configuration.debugLevel.getValue() )
+        if ( l.getValue() < Configuration.debugLevel.getValue() )
             return;
 
         if ( !log4exists )
@@ -219,45 +266,48 @@ public class Logging
     {
         // Fetch location for the message
         UtilsJavaSE.StackTraceLocation s = UtilsJavaSE.getLocation( fromCollection );
-        boolean useError = (t == null && (!l.equals( Level.ERROR ) && !l.equals( Level.FATAL )));
-        PrintStream out = (useError ? System.out : System.err);
+//        boolean useError = (t == null && (!l.equals( Level.ERROR ) && !l.equals( Level.FATAL )));
+//        PrintStream out = (useError ? System.out : System.err);
 
-        try
-        {
-            // Create our timestamp
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime( new Date( System.currentTimeMillis() ) );
+        logger.setLevel( Configuration.debugLevel.getLevel() );
+        Logging.logger.logp( l.getLevel(), s.className, s.methodName, "\t" + msg + "\n", t );
 
-            // Hours
-            String hour = calendar.get( Calendar.HOUR_OF_DAY ) + "";
-            hour = (Integer.parseInt( hour ) < 10 ? "0" : "") + hour;
-
-            // Minutes
-            String minutes = calendar.get( Calendar.MINUTE ) + "";
-            minutes = (Integer.parseInt( minutes ) < 10 ? "0" : "") + minutes;
-
-            // Seconds
-            String seconds = calendar.get( Calendar.SECOND ) + "";
-            seconds = (Integer.parseInt( seconds ) < 10 ? "0" : "") + seconds;
-
-            // Milliseconds
-            String ms = calendar.get( Calendar.MILLISECOND ) + "";
-
-            // Now create our debug message
-            String aMsg = "[ " + hour + ":" + minutes + ":" + seconds + "." + ms + " ]"; // Timestamp
-            aMsg += "[ " + l + " ]"; // Level
-            aMsg += " " + msg;
-
-            // Print message
-            out.println( aMsg );
-        }
-        catch ( Throwable _ )
-        {
-        }
-
-        // Check if we have something throwable
-        if ( s != null )
-            out.println( "\t " + fromLocation( s ) );
+//        try
+//        {
+//            // Create our timestamp
+//            Calendar calendar = Calendar.getInstance();
+//            calendar.setTime( new Date( System.currentTimeMillis() ) );
+//
+//            // Hours
+//            String hour = calendar.get( Calendar.HOUR_OF_DAY ) + "";
+//            hour = (Integer.parseInt( hour ) < 10 ? "0" : "") + hour;
+//
+//            // Minutes
+//            String minutes = calendar.get( Calendar.MINUTE ) + "";
+//            minutes = (Integer.parseInt( minutes ) < 10 ? "0" : "") + minutes;
+//
+//            // Seconds
+//            String seconds = calendar.get( Calendar.SECOND ) + "";
+//            seconds = (Integer.parseInt( seconds ) < 10 ? "0" : "") + seconds;
+//
+//            // Milliseconds
+//            String ms = calendar.get( Calendar.MILLISECOND ) + "";
+//
+//            // Now create our debug message
+//            String aMsg = "[ " + hour + ":" + minutes + ":" + seconds + "." + ms + " ]"; // Timestamp
+//            aMsg += "[ " + l + " ]"; // Level
+//            aMsg += " " + msg;
+//
+//            // Print message
+//            out.println( aMsg );
+//        }
+//        catch ( Throwable _ )
+//        {
+//        }
+//
+//        // Check if we have something throwable
+//        if ( s != null )
+//            out.println( "\t " + fromLocation( s ) );
     }
 
 

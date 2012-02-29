@@ -2,6 +2,7 @@ package se.nicklasgavelin.sphero;
 
 import se.nicklasgavelin.sphero.command.CommandMessage;
 import se.nicklasgavelin.sphero.response.ResponseMessage;
+import se.nicklasgavelin.sphero.response.information.DeviceInformationResponse;
 
 /**
  * Interface for listening on a robot.
@@ -45,4 +46,13 @@ public interface RobotListener
      * @param code The EVENT_CODE that occurred (RobotListener.EVENT_CODE)
      */
     public void event( Robot r, EVENT_CODE code );
+
+
+    /**
+     * Called when an information response is received (streaming event or similar)
+     *
+     * @param r The robot the message was received for
+     * @param response The response itself
+     */
+    public void informationResponseReceived( Robot r, DeviceInformationResponse response );
 }

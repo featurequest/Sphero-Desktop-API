@@ -7,6 +7,7 @@ package se.nicklasgavelin.sphero.response;
 import java.lang.reflect.Constructor;
 import java.util.EnumMap;
 import java.util.Map;
+import se.nicklasgavelin.log.Logging;
 import se.nicklasgavelin.sphero.command.CommandMessage;
 import se.nicklasgavelin.sphero.response.information.DeviceInformationResponse;
 import se.nicklasgavelin.util.ByteArrayBuffer;
@@ -25,6 +26,10 @@ public class ResponseMessage
             SEQUENCE_NUMBER_INDEX = 3,
             PACKET_LENGTH_INDEX = 4,
             RESPONSE_HEADER_LENGTH = 5;
+
+    public static final int INFORMATION_RESPONSE_CODE_INDEX = 3,
+                            INFORMATION_RESPONSE_HEADER_LENGTH = 5,
+                            INFORMATION_PACKET_LENGTH_INDEX = PACKET_LENGTH_INDEX;
 
     /* Internal storage */
     private ResponseHeader drh;
@@ -145,12 +150,16 @@ public class ResponseMessage
             case INFORMATION:
                 try
                 {
+                    Logging.debug( "Creating information packet from recevied data" );
+
                     // Continue with information
                     DeviceInformationResponse.INFORMATION_RESPONSE_CODE ir = DeviceInformationResponse.INFORMATION_RESPONSE_CODE.valueOf( data[ResponseMessage.RESPONSE_CODE_INDEX] );
 
                     // Create our class name for the message
                     String className = ir.name().toLowerCase();
                     className = className.substring( 0, 1 ).toUpperCase() + className.substring( 1 );
+
+                    Logging.debug( "Parsed received data as a " + className + " information response" );
 
                     // Construct our new response message
                     @SuppressWarnings( "unchecked" )
@@ -162,10 +171,16 @@ public class ResponseMessage
                                     {
                                     }).getClass()
                             } );*/
-                    return ( ResponseMessage ) cons.newInstance( rh );
+
+                    ResponseMessage dim = ( ResponseMessage ) cons.newInstance( rh );
+                    Logging.debug( "Successfully created information response message " + dim );
+
+                    return dim;
                 }
                 catch ( Exception ex )
                 {
+                    ex.printStackTrace();
+                    Logging.error( "Failed to create information response packet from received data ", ex );
                 }
                 break;
 
@@ -183,6 +198,8 @@ public class ResponseMessage
 
                 try
                 {
+                    Logging.debug( "Creating response packet from received data" );
+
                     // Create the new instance
                     @SuppressWarnings( "unchecked" )
                     Constructor<ResponseMessage> cons = ( Constructor<ResponseMessage> ) Class.forName(
@@ -199,6 +216,7 @@ public class ResponseMessage
                 }
                 catch ( Exception e )
                 {
+                    Logging.error( "Failed to create response packet from received data", e );
                 }
                 break;
         }
@@ -215,7 +233,7 @@ public class ResponseMessage
         private RESPONSE_CODE code;
 
         /* Packet information */
-        private int seqNum, packetLength;
+        private int seqNum, dataLength;
         private byte checksum;
         private ByteArrayBuffer data;
 
@@ -243,14 +261,37 @@ public class ResponseMessage
         {
             // Packet information
             this.type           = RESPONSE_TYPE.valueOf( _data[ INDEX_START_1 + offset], _data[ INDEX_START_2 + offset] );
-            this.code           = RESPONSE_CODE.valueOf( _data[ RESPONSE_CODE_INDEX + offset], this.type );
-            this.seqNum         = _data[ SEQUENCE_NUMBER_INDEX + offset];
-            this.packetLength   = _data[ PACKET_LENGTH_INDEX + offset];
-            this.checksum = _data[ offset + (this.packetLength + RESPONSE_HEADER_LENGTH - 1) ];
+            int respCodeIndex = RESPONSE_CODE_INDEX, packetLengthIndex = PACKET_LENGTH_INDEX, respHeaderLength = RESPONSE_HEADER_LENGTH;
+
+            switch( type )
+            {
+                /* Information response messages */
+                case INFORMATION:
+                    respCodeIndex       = INFORMATION_RESPONSE_CODE_INDEX;
+                    packetLengthIndex   = INFORMATION_PACKET_LENGTH_INDEX;
+                    respHeaderLength    = INFORMATION_RESPONSE_HEADER_LENGTH;
+
+                    // Information response messages have no sequence number
+                    this.seqNum         = -1;
+                break;
+
+                /* Regular response messages */
+                case RESPONSE:
+                    this.seqNum         = _data[ SEQUENCE_NUMBER_INDEX + offset];
+                break;
+            }
+
+            // Set internal stuff
+            this.code           = RESPONSE_CODE.valueOf( _data[ respCodeIndex + offset], this.type );
+            this.dataLength     = _data[ packetLengthIndex + offset];
+            int packetLength = (this.dataLength + respHeaderLength);
+            this.checksum       = _data[ offset + (packetLength - 1) ];
+
+//            System.err.println( "Data length: " + this.dataLength + ", Packet length: " + packetLength + ", Code: " + this.code + ", Checksum: " + this.checksum );
 
             // Data storage
-            this.data           = new ByteArrayBuffer( this.packetLength + RESPONSE_HEADER_LENGTH );
-            this.data.append( _data, offset, this.packetLength + RESPONSE_HEADER_LENGTH );
+            this.data           = new ByteArrayBuffer( packetLength );
+            this.data.append( _data, offset, packetLength );
         }
 
 
@@ -298,13 +339,13 @@ public class ResponseMessage
 
 
         /**
-         * Returns the length of the packet
+         * Returns the length of the packet (WITHOUT THE HEADER!)
          *
          * @return The length of the packet
          */
         public int getPacketLength()
         {
-            return this.packetLength;
+            return this.dataLength;
         }
 
 
@@ -411,7 +452,7 @@ public class ResponseMessage
     public static enum RESPONSE_CODE
     {
         /* Regular response codes */
-        CODE_OK( new int[]{0, 6}, new ResponseHeader.RESPONSE_TYPE[]{ ResponseHeader.RESPONSE_TYPE.RESPONSE, ResponseHeader.RESPONSE_TYPE.INFORMATION } ),
+        CODE_OK( new int[]{0, 0}, new ResponseHeader.RESPONSE_TYPE[]{ ResponseHeader.RESPONSE_TYPE.RESPONSE, ResponseHeader.RESPONSE_TYPE.INFORMATION } ),
         CODE_ERROR_GENERAL( new int[]{1}, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE} ),
         CODE_ERROR_CHECKSUM( new int[]{2 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE }  ),
         CODE_ERROR_FRAGMENT( new int[]{3 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),

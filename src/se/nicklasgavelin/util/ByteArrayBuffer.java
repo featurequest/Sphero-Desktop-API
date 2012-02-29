@@ -33,9 +33,11 @@ public class ByteArrayBuffer
      *
      * @param b The byte to append
      */
-    public void append( int b )
+    public ByteArrayBuffer append( int b )
     {
         this.append( ( byte ) b );
+
+        return this;
     }
 
 
@@ -44,10 +46,12 @@ public class ByteArrayBuffer
      *
      * @param b The byte array to append
      */
-    public void append( byte[] b )
+    public ByteArrayBuffer append( byte[] b )
     {
         for ( int i = 0; i < b.length; i++ )
             this.append( b[i] );
+
+        return this;
     }
 
 
@@ -56,11 +60,13 @@ public class ByteArrayBuffer
      *
      * @param b The byte to append
      */
-    public void append( byte b )
+    public ByteArrayBuffer append( byte b )
     {
         // Check if we have any more space to use
         if ( this.length < this.buffer.length )
             this.buffer[ this.length++] = b;
+
+        return this;
     }
 
 
@@ -72,10 +78,12 @@ public class ByteArrayBuffer
      * @param offset The offset to start from
      * @param length The length to append
      */
-    public void append( byte[] b, int offset, int length )
+    public ByteArrayBuffer append( byte[] b, int offset, int length )
     {
         for ( int i = offset; i < (length + offset); i++ )
             this.append( b[i] );
+
+        return this;
     }
 
 
@@ -108,9 +116,11 @@ public class ByteArrayBuffer
      * Clear the data in the buffer,
      * will only set the length to 0
      */
-    public void clear()
+    public ByteArrayBuffer clear()
     {
         this.length = 0;
+
+        return this;
     }
 
 
@@ -206,7 +216,7 @@ public class ByteArrayBuffer
      *
      * @param capacity The new capacity (may be larger or smaller)
      */
-    public void setCapacity( int capacity )
+    public ByteArrayBuffer setCapacity( int capacity )
     {
         // Create our new buffer
         byte[] newBuffer = new byte[ capacity ];
@@ -221,6 +231,8 @@ public class ByteArrayBuffer
 
         // Replace our old buffer with our new one
         this.buffer = newBuffer;
+
+        return this;
     }
 
 

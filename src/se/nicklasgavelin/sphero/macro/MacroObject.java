@@ -3,6 +3,7 @@ package se.nicklasgavelin.sphero.macro;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import se.nicklasgavelin.sphero.macro.command.Emit;
 import se.nicklasgavelin.util.ByteArrayBuffer;
 
 /**

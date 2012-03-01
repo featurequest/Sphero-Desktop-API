@@ -5,12 +5,12 @@
 
 package se.nicklasgavelin.sphero.response.information;
 
-import se.nicklasgavelin.util.Array;
+import se.nicklasgavelin.sphero.response.InformationResponseMessage;
 
 /**
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
-public class DataResponse extends DeviceInformationResponse
+public class DataResponse extends InformationResponseMessage
 {
     private byte[] data;
 
@@ -26,7 +26,7 @@ public class DataResponse extends DeviceInformationResponse
 //        System.err.println( "DATA: " + rh.getPacketData() );
 
         // Internal data storage
-        this.data = rh.getPacketData().toByteArray( DeviceInformationResponse.INFORMATION_RESPONSE_HEADER_LENGTH, rh.getPacketLength() - 1 );
+        this.data = rh.getPacketData().toByteArray( InformationResponseMessage.INFORMATION_RESPONSE_HEADER_LENGTH, rh.getPacketLength() - 1 );
 //        System.err.println( "CONTENT: " + Array.stringify( data ) );
     }
 
@@ -47,7 +47,7 @@ public class DataResponse extends DeviceInformationResponse
      *
      * @return The sensor data length
      */
-    public int sensorDataLength()
+    public int getSensorDataLength()
     {
         return this.data.length;
     }

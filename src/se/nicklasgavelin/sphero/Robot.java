@@ -1,5 +1,8 @@
 package se.nicklasgavelin.sphero;
 
+import se.nicklasgavelin.sphero.macro.command.RGB;
+import se.nicklasgavelin.sphero.macro.command.Delay;
+import se.nicklasgavelin.sphero.macro.command.Emit;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.*;
@@ -15,9 +18,9 @@ import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
 import se.nicklasgavelin.sphero.exception.RobotInitializeConnectionFailed;
 import se.nicklasgavelin.sphero.macro.*;
-import se.nicklasgavelin.sphero.response.GetBluetoothInfoResponse;
+import se.nicklasgavelin.sphero.response.regular.GetBluetoothInfoResponse;
 import se.nicklasgavelin.sphero.response.ResponseMessage;
-import se.nicklasgavelin.sphero.response.information.DeviceInformationResponse;
+import se.nicklasgavelin.sphero.response.InformationResponseMessage;
 import se.nicklasgavelin.sphero.response.information.EmitResponse;
 import se.nicklasgavelin.util.ByteArrayBuffer;
 import se.nicklasgavelin.util.Pair;
@@ -59,7 +62,7 @@ public class Robot
         private final Collection<CommandMessage> sendingQueue;
         private final Collection<Integer> ballMemory;
         private boolean macroRunning, macroStreamingEnabled;
-        private static final int maxMacroSize = 100, robotStorageSpace = 900, minSpaceToSend = 50;
+        private static final int maxMacroSize = 200, robotStorageSpace = 600, minSpaceToSend = 180;
 
         private int emits = 0;
 
@@ -136,7 +139,7 @@ public class Robot
                     if ( !macro.getCommands().isEmpty() )
                     {
                         // Get all macro commands localy instead
-                        this.commands.clear();
+//                        this.commands.clear();
                         this.commands.addAll( macro.getCommands() );
 
                         this.macroRunning = true;
@@ -653,7 +656,7 @@ public class Robot
     }
 
 
-    private void notifyListenersInformationResponse( DeviceInformationResponse dir )
+    private void notifyListenersInformationResponse( InformationResponseMessage dir )
     {
         Logging.debug( "Nofifying listeners about information response " + dir );
 
@@ -788,10 +791,10 @@ public class Robot
 
         // Reset the robot
         this.sendSystemCommand( new AbortMacroCommand() );
-        this.sendSystemCommand( new RGBLEDCommand( this.getLed().getRGBColor() ) );
         this.sendSystemCommand( new RollCommand( this.movement.getHeading(), this.movement.getVelocity(), this.movement.getStop() ) );
         this.sendSystemCommand( new CalibrateCommand( this.movement.getHeading() ) );
         this.sendSystemCommand( new FrontLEDCommand( this.led.getFrontLEDBrightness() ) );
+        this.sendSystemCommand( new RGBLEDCommand( this.getLed().getRGBColor() ) );
 
         // Create our pinger
         this.sendSystemCommand( new PingCommand( this ), PING_INTERVAL, PING_INTERVAL );
@@ -1225,7 +1228,7 @@ public class Robot
             n[2] = (iInt ? fHSB[2] + (i * incInt) : fHSB[2] - (i * incInt));
 
             // Get new color
-            int ik = Color.HSBtoRGB( n[0], n[1], n[2] );
+            int ik = Color.HSBtoRGB( Value.clamp( n[0], 0, 1 ), Value.clamp( n[1], 0, 1 ), Value.clamp( n[2], 0, 1 ) );
             c = new Color( ik );
 
             // Add new RGB commands
@@ -1776,9 +1779,12 @@ public class Robot
                         }
                         else if ( drh.getResponseType().equals( ResponseMessage.ResponseHeader.RESPONSE_TYPE.INFORMATION ) )//drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.INFORMATION ) )
                         {
+                            // Update internal values if we got an OK from the robot
+                            if ( !drh.getResponseCode().equals( ResponseMessage.RESPONSE_CODE.CODE_OK ) )
+                                Logging.error( "Received response code " + drh.getResponseCode() );
 
                             // Fetch our information response
-                            DeviceInformationResponse dir = DeviceInformationResponse.valueOf( drh );
+                            InformationResponseMessage dir = InformationResponseMessage.valueOf( drh );
 
                             // TODO: Received information packet, what should we do, what SHOULD we do?
                             Logging.debug( "Received information packet: " + dir );

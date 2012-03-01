@@ -9,7 +9,6 @@ import java.util.EnumMap;
 import java.util.Map;
 import se.nicklasgavelin.log.Logging;
 import se.nicklasgavelin.sphero.command.CommandMessage;
-import se.nicklasgavelin.sphero.response.information.DeviceInformationResponse;
 import se.nicklasgavelin.util.ByteArrayBuffer;
 
 /**
@@ -41,7 +40,7 @@ public class ResponseMessage
      *
      * @param _drh The response header
      */
-    public ResponseMessage( ResponseHeader _drh )
+    protected ResponseMessage( ResponseHeader _drh )
     {
         this.drh = _drh;
         this.updateCorrupt();
@@ -75,7 +74,7 @@ public class ResponseMessage
     }
 
 
-    public void setCorrupt( boolean _corrupt )
+    protected void setCorrupt( boolean _corrupt )
     {
         this.corrupt = _corrupt;
     }
@@ -96,7 +95,7 @@ public class ResponseMessage
         return this.drh.getResponseType();
     }
 
-    public byte[] getPacketData()
+    protected byte[] getPacketData()
     {
         return this.getDataArray();
     }
@@ -106,7 +105,7 @@ public class ResponseMessage
      *
      * @return The packet data
      */
-    public ByteArrayBuffer getData()
+    protected ByteArrayBuffer getData()
     {
         return this.drh.getPacketData();
     }
@@ -153,7 +152,7 @@ public class ResponseMessage
                     Logging.debug( "Creating information packet from recevied data" );
 
                     // Continue with information
-                    DeviceInformationResponse.INFORMATION_RESPONSE_CODE ir = DeviceInformationResponse.INFORMATION_RESPONSE_CODE.valueOf( data[ResponseMessage.RESPONSE_CODE_INDEX] );
+                    InformationResponseMessage.INFORMATION_RESPONSE_CODE ir = InformationResponseMessage.INFORMATION_RESPONSE_CODE.valueOf( data[ResponseMessage.RESPONSE_CODE_INDEX] );
 
                     // Create our class name for the message
                     String className = ir.name().toLowerCase();
@@ -162,9 +161,11 @@ public class ResponseMessage
                     Logging.debug( "Parsed received data as a " + className + " information response" );
 
                     // Construct our new response message
+                    String n = InformationResponseMessage.class.getCanonicalName().replace( "Information", "information." + className );
+                    n = n.substring( 0, n.length() - "Message".length() );
                     @SuppressWarnings( "unchecked" )
-                    Constructor<DeviceInformationResponse> cons = ( Constructor<DeviceInformationResponse> ) Class.forName(
-                                                                        DeviceInformationResponse.class.getCanonicalName().replace( "DeviceInformation", className ) )
+                    Constructor<InformationResponseMessage> cons = ( Constructor<InformationResponseMessage> ) Class.forName(
+                                                                        n )
                                                                         .getConstructor( ResponseHeader.class );/*new Class[]
                             {
                                 (new byte[]
@@ -179,7 +180,6 @@ public class ResponseMessage
                 }
                 catch ( Exception ex )
                 {
-                    ex.printStackTrace();
                     Logging.error( "Failed to create information response packet from received data ", ex );
                 }
                 break;
@@ -203,7 +203,7 @@ public class ResponseMessage
                     // Create the new instance
                     @SuppressWarnings( "unchecked" )
                     Constructor<ResponseMessage> cons = ( Constructor<ResponseMessage> ) Class.forName(
-                                                            ResponseMessage.class.getCanonicalName().replace( "ResponseMessage", name + "Response" ) )
+                                                            ResponseMessage.class.getCanonicalName().replace( "ResponseMessage", "regular." + name + "Response" ) )
                                                             .getConstructor( ResponseHeader.class );/*new Class[]
                             {
                                 (new byte[]

@@ -25,7 +25,7 @@ public class Configuration
     /**
      * Name of logger
      */
-    public static final String loggerName = "mohahha";
+    public static final String loggerName = "se.nicklasgavelin";
 
     /**
      * Value for turning on/off Bluecove library debugging
@@ -35,7 +35,7 @@ public class Configuration
     /**
      * The logging level during runtime
      */
-    public static Logging.Level debugLevel = Logging.Level.DEBUG;
+    public static Logging.Level debugLevel = Logging.Level.ERROR;
 
     static
     {

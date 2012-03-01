@@ -5,7 +5,9 @@
 
 package experimental.test;
 
+import java.awt.Color;
 import java.util.Collection;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.nicklasgavelin.bluetooth.Bluetooth;
 import se.nicklasgavelin.bluetooth.Bluetooth.EVENT;
@@ -15,16 +17,19 @@ import se.nicklasgavelin.log.Logging;
 import se.nicklasgavelin.sphero.Robot;
 import se.nicklasgavelin.sphero.RobotListener;
 import se.nicklasgavelin.sphero.command.CommandMessage;
+import se.nicklasgavelin.sphero.command.RGBLEDCommand;
 import se.nicklasgavelin.sphero.command.RawMotorCommand;
 import se.nicklasgavelin.sphero.command.SetDataStreamingCommand;
 import se.nicklasgavelin.sphero.exception.InvalidRobotAddressException;
 import se.nicklasgavelin.sphero.exception.RobotBluetoothException;
-import se.nicklasgavelin.sphero.macro.Delay;
+import se.nicklasgavelin.sphero.macro.command.Delay;
 import se.nicklasgavelin.sphero.macro.MacroObject;
-import se.nicklasgavelin.sphero.macro.RawMotor;
+import se.nicklasgavelin.sphero.macro.command.RawMotor;
+import experimental.sphero.macro.Rotate;
+import se.nicklasgavelin.sphero.macro.command.*;
 import se.nicklasgavelin.sphero.response.ResponseMessage;
 import se.nicklasgavelin.sphero.response.information.DataResponse;
-import se.nicklasgavelin.sphero.response.information.DeviceInformationResponse;
+import se.nicklasgavelin.sphero.response.InformationResponseMessage;
 
 /**
  *
@@ -39,9 +44,9 @@ public class Experimental_Main implements BluetoothDiscoveryListener, RobotListe
      * @param args All arguments are ignored
      *
      * @throws InvalidRobotAddressException If the address for the robot is
-     *                                      invalid
+     * invalid
      * @throws RobotBluetoothException      If there occurs a Bluetooth
-     *                                      exception during connecting
+     * exception during connecting
      */
     public static void main( String[] args ) throws InvalidRobotAddressException, RobotBluetoothException
     {
@@ -49,7 +54,6 @@ public class Experimental_Main implements BluetoothDiscoveryListener, RobotListe
 //        System.out.println( calculateChecksum( data ) );
         Experimental_Main experimental_Main = new Experimental_Main();
     }
-
 
 
     private static byte calculateChecksum( String data )
@@ -65,27 +69,62 @@ public class Experimental_Main implements BluetoothDiscoveryListener, RobotListe
 
         return ( byte ) (checksum ^ 0xFFFFFFFF);
     }
+    private int delay = 25;
+    private int steps = 100;
 
 
     private Experimental_Main() throws InvalidRobotAddressException, RobotBluetoothException
     {
         Logging.debug( "test" );
-        String id = "00066644390F";// ( - | x | - ) // "000666440DB8"; // ( x | - | - )
+        String id = "000666440DB8"; // ( x | - | - ) "00066644390F";// ( - | x | - ) //
         Robot r = new Robot(
                 new BluetoothDevice(
                 new Bluetooth( this, Bluetooth.SERIAL_COM ),
                 "btspp://" + id + ":1;authenticate=true;encrypt=false;master=false" ) );
 
+        Logger.getLogger( Experimental_Main.class.getName() ).log( Level.INFO, "Trying to connect to robot" );
         if ( r.connect() )
         {
             r.addListener( this );
-            System.out.println( "Connected" );
-            r.sendCommand( new RawMotorCommand( RawMotorCommand.MOTOR_MODE.FORWARD, 0, RawMotorCommand.MOTOR_MODE.FORWARD, 0 ) );
-            SetDataStreamingCommand sds = new SetDataStreamingCommand( 100, 1, SetDataStreamingCommand.DATA_STREAMING_MASKS.ACCELEROMETER.ALL.RAW, 65534 );
-            r.sendCommand( new SetDataStreamingCommand(
-                    100,
-                    1,
-                    65534 ) );
+            Logger.getLogger( Experimental_Main.class.getName() ).log( Level.INFO, "Connected to robot" );
+
+            MacroObject mo = new MacroObject();
+            mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
+            mo.addCommand( new RGB( Color.WHITE, 0 ) );
+            mo.addCommand( new Fade( 255, 0, 0, 500 ) );
+            mo.addCommand( new Delay( 1000 ) );
+
+            mo.addCommand( new Fade( 0, 255, 0, 500 ) );
+            mo.addCommand( new Delay( 1000 ) );
+
+            mo.addCommand( new Fade( 0, 0, 255, 500 ) );
+            mo.addCommand( new Delay( 1000 ) );
+
+            r.sendCommand( mo );
+
+//            for( int i = 0; i < 1000; i++ )
+//            {
+//                Color from = se.nicklasgavelin.util.Color.fromHex( "33FF00" );
+//             &   Color to = se.nicklasgavelin.util.Color.fromHex( "FF8900" );
+//                r.rgbTransition( from, to, steps, delay );
+//                r.rgbTransition( to, from, steps, delay );
+//
+//                try
+//                {
+//                    Thread.sleep(1000);
+//                }
+//                catch ( InterruptedException ex )
+//                {
+//                    Logger.getLogger( Experimental_Main.class.getName() ).log( Level.SEVERE, null, ex );
+//                }
+//            }
+
+//            r.sendCommand( new RawMotorCommand( RawMotorCommand.MOTOR_MODE.FORWARD, 0, RawMotorCommand.MOTOR_MODE.FORWARD, 0 ) );
+//            SetDataStreamingCommand sds = new SetDataStreamingCommand( 100, 1, SetDataStreamingCommand.DATA_STREAMING_MASKS.ACCELEROMETER.ALL.RAW, 65534 );
+//            r.sendCommand( new SetDataStreamingCommand(
+//                    100,
+//                    1,
+//                    65534 ) );
 
 
 
@@ -181,16 +220,41 @@ public class Experimental_Main implements BluetoothDiscoveryListener, RobotListe
     public void responseReceived( Robot r, ResponseMessage response, CommandMessage dc )
     {
     }
+    private int p = 0;
 
 
     @Override
     public void event( Robot r, EVENT_CODE code )
     {
+        System.out.println( "Macro done" );
+//
+//        switch( code )
+//        {
+//            case MACRO_DONE:
+//                if( p == 0 )
+//                {
+//                    r.rgbTransition( Color.RED, Color.BLUE, steps, delay );
+////                    r.sendCommandAfterMacro( new RGBLEDCommand( Color.BLUE ) );
+//                }
+//                else if( p == 1 )
+//                {
+//                    r.rgbTransition( Color.BLUE, Color.RED, steps, delay );
+////                    r.sendCommandAfterMacro( new RGBLEDCommand( Color.RED ) );
+//                }
+//                else if( p == 2 )
+//                {
+//                    r.rgbTransition( Color.RED, Color.BLACK, steps, delay );
+////                    r.sendCommandAfterMacro( new RGBLEDCommand( Color.BLACK ) );
+//                }
+//
+//                p = (++p % 3);
+//            break;
+//        }
     }
 
 
     @Override
-    public void informationResponseReceived( Robot r, DeviceInformationResponse response )
+    public void informationResponseReceived( Robot r, InformationResponseMessage response )
     {
         if ( response instanceof DataResponse )
         {

@@ -4,12 +4,14 @@
  */
 package se.nicklasgavelin.sphero.response.information;
 
+import se.nicklasgavelin.sphero.response.InformationResponseMessage;
+
 /**
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology
  */
-public class EmitResponse extends DeviceInformationResponse
+public class EmitResponse extends InformationResponseMessage
 {
     /**
      * Index for the identifier

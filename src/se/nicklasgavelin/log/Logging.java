@@ -118,7 +118,7 @@ public class Logging
     /**
      * Log appender interface
      */
-    public static interface Appender
+    protected static interface Appender
     {
         /**
          * Log message

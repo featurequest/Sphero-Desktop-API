@@ -32,7 +32,7 @@ public class GetBluetoothInfoResponse extends ResponseMessage
 
         if ( !isCorrupt() )
         {
-            byte[] data = this.getPacketData();
+            byte[] data = this.getPacketPayload();
             if ( data == null || (data.length != INFO_DATA_LENGTH && data.length != OLD_INFO_DATA_LENGTH) )
             {
                 System.err.println( "Data is corrupt" );

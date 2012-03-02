@@ -12,8 +12,6 @@ import se.nicklasgavelin.sphero.response.InformationResponseMessage;
  */
 public class DataResponse extends InformationResponseMessage
 {
-    private byte[] data;
-
     /**
      * Response message for sensor data
      *
@@ -23,11 +21,7 @@ public class DataResponse extends InformationResponseMessage
     {
         super( rh );
 
-//        System.err.println( "DATA: " + rh.getPacketData() );
-
-        // Internal data storage
-        this.data = rh.getPacketData().toByteArray( InformationResponseMessage.INFORMATION_RESPONSE_HEADER_LENGTH, rh.getPacketLength() - 1 );
-//        System.err.println( "CONTENT: " + Array.stringify( data ) );
+//        System.err.println( "DATA: " + rh.getPacketPayload() );
     }
 
 
@@ -38,7 +32,7 @@ public class DataResponse extends InformationResponseMessage
      */
     public byte[] getSensorData()
     {
-        return this.data;
+        return super.getMessageHeader().getPacketPayload();
     }
 
 
@@ -49,6 +43,6 @@ public class DataResponse extends InformationResponseMessage
      */
     public int getSensorDataLength()
     {
-        return this.data.length;
+        return super.getPacketPayload().length;
     }
 }

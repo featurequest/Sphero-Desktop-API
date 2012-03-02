@@ -5,6 +5,8 @@
 
 package experimental.test;
 
+import experimental.sensor.AccelerometerSensorData;
+import experimental.sensor.TouchSensor;
 import java.awt.Color;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -36,7 +38,7 @@ import se.nicklasgavelin.sphero.response.InformationResponseMessage;
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  * Technology
  */
-public class Experimental_Main implements BluetoothDiscoveryListener, RobotListener
+public class Experimental_Main implements BluetoothDiscoveryListener, RobotListener, TouchSensor.TouchListener
 {
     /**
      * Main method for experimental stuff
@@ -54,6 +56,7 @@ public class Experimental_Main implements BluetoothDiscoveryListener, RobotListe
 //        System.out.println( calculateChecksum( data ) );
         Experimental_Main experimental_Main = new Experimental_Main();
     }
+    private TouchSensor s;
 
 
     private static byte calculateChecksum( String data )
@@ -76,7 +79,9 @@ public class Experimental_Main implements BluetoothDiscoveryListener, RobotListe
     private Experimental_Main() throws InvalidRobotAddressException, RobotBluetoothException
     {
         Logging.debug( "test" );
-        String id = "000666440DB8"; // ( x | - | - ) "00066644390F";// ( - | x | - ) //
+        String id = "00066644390F" /* x - - */;
+//        String id = "000666440DB8" /* - - x */;
+
         Robot r = new Robot(
                 new BluetoothDevice(
                 new Bluetooth( this, Bluetooth.SERIAL_COM ),
@@ -88,19 +93,23 @@ public class Experimental_Main implements BluetoothDiscoveryListener, RobotListe
             r.addListener( this );
             Logger.getLogger( Experimental_Main.class.getName() ).log( Level.INFO, "Connected to robot" );
 
-            MacroObject mo = new MacroObject();
-            mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
-            mo.addCommand( new RGB( Color.WHITE, 0 ) );
-            mo.addCommand( new Fade( 255, 0, 0, 500 ) );
-            mo.addCommand( new Delay( 1000 ) );
+            s = new TouchSensor( r );
+            s.addTouchListener( this );
+            startStream( r );
 
-            mo.addCommand( new Fade( 0, 255, 0, 500 ) );
-            mo.addCommand( new Delay( 1000 ) );
-
-            mo.addCommand( new Fade( 0, 0, 255, 500 ) );
-            mo.addCommand( new Delay( 1000 ) );
-
-            r.sendCommand( mo );
+//            MacroObject mo = new MacroObject();
+//            mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
+//            mo.addCommand( new RGB( Color.WHITE, 0 ) );
+//            mo.addCommand( new Fade( 255, 0, 0, 500 ) );
+//            mo.addCommand( new Delay( 1000 ) );
+//
+//            mo.addCommand( new Fade( 0, 255, 0, 500 ) );
+//            mo.addCommand( new Delay( 1000 ) );
+//
+//            mo.addCommand( new Fade( 0, 0, 255, 500 ) );
+//            mo.addCommand( new Delay( 1000 ) );
+//
+//            r.sendCommand( mo );
 
 //            for( int i = 0; i < 1000; i++ )
 //            {
@@ -120,28 +129,6 @@ public class Experimental_Main implements BluetoothDiscoveryListener, RobotListe
 //            }
 
 //            r.sendCommand( new RawMotorCommand( RawMotorCommand.MOTOR_MODE.FORWARD, 0, RawMotorCommand.MOTOR_MODE.FORWARD, 0 ) );
-//            SetDataStreamingCommand sds = new SetDataStreamingCommand( 100, 1, SetDataStreamingCommand.DATA_STREAMING_MASKS.ACCELEROMETER.ALL.RAW, 65534 );
-//            r.sendCommand( new SetDataStreamingCommand(
-//                    100,
-//                    1,
-//                    65534 ) );
-
-
-
-
-//            r.sendCommand( new SetDataStreamingCommand( 100, 1, SetDataStreamingCommand.DATA_STREAMING_MASK_ACCELEROMETER_X_RAW | SetDataStreamingCommand.DATA_STREAMING_MASK_ACCELEROMETER_Y_RAW | SetDataStreamingCommand.DATA_STREAMING_MASK_ACCELEROMETER_Z_RAW, 65534 ) );
-//            r.stopMacro();
-//            r.sendCommandAfterMacro( new RGBLEDCommand( Color.BLUE ) );
-//            r.rgbTransition( Color.RED, Color.BLUE, 300, 25 );
-
-            //MacroObject mo = this.createSwingMotionMacro( 255, 1, 50 );
-            //mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
-            //r.sendCommand( mo );
-//            MacroObject mo = new MacroObject();
-//            mo.addCommand( new RawMotor( RawMotorCommand.MOTOR_MODE.FORWARD, 100, RawMotorCommand.MOTOR_MODE.FORWARD, 100 ) );
-//            mo.addCommand( new Delay( 5000 ) );
-//            mo.addCommand( new RawMotor( RawMotorCommand.MOTOR_MODE.FORWARD, 0, RawMotorCommand.MOTOR_MODE.FORWARD, 0 ) );
-//            r.sendCommand( mo );
         }
         else
             System.err.println( "Failed to connect" );
@@ -253,13 +240,56 @@ public class Experimental_Main implements BluetoothDiscoveryListener, RobotListe
     }
 
 
+    private void startStream( Robot r )
+    {
+        SetDataStreamingCommand sds = new SetDataStreamingCommand( 4, 1, SetDataStreamingCommand.DATA_STREAMING_MASKS.GYRO.ALL.RAW, 100 ); //new SetDataStreamingCommand( 1, 1, SetDataStreamingCommand.DATA_STREAMING_MASKS.ACCELEROMETER.ALL.RAW, 65534 );
+        r.sendCommand( sds );
+    }
+    private int co = 0;
+
+
     @Override
     public void informationResponseReceived( Robot r, InformationResponseMessage response )
     {
         if ( response instanceof DataResponse )
         {
+            co++;
+
+            if ( co > 90 )
+            {
+                startStream( r );
+                co = 0;
+            }
+
             DataResponse dr = ( DataResponse ) response;
             byte[] data = dr.getSensorData();
+
+            int x = (data[1] | (data[0] << 8));
+            int y = (data[3] | (data[2] << 8));
+            int z = (data[5] | (data[4] << 8));
+
+//            System.out.println( "X=" + x + ", Y=" + y + ", Z=" + z );
+            s.addData( new AccelerometerSensorData( x, y, z ) );
         }
+    }
+
+
+    @Override
+    public void touchEvent( Robot r )
+    {
+        int d = 500, k = 250;
+        MacroObject mo = new MacroObject();
+        mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
+        mo.addCommand( new RGB( Color.WHITE, 0 ) );
+        mo.addCommand( new Fade( 255, 0, 0, k ) );
+        mo.addCommand( new Delay( d ) );
+
+        mo.addCommand( new Fade( 0, 255, 0, k ) );
+        mo.addCommand( new Delay( d ) );
+
+        mo.addCommand( new Fade( 0, 0, 255, k ) );
+        mo.addCommand( new Delay( d ) );
+
+        r.sendCommand( mo );
     }
 }

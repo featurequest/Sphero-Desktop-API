@@ -1,3 +1,4 @@
+
 package se.nicklasgavelin.sphero;
 
 import se.nicklasgavelin.sphero.macro.command.RGB;
@@ -22,6 +23,7 @@ import se.nicklasgavelin.sphero.response.regular.GetBluetoothInfoResponse;
 import se.nicklasgavelin.sphero.response.ResponseMessage;
 import se.nicklasgavelin.sphero.response.InformationResponseMessage;
 import se.nicklasgavelin.sphero.response.information.EmitResponse;
+import se.nicklasgavelin.util.Array;
 import se.nicklasgavelin.util.ByteArrayBuffer;
 import se.nicklasgavelin.util.Pair;
 import se.nicklasgavelin.util.Value;
@@ -63,8 +65,8 @@ public class Robot
         private final Collection<Integer> ballMemory;
         private boolean macroRunning, macroStreamingEnabled;
         private static final int maxMacroSize = 200, robotStorageSpace = 600, minSpaceToSend = 180;
-
         private int emits = 0;
+
 
         /**
          * Create a macro settings object
@@ -101,8 +103,8 @@ public class Robot
          */
         protected void stopIfFinished()
         {
-            emits = (emits > 0 ? emits - 1 : 0 );
-            if ( this.commands.isEmpty() && this.macroRunning && emits == 0)
+            emits = (emits > 0 ? emits - 1 : 0);
+            if ( this.commands.isEmpty() && this.macroRunning && emits == 0 )
             {
                 for ( CommandMessage cmd : this.sendingQueue )
                     sendCommand( cmd );
@@ -660,7 +662,7 @@ public class Robot
     {
         Logging.debug( "Nofifying listeners about information response " + dir );
 
-        for( RobotListener r : this.listeners )
+        for ( RobotListener r : this.listeners )
             r.informationResponseReceived( this, dir );
     }
 
@@ -1693,17 +1695,31 @@ public class Robot
         }
 
 
+        private byte[] linkedToArray( List<Byte> list )
+        {
+            byte[] d = new byte[ list.size() ];
+            for( int i = 0; i < list.size(); i++ )
+                d[ i ] = list.get( i );
+
+//            for ( int i = 0; list.size() > 0; i++ )
+//                d[ i] = list.remove( 0 );
+
+            return d;
+        }
+
+
         /**
          * Runs the listening of the socket
          */
         @Override
         public void run()
         {
-            ByteArrayBuffer buf = new ByteArrayBuffer( BUFFER_SIZE );
+//            ByteArrayBuffer buf = new ByteArrayBuffer( BUFFER_SIZE );
 
             // Create a data array that contains all our read
             // data.
             byte[] data = new byte[ BUFFER_SIZE ];
+            LinkedList<Byte> buffer = new LinkedList<Byte>();
 
             // Run until we manually stop the thread
             while ( !this.stop )
@@ -1713,117 +1729,206 @@ public class Robot
                     int read = this.btc.read( data );
                     if ( read == -1 )
                         throw new IOException( "Reached end of stream" );
-                    buf.append( data, 0, read );
 
-//                    System.out.println("Read " + read);
+                    // Append all newly read values to our buffer
+                    // These values may only be the header or may as well be
+                    // multiple messages depending on how much we could read this time
+                    for ( int k = 0; k < read; k++ )
+                        buffer.add( data[k] );
 
-                    // Read until we get the header
-                    int dataLength = 0;
-                    while ( buf.length() < ResponseMessage.RESPONSE_HEADER_LENGTH + dataLength ) // Header length + checksum length + data length
+                    // Now we will continue to read until we got the whole message
+                    // if we already have the whole message, skip this part
+                    for ( int dataLength = 0; buffer.size() < (ResponseMessage.RESPONSE_HEADER_LENGTH + dataLength); )
                     {
-                        read = this.btc.read( data );
-                        buf.append( data, 0, read );
+                        // We need to read more of the data input to get a complete message
+                        // Now read once again until we reach the end of the message
+                        read = this.btc.read( data ); // Store it in the data array as earlier
 
-                        if ( buf.length() > ResponseMessage.PACKET_LENGTH_INDEX ) // Set data length
-                            dataLength = buf.toByteArray()[ ResponseMessage.PACKET_LENGTH_INDEX];
+                        // Append the read data to our data list
+                        for ( int k = 0; k < read; k++ )
+                            buffer.add( data[k] );
+
+                        // Now we have read a number of bytes and may have the complete message
+                        // But we will check so that we have read equal to the complete message
+                        // length or more (more messages than one is fine as long as we have at least one
+                        // complete message)
+                        if ( buffer.size() > ResponseMessage.PAYLOAD_LENGTH_INDEX )
+                        {
+                            // We check the length of the packet by reading the length index
+                            // These indexes are the same both for information and regular packets
+                            // so it's fine selecting whatever index that we need
+                            dataLength = linkedToArray( buffer )[ ResponseMessage.PAYLOAD_LENGTH_INDEX];
+                        }
                     }
 
-                    // Fetch all our data that we got in our buffer
-                    byte[] newData = buf.toByteArray();
+                    // Now we have at least one fine packet
+                    // convert the linked list to an array that we can read from (easier reading)
+                    byte[] nData = linkedToArray( buffer );
 
-                    // Start reading messages from the buffer that we got
-                    int read2 = 0;
-                    for ( int pointer = 0;
-                          pointer < buf.length()
-                          && (newData.length - pointer >= ResponseMessage.RESPONSE_HEADER_LENGTH)
-                          && (newData.length - pointer >= ResponseMessage.RESPONSE_HEADER_LENGTH + newData[pointer + ResponseMessage.PACKET_LENGTH_INDEX]); )
+                    // Now we have our read data, the next step is to start reading messages until
+                    // we have read all completed messages in the array, after we have read all messages
+                    // we will dump all remaining data in the buffer once again and then we will continue
+                    // reading from the top again
+                    int read2 = 0; // Read to point in array
+                    for ( int pointer = 0; pointer < buffer.size() && (nData.length - pointer >= ResponseMessage.RESPONSE_HEADER_LENGTH) && (nData.length - pointer >= (ResponseMessage.RESPONSE_HEADER_LENGTH + nData[pointer + ResponseMessage.PAYLOAD_LENGTH_INDEX])); )
                     {
-                        // Copy data
-                        ResponseMessage.ResponseHeader drh = new ResponseMessage.ResponseHeader( newData, pointer );
+                        // Now the above restrictions make these things come true
+                        //  1. Our current position in the buffer array (nData) is not more than our buffer size
+                        //  2. Our current message length is above that of the header length of a message (We got a header to read)
+                        //  3. Our current message length is above that of the header length + the packet length (We got a complete packet to read)
+                        // These restriction makes us able to read a COMPLETED message and not only the header part of the message
 
-                        if ( drh.getResponseType().equals( ResponseMessage.ResponseHeader.RESPONSE_TYPE.RESPONSE ) )
+                        // Now we will start by creating an object for our header
+                        // The header will select our specific message values such as response code and type
+                        // and also the length of the contained data
+                        ResponseMessage.ResponseHeader drh = new ResponseMessage.ResponseHeader( nData, pointer );
+
+                        // Check the type of the response,
+                        // Regular response is messages received after sending a command to the device
+                        // Information response is messages received as an effect of sending a specific command that
+                        // sets the Sphero to keep sending information for some given reason
+                        switch ( drh.getResponseType() )
                         {
-                            Pair<CommandMessage, Boolean> cmd = waitingForResponse.remove();
+                            /* Regular response message */
+                            case REGULAR:
+                                // We have received the message as an action that depends on a message
+                                // we sent earlier, now check which message that this response corresponds to
+                                Pair<CommandMessage, Boolean> cmd = waitingForResponse.remove();
 
-                            // Build our Device response
-                            ResponseMessage response = ResponseMessage.valueOf( cmd.getFirst(), drh );
-                            CommandMessage.COMMAND_MESSAGE_TYPE cmd_type = cmd.getFirst().getCommand();
+                                // Fetch the type of command that we sent, this is used for debugging purposes
+                                CommandMessage.COMMAND_MESSAGE_TYPE cmdType = cmd.getFirst().getCommand();
 
-                            Logging.debug( "Received response packet: " + response + (cmd.getSecond() ? " as a SYSTEM RESPONSE" : "") );
+                                // The command that we sent will act as the decider for which type of response that
+                                // we received. The response we create is in fact the response which corresponds to the
+                                // command that we sent, although it's an super type that we extend for increased functionality
+                                ResponseMessage response = ResponseMessage.valueOf( cmd.getFirst(), drh );
 
-                            // Update internal values if we got an OK from the robot
-                            if ( drh.getResponseCode().equals( ResponseMessage.RESPONSE_CODE.CODE_OK ) )
-                                updateInternalValues( cmd.getFirst() );
-                            else
-                                Logging.error( "Received response code " + drh.getResponseCode() + " for " + cmd_type );
+                                // Print some debug information that will help us if we end up with trouble later on
+                                Logging.debug( "Received response packet: " + response + (cmd.getSecond() ? " as a SYSTEM RESPONSE" : "") );
 
-                            // Check if we got a system command or not
-                            if ( cmd.getSecond() )
-                            {
-                                // System command
-                                switch ( cmd_type )
+                                // Update internal values if we got an OK response code from the robot
+                                // on the command that we sent. We use a switch case instead of an if/elseif for nicer looking code ;-)
+                                switch ( drh.getResponseCode() )
                                 {
-                                    case GET_BLUETOOTH_INFO:
-                                        // Update Sphero name
-                                        GetBluetoothInfoResponse gb = ( GetBluetoothInfoResponse ) response;
-                                        if ( !gb.isCorrupt() )
-                                            name = gb.getName();
+                                    /* Code OK, nothing went wrong with the command that we sent */
+                                    case CODE_OK:
+                                        // Update the internal settings for the robot with the response stuff that we have received
+                                        updateInternalValues( cmd.getFirst() );
+                                        break;
+                                    default:
+                                        Logging.error( "Received response code " + drh.getResponseCode() + " for " + cmdType );
                                         break;
                                 }
-                            }
-                            else
-                            {
-                                // Ordinary command, notify listeners
-                                Robot.this.notifyListenersDeviceResponse( response, cmd.getFirst() );
-                            }
+
+                                // Check if we sent the command as a system command (command sent by the inner classes or robot class for setting
+                                // up the device itself and not by the user)
+                                if ( cmd.getSecond() ) // System command
+                                {
+                                    // The sent command is a system command
+                                    // Check which type of command to see if we need to update something internal
+                                    switch ( cmdType )
+                                    {
+                                        /* A bluetooth information message that returns information about the bluetooth
+                                         * connection */
+                                        case GET_BLUETOOTH_INFO:
+                                            // Check that the response is OK so that we can do something with our data
+                                            if ( drh.getResponseCode().equals( ResponseMessage.RESPONSE_CODE.CODE_OK ) )
+                                            {
+                                                // Update Sphero name
+                                                GetBluetoothInfoResponse gb = ( GetBluetoothInfoResponse ) response;
+                                                if ( !gb.isCorrupt() )
+                                                    name = gb.getName();
+                                                break;
+                                            }
+                                    }
+                                }
+                                else // Notify user
+                                {
+                                    // The sent command is a user sent command that we need to notify the user about
+                                    Robot.this.notifyListenersDeviceResponse( response, cmd.getFirst() );
+                                }
+                                break;
+
+                            /* Information response message */
+                            case INFORMATION:
+                                // Check if we got a OK response code so that we can read the message that we received
+                                // Otherwise we need to throw away the message
+                                switch ( drh.getResponseCode() )
+                                {
+                                    /* OK response code, message is fine */
+                                    case CODE_OK:
+                                        // Now create our message from the data that we have received
+                                        InformationResponseMessage dir = InformationResponseMessage.valueOf( drh );
+
+                                        if ( !dir.isCorrupt() )
+                                        {
+                                            // Message content is OK and we can send the data onwards for handling
+                                            switch ( dir.getInformationResponseType() )
+                                            {
+                                                /* Data message, contains sensor data */
+                                                /* Emit macro message */
+                                                case EMIT:
+                                                    if ( Robot.this.macroSettings.macroRunning )
+                                                    {
+                                                        // We have a macro running and received an emit message
+                                                        // now we want to continue sending any data that is left
+                                                        // for transmission regarding a macro
+                                                        if ( Robot.this.macroSettings.ballMemory.size() > 0 )
+                                                        {
+                                                            // Remove the size of the last macro that we have allocated for the macro data
+                                                            // as the robot has a limited amount of memory for macro storage
+                                                            Robot.this.macroSettings.ballMemory.remove( ( Integer ) macroSettings.ballMemory.toArray()[0] );
+                                                        }
+
+                                                        // Transmit any remaining macro data now that we got more memory on the device
+                                                        Robot.this.macroSettings.emptyMacroCommandQueue();
+                                                    }
+                                                    break;
+
+                                                /* Data message and any other type of message */
+                                                case DATA:
+                                                    // Notify listeners about a received data message
+                                                    Robot.this.notifyListenersInformationResponse( dir );
+                                                    break;
+
+                                                /* Not implemented type of information message received, ignore it and log this
+                                                 * occurrence */
+                                                default:
+//                                                    Logging.error( "Unkown type of information message was received " );
+                                                    break;
+                                            }
+                                        }
+                                        else
+                                            // Received a corrupt message code for some reason, log the instance
+                                            Logging.error( "Received corrupt information response message " + dir );
+                                        break;
+                                }
+                                break;
+
+                            /* Unknown response code received */
+                            default:
+//                                Logging.error( "Unkown response type received: " + drh.getResponseType() );
+                                break;
                         }
-                        else if ( drh.getResponseType().equals( ResponseMessage.ResponseHeader.RESPONSE_TYPE.INFORMATION ) )//drh.getHeader().equals( DeviceResponseHeader.HEADER_TYPE.INFORMATION ) )
-                        {
-                            // Update internal values if we got an OK from the robot
-                            if ( !drh.getResponseCode().equals( ResponseMessage.RESPONSE_CODE.CODE_OK ) )
-                                Logging.error( "Received response code " + drh.getResponseCode() );
 
-                            // Fetch our information response
-                            InformationResponseMessage dir = InformationResponseMessage.valueOf( drh );
+                        // Now we need to move our pointer forward so that
+                        // we may continue to read any other messages that we have read in our
+                        // buffer array, but first check which type of header that we need to use for calculating the complete packet length
+                        int headerLength = (drh.getResponseType().equals( ResponseMessage.ResponseHeader.RESPONSE_TYPE.INFORMATION ) ? ResponseMessage.INFORMATION_RESPONSE_HEADER_LENGTH : ResponseMessage.RESPONSE_HEADER_LENGTH);
 
-                            // TODO: Received information packet, what should we do, what SHOULD we do?
-                            Logging.debug( "Received information packet: " + dir );
-
-                            if ( Robot.this.macroSettings.macroRunning && dir instanceof EmitResponse )
-                            {
-                                // Check if we want to abort macro execution
-                                // Macro has been saved, now get the fuck out!
-                                if ( Robot.this.macroSettings.ballMemory.size() > 0 )
-                                    Robot.this.macroSettings.ballMemory.remove( ( Integer ) macroSettings.ballMemory.toArray()[0] );
-                                Robot.this.macroSettings.emptyMacroCommandQueue();
-
-                                // Stop macro execution if the macro is not running any longer
-                                Robot.this.macroSettings.stopIfFinished();
-                            }
-                            else
-                            {
-                                // Notify listeners about a new information response as long it's not an internal response
-                                Robot.this.notifyListenersInformationResponse( dir );
-                            }
-                        }
-                        else
-                        {
-                            // Unknown packet type
-                            Logging.error( "Received unrecognized packet: " + drh );
-                        }
-
-                        // Move our pointer forward
-                        pointer += drh.getPacketLength() + ResponseMessage.RESPONSE_HEADER_LENGTH;
-                        read2 = pointer;
+                        // Add the current packet length to the data pointer
+                        read2 = (pointer += drh.getPayloadLength() + headerLength);
                     }
 
-                    // Remove all old data from the buffer
-                    buf.clear();
+                    // Now we need to clear our data array and add any data that
+                    // we couldn't read cause it was incomplete to our buffer
+                    // for handling when we have read more information
+                    buffer.clear();
 
-                    // Check if we could handle all the messages that we had,
-                    // if not add them to the next batch
-                    if ( newData.length - read2 > 0 )
-                        buf.append( newData, read2, newData.length - read2 );
+                    // Add the remaining data to the buffer by reading
+                    // from our abandoned position
+                    for( ; read2 < nData.length; read2++)
+                        buffer.add( nData[read2] );
                 }
                 catch ( NullPointerException e )
                 {

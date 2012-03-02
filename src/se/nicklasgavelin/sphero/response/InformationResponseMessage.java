@@ -4,6 +4,8 @@
  */
 package se.nicklasgavelin.sphero.response;
 
+import se.nicklasgavelin.util.Array;
+
 /**
  *
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
@@ -64,7 +66,7 @@ public class InformationResponseMessage extends ResponseMessage
     public InformationResponseMessage( ResponseHeader rh )
     {
         super( rh );
-        this.responseType = INFORMATION_RESPONSE_CODE.valueOf( rh.getPacketData().toByteArray()[InformationResponseMessage.INFORMATION_RESPONSE_CODE_INDEX] );
+        this.responseType = INFORMATION_RESPONSE_CODE.valueOf( rh.getRawPacket()[InformationResponseMessage.INFORMATION_RESPONSE_TYPE_INDEX] );
     }
 
     /**

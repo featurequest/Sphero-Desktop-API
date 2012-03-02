@@ -41,7 +41,7 @@ public class VersioningResponse extends ResponseMessage
         // Check so that we got a valid response
         if ( !isCorrupt() )
         {
-            byte[] data = this.getPacketData();
+            byte[] data = this.getPacketPayload();
 
             this.recordVersion = ((data[ RECORD_VERSION_INDEX] >> 4) + "." + (0xF & data[ RECORD_VERSION_INDEX]));
             this.modelNumber = data[ MODEL_VERSION_INDEX];

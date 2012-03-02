@@ -14,7 +14,7 @@ import se.nicklasgavelin.sphero.response.ResponseMessage;
 public class AbortMacroResponse extends ResponseMessage
 {
     public static final int NO_MACRO_RUNNING = 0;
-    public static final int MACRO_ID_INDEX = RESPONSE_HEADER_LENGTH;
+    public static final int MACRO_ID_INDEX = 0;
     private int macroId;
 
 
@@ -28,7 +28,7 @@ public class AbortMacroResponse extends ResponseMessage
 //            this.macroId = 0;
 //        }
 //        else
-            this.macroId = rh.getPacketData().toByteArray()[ RESPONSE_HEADER_LENGTH];
+            this.macroId = rh.getPacketPayload()[ MACRO_ID_INDEX ];
     }
 
 

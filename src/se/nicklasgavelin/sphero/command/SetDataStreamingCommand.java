@@ -116,14 +116,18 @@ public class SetDataStreamingCommand extends CommandMessage
     protected byte[] getPacketData()
     {
         byte[] data = new byte[ 9 ];
+
         data[0] = ( byte ) (this.mDivisor >> 8);
         data[1] = ( byte ) this.mDivisor;
+
         data[2] = ( byte ) (this.mPacketFrames >> 8);
         data[3] = ( byte ) this.mPacketFrames;
+
         data[4] = ( byte ) (this.mSensorMask >> 24);
         data[5] = ( byte ) (this.mSensorMask >> 16);
         data[6] = ( byte ) (this.mSensorMask >> 8);
         data[7] = ( byte ) this.mSensorMask;
+
         data[8] = ( byte ) this.mPacketCount;
 
         return data;
@@ -159,7 +163,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class LEFT
             {
-                public static final int FILTERED = 0x20, RAW = 0x200000;
+                public static final int FILTERED = 32, RAW = 2097152;
             }
 
 
@@ -168,7 +172,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class RIGHT
             {
-                public static final int FILTERED = 0x40, RAW = 0x400000;
+                public static final int FILTERED = 64, RAW = 4194304;
             }
         }
 
@@ -190,7 +194,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class X
             {
-                public static final int FILTERED = 0x200, RAW = 0x2000000;
+                public static final int FILTERED = 512, RAW = 33554432;
             }
 
 
@@ -199,7 +203,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class Y
             {
-                public static final int FILTERED = 0x100, RAW = 0x1000000;
+                public static final int FILTERED = 256, RAW = 16777216;
             }
 
 
@@ -208,7 +212,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class Z
             {
-                public static final int FILTERED = 0x80, RAW = 0x800000;
+                public static final int FILTERED = 128, RAW = 8388608;
             }
         }
 
@@ -222,7 +226,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class ALL
             {
-                public static final int FILTERED = X.FILTERED | Y.FILTERED  | Z.FILTERED, RAW = X.RAW | Y.RAW | Z.RAW;
+                public static final int FILTERED = (X.FILTERED | Y.FILTERED  | Z.FILTERED), RAW = (X.RAW | Y.RAW | Z.RAW);
             }
 
             /**
@@ -230,7 +234,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class X
             {
-                public static final int FILTERED = 0x8000, RAW = 0x80000000;
+                public static final int FILTERED = 32768, RAW = -2147483648;
             }
 
 
@@ -239,7 +243,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class Y
             {
-                public static final int FILTERED = 0x4000, RAW = 0x40000000;
+                public static final int FILTERED = 16384, RAW = 1073741824;
             }
 
 
@@ -248,7 +252,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class Z
             {
-                public static final int FILTERED = 0x2000, RAW = 0x20000000;
+                public static final int FILTERED = 8192, RAW = 536870912;
             }
         }
 
@@ -270,7 +274,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class X
             {
-                public static final int FILTERED = 0x1000, RAW = 0x10000000;
+                public static final int FILTERED = 4096, RAW = 268435456;
             }
 
             /**
@@ -278,7 +282,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class Y
             {
-                public static final int FILTERED = 0x800, RAW = 0x8000000;
+                public static final int FILTERED = 2048, RAW = 134217728;
             }
 
             /**
@@ -286,7 +290,7 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class Z
             {
-                public static final int FILTERED = 0x400, RAW = 0x4000000;
+                public static final int FILTERED = 1024, RAW = 67108864;
             }
         }
 
@@ -308,18 +312,18 @@ public class SetDataStreamingCommand extends CommandMessage
              */
             public static final class YAW
             {
-                public static final int FILTERED = 0x10000;
+                public static final int FILTERED = 65536;
             }
 
 
             public static final class ROLL
             {
-                public static final int FILTERED = 0x20000;
+                public static final int FILTERED = 131072;
             }
 
             public static final class PITCH
             {
-                public static final int FILTERED = 0x40000;
+                public static final int FILTERED = 262144;
             }
         }
     }

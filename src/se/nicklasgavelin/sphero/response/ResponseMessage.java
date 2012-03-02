@@ -9,6 +9,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import se.nicklasgavelin.log.Logging;
 import se.nicklasgavelin.sphero.command.CommandMessage;
+import se.nicklasgavelin.util.Array;
 import se.nicklasgavelin.util.ByteArrayBuffer;
 
 /**
@@ -23,12 +24,13 @@ public class ResponseMessage
             INDEX_START_2 = 1,
             RESPONSE_CODE_INDEX = 2,
             SEQUENCE_NUMBER_INDEX = 3,
-            PACKET_LENGTH_INDEX = 4,
-            RESPONSE_HEADER_LENGTH = 5;
+            PAYLOAD_LENGTH_INDEX = 4,
+            RESPONSE_HEADER_LENGTH = 5; // 2 (header type) + 1 (Sequence number) + 1 (Response code) + 1 (Packet length)
 
-    public static final int INFORMATION_RESPONSE_CODE_INDEX = 3,
-                            INFORMATION_RESPONSE_HEADER_LENGTH = 5,
-                            INFORMATION_PACKET_LENGTH_INDEX = PACKET_LENGTH_INDEX;
+    public static final int INFORMATION_RESPONSE_TYPE_INDEX = 2,
+                            INFORMATION_RESPONSE_CODE_INDEX = 3,
+                            INFORMATION_PAYLOAD_LENGTH_INDEX = PAYLOAD_LENGTH_INDEX,
+                            INFORMATION_RESPONSE_HEADER_LENGTH = RESPONSE_HEADER_LENGTH; // 2 (header type) + 1 (Response type) + 1 (Response code) + 1 (Packet length);
 
     /* Internal storage */
     private ResponseHeader drh;
@@ -43,18 +45,18 @@ public class ResponseMessage
     protected ResponseMessage( ResponseHeader _drh )
     {
         this.drh = _drh;
-        this.updateCorrupt();
+        this.calculateCorrupt();
     }
 
 
     /**
      * Update corrupt
      */
-    private void updateCorrupt()
+    private void calculateCorrupt()
     {
         byte claimed = this.drh.getChecksum();
         int checksum = 0;
-        byte[] data = this.drh.getPacketData().toByteArray();
+        byte[] data = this.drh.getRawPacket();
 
         for( int i = 2; i < data.length - 1; i++ )
             checksum += data[ i ];
@@ -68,7 +70,7 @@ public class ResponseMessage
      *
      * @return The packet header
      */
-    public ResponseHeader getHeader()
+    public ResponseHeader getMessageHeader()
     {
         return this.drh;
     }
@@ -95,9 +97,9 @@ public class ResponseMessage
         return this.drh.getResponseType();
     }
 
-    protected byte[] getPacketData()
+    protected byte[] getPacketPayload()
     {
-        return this.getDataArray();
+        return this.drh.getPacketPayload();
     }
 
     /**
@@ -105,20 +107,9 @@ public class ResponseMessage
      *
      * @return The packet data
      */
-    protected ByteArrayBuffer getData()
+    protected byte[] getPayload()
     {
-        return this.drh.getPacketData();
-    }
-
-
-    /**
-     * Returns the packet data
-     *
-     * @return The packet data
-     */
-    public byte[] getDataArray()
-    {
-        return this.getData().toByteArray();
+        return this.drh.getPacketPayload();
     }
 
     @Override
@@ -140,7 +131,7 @@ public class ResponseMessage
     public static ResponseMessage valueOf( CommandMessage dc, ResponseHeader rh )
     {
         // Fetch packet data
-        byte[] data = rh.getPacketData().toByteArray();
+        byte[] data = rh.getRawPacket();
 
         // Switch between the different message types
         switch ( rh.getResponseType() )
@@ -180,12 +171,13 @@ public class ResponseMessage
                 }
                 catch ( Exception ex )
                 {
+                    ex.printStackTrace();
                     Logging.error( "Failed to create information response packet from received data ", ex );
                 }
                 break;
 
             // Message received in return for a command message being sent
-            case RESPONSE:
+            case REGULAR:
                 if ( dc == null )
                     return null;
 
@@ -233,9 +225,10 @@ public class ResponseMessage
         private RESPONSE_CODE code;
 
         /* Packet information */
-        private int seqNum, dataLength;
+        private int seqNum, payloadLength;
         private byte checksum;
         private ByteArrayBuffer data;
+        private int payloadStart, payloadEnd;
 
         /* Type of the response */
         private RESPONSE_TYPE type;
@@ -261,14 +254,21 @@ public class ResponseMessage
         {
             // Packet information
             this.type           = RESPONSE_TYPE.valueOf( _data[ INDEX_START_1 + offset], _data[ INDEX_START_2 + offset] );
-            int respCodeIndex = RESPONSE_CODE_INDEX, packetLengthIndex = PACKET_LENGTH_INDEX, respHeaderLength = RESPONSE_HEADER_LENGTH;
+            int respCodeIndex   = RESPONSE_CODE_INDEX, packetLengthIndex = PAYLOAD_LENGTH_INDEX, respHeaderLength = RESPONSE_HEADER_LENGTH;
+
+            if( type == null )
+            {
+                byte[] b = new byte[ _data.length - offset ];
+                System.arraycopy( _data, offset, b, 0, b.length );
+                System.out.println( "ARRAY: " + Array.stringify( b ) );
+            }
 
             switch( type )
             {
                 /* Information response messages */
                 case INFORMATION:
                     respCodeIndex       = INFORMATION_RESPONSE_CODE_INDEX;
-                    packetLengthIndex   = INFORMATION_PACKET_LENGTH_INDEX;
+                    packetLengthIndex   = INFORMATION_PAYLOAD_LENGTH_INDEX;
                     respHeaderLength    = INFORMATION_RESPONSE_HEADER_LENGTH;
 
                     // Information response messages have no sequence number
@@ -276,24 +276,51 @@ public class ResponseMessage
                 break;
 
                 /* Regular response messages */
-                case RESPONSE:
+                case REGULAR:
                     this.seqNum         = _data[ SEQUENCE_NUMBER_INDEX + offset];
                 break;
+
+                /* Response type is unkown */
+                case UNKOWN:
+                    this.payloadLength = 0;
+
+                    this.payloadEnd = 2;
+                    this.payloadStart = 2;
+
+                    this.code = RESPONSE_CODE.CODE_ERROR_BAD_MESSAGE;
+                    this.checksum = 0;
+
+                    this.data = new ByteArrayBuffer( 2 );
+                    data.append( _data[0] );
+                    data.append( _data[1] );
+                    return;
             }
 
             // Set internal stuff
-            this.code           = RESPONSE_CODE.valueOf( _data[ respCodeIndex + offset], this.type );
-            this.dataLength     = _data[ packetLengthIndex + offset];
-            int packetLength = (this.dataLength + respHeaderLength);
-            this.checksum       = _data[ offset + (packetLength - 1) ];
-
-//            System.err.println( "Data length: " + this.dataLength + ", Packet length: " + packetLength + ", Code: " + this.code + ", Checksum: " + this.checksum );
+            this.code               = RESPONSE_CODE.valueOf( _data[ respCodeIndex + offset], this.type );
+            this.payloadLength      = _data[ packetLengthIndex + offset];
+            int packetLength        = (this.payloadLength + respHeaderLength);
+            this.checksum           = _data[ offset + (packetLength - 1) ];
+            this.payloadStart       = respHeaderLength;
+            this.payloadEnd         = packetLength - 1;
 
             // Data storage
             this.data           = new ByteArrayBuffer( packetLength );
             this.data.append( _data, offset, packetLength );
+
+//            System.err.println( "Data: "  + this.data );
+//            System.err.println( "Data length: " + this.payloadLength + ", Packet length: " + packetLength + ", Code: " + this.code + ", Checksum: " + this.checksum );
         }
 
+        /**
+         * Returns the raw packet data
+         *
+         * @return The packet itself as raw byte array
+         */
+        public byte[] getRawPacket()
+        {
+            return this.data.toByteArray();
+        }
 
         /**
          * Returns the response code for the packet
@@ -321,9 +348,12 @@ public class ResponseMessage
          *
          * @return The packet data
          */
-        public ByteArrayBuffer getPacketData()
+        public byte[] getPacketPayload()
         {
-            return this.data;
+            byte[] d = new byte[ this.payloadLength ];
+            System.arraycopy( this.data.toByteArray(), this.payloadStart, d, 0, this.payloadLength );
+
+            return d;
         }
 
 
@@ -343,9 +373,9 @@ public class ResponseMessage
          *
          * @return The length of the packet
          */
-        public int getPacketLength()
+        public int getPayloadLength()
         {
-            return this.dataLength;
+            return this.payloadLength;
         }
 
 
@@ -371,12 +401,13 @@ public class ResponseMessage
         public static enum RESPONSE_TYPE
         {
             /* Device response headers */
-            RESPONSE( -1, -1 ),
-            INFORMATION( -1, -2 );
+            REGULAR( -1, -1 ),
+            INFORMATION( -1, -2 ),
+            UNKOWN();
 
             /* Internal storage */
             private byte first, second;
-
+            private boolean unknown = false;
 
             /**
              * Create a response header with first header value i and second j
@@ -388,6 +419,11 @@ public class ResponseMessage
             {
                 this.first = ( byte ) i;
                 this.second = ( byte ) j;
+            }
+
+            private RESPONSE_TYPE()
+            {
+                this.unknown = true;
             }
 
 
@@ -402,6 +438,11 @@ public class ResponseMessage
                         {
                             this.first, this.second
                         };
+            }
+
+            private boolean isUnkown()
+            {
+                return this.unknown;
             }
 
 
@@ -420,9 +461,9 @@ public class ResponseMessage
             {
                 RESPONSE_TYPE[] res = RESPONSE_TYPE.values();
                 for ( RESPONSE_TYPE r : res )
-                    if ( r.getHeaderType()[0] == i && r.getHeaderType()[1] == j )
+                    if ( !r.isUnkown() && (r.getHeaderType()[0] == i && r.getHeaderType()[1] == j) )
                         return r;
-                return null;
+                return RESPONSE_TYPE.UNKOWN;
             }
 
 
@@ -452,19 +493,19 @@ public class ResponseMessage
     public static enum RESPONSE_CODE
     {
         /* Regular response codes */
-        CODE_OK( new int[]{0, 0}, new ResponseHeader.RESPONSE_TYPE[]{ ResponseHeader.RESPONSE_TYPE.RESPONSE, ResponseHeader.RESPONSE_TYPE.INFORMATION } ),
-        CODE_ERROR_GENERAL( new int[]{1}, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE} ),
-        CODE_ERROR_CHECKSUM( new int[]{2 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE }  ),
-        CODE_ERROR_FRAGMENT( new int[]{3 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),
-        CODE_ERROR_BAD_COMMAND( new int[]{4 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),
-        CODE_ERROR_UNSUPPORTED( new int[]{5 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),
-        CODE_ERROR_BAD_MESSAGE( new int[]{6 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),
-        CODE_ERROR_PARAMETER( new int[]{7 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),
-        CODE_ERROR_EXECUTE( new int[]{8 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),
-        CODE_ERROR_MAIN_APP_CORRUPT( new int[]{52 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),
-        CODE_ERROR_TIME_OUT( new int[]{-1 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),
-        CODE_ERROR_UNKNOWN( new int[]{53 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } ),
-        UNKNOWN_RESPONSE_CODE( new int[]{-2 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.RESPONSE } );
+        CODE_OK( new int[]{0, 0}, new ResponseHeader.RESPONSE_TYPE[]{ ResponseHeader.RESPONSE_TYPE.REGULAR, ResponseHeader.RESPONSE_TYPE.INFORMATION } ),
+        CODE_ERROR_GENERAL( new int[]{1}, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR} ),
+        CODE_ERROR_CHECKSUM( new int[]{2 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR }  ),
+        CODE_ERROR_FRAGMENT( new int[]{3 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } ),
+        CODE_ERROR_BAD_COMMAND( new int[]{4 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } ),
+        CODE_ERROR_UNSUPPORTED( new int[]{5 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } ),
+        CODE_ERROR_BAD_MESSAGE( new int[]{6 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } ),
+        CODE_ERROR_PARAMETER( new int[]{7 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } ),
+        CODE_ERROR_EXECUTE( new int[]{8 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } ),
+        CODE_ERROR_MAIN_APP_CORRUPT( new int[]{52 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } ),
+        CODE_ERROR_TIME_OUT( new int[]{-1 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } ),
+        CODE_ERROR_UNKNOWN( new int[]{53 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } ),
+        UNKNOWN_RESPONSE_CODE( new int[]{-2 }, new ResponseHeader.RESPONSE_TYPE[]{ResponseHeader.RESPONSE_TYPE.REGULAR } );
 
 
         private Map<ResponseHeader.RESPONSE_TYPE, Byte> codes;

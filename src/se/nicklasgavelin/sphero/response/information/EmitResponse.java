@@ -29,7 +29,7 @@ public class EmitResponse extends InformationResponseMessage
     public EmitResponse( ResponseHeader rh )
     {
         super( rh );
-        this.identifier = rh.getPacketData().toByteArray()[ EMIT_IDENTIFIER_INDEX];//data[ EMIT_IDENTIFIER_INDEX];
+        this.identifier = rh.getRawPacket()[ EMIT_IDENTIFIER_INDEX];//data[ EMIT_IDENTIFIER_INDEX];
     }
 
 

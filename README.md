@@ -23,6 +23,13 @@ compile the code into a single .jar file.
 
 	./compile.sh
 
+Manual compiling may be done with
+
+        ant withjavadoc
+
+or
+        ant nojavadoc
+
 The above command will compile the source into the dist/ directory and create a .zip file in the base dir that contains
 both the .jar file.
 

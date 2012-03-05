@@ -1,11 +1,14 @@
 
 package se.nicklasgavelin.log;
 
-import java.io.PrintStream;
-import java.util.*;
+import com.intel.bluetooth.DebugLog;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
+import se.nicklasgavelin.configuration.ProjectProperties;
 
 /**
  * Manages the logging of the application.
@@ -28,7 +31,7 @@ public class Logging
     private static final String log4logger = "site.nicklas.log.Log4JLogger";
     private static final String from = Logging.class.getName();
     private static final Collection<String> fromCollection = new ArrayList<String>();
-    private static final Logger logger = Logger.getLogger( Configuration.loggerName );
+    private static final Logger logger = Logger.getLogger( ProjectProperties.getInstance().getLoggerName() );//Configuration.loggerName );
 
 
     static
@@ -166,8 +169,6 @@ public class Logging
 
             setLevel();
 
-            Logging.logger.fine( "test " );
-
             Logging.debug( "[" + Logging.class.getCanonicalName() + "] Turning off debug as no log4j instance could be created" );
         }
     }
@@ -175,9 +176,14 @@ public class Logging
 
     private static void setLevel()
     {
-        //get the top Logger:
-        Logger topLogger = java.util.logging.Logger.getLogger( Configuration.loggerName );
-        topLogger.setLevel( Configuration.debugLevel.getLevel() );
+        // Fetch project settings
+        ProjectProperties pp = ProjectProperties.getInstance();
+
+        Logger topLogger = java.util.logging.Logger.getLogger( pp.getLoggerName() );//Configuration.loggerName );
+        topLogger.setLevel( pp.getDebugLevel().getLevel() ); //Configuration.debugLevel.getLevel() );
+
+        // Set bluecove log status
+        DebugLog.setDebugEnabled( pp.getBluecoveDebugEnabled() );
 
         // Handler for console (reuse it if it already exists)
         Handler consoleHandler = null;
@@ -200,7 +206,7 @@ public class Logging
         }
 
         //set the console handler to fine:
-        consoleHandler.setLevel( Configuration.debugLevel.getLevel() );
+        consoleHandler.setLevel( pp.getDebugLevel().getLevel() );//Configuration.debugLevel.getLevel() );
     }
 
 
@@ -212,7 +218,8 @@ public class Logging
     public static void setDebugEnabled( boolean enabled )
     {
         initialize();
-        Configuration.debugEnabled = enabled;
+        //Configuration.debugEnabled = enabled;
+        ProjectProperties.getInstance().setDebugEnabled( enabled );
     }
 
 
@@ -228,12 +235,14 @@ public class Logging
         // Perform initialization if not already done
         initialize();
 
+        ProjectProperties pp = ProjectProperties.getInstance();
+
         // Check if we have debug enabled or if the level is fatal
-        if ( (!Configuration.debugEnabled && !l.equals( Level.FATAL )) )
+        if ( (!pp.getDebugEnabled() && !l.equals( Level.FATAL )) )
             return;
 
         // Check if we want the messages of this level to be logged
-        if ( l.getValue() < Configuration.debugLevel.getValue() )
+        if ( l.getValue() < pp.getDebugLevel().getValue() )
             return;
 
         if ( !log4exists )
@@ -266,48 +275,8 @@ public class Logging
     {
         // Fetch location for the message
         UtilsJavaSE.StackTraceLocation s = UtilsJavaSE.getLocation( fromCollection );
-//        boolean useError = (t == null && (!l.equals( Level.ERROR ) && !l.equals( Level.FATAL )));
-//        PrintStream out = (useError ? System.out : System.err);
-
-        logger.setLevel( Configuration.debugLevel.getLevel() );
+        logger.setLevel( ProjectProperties.getInstance().getDebugLevel().getLevel() );
         Logging.logger.logp( l.getLevel(), s.className, s.methodName, "\t" + msg + "\n", t );
-
-//        try
-//        {
-//            // Create our timestamp
-//            Calendar calendar = Calendar.getInstance();
-//            calendar.setTime( new Date( System.currentTimeMillis() ) );
-//
-//            // Hours
-//            String hour = calendar.get( Calendar.HOUR_OF_DAY ) + "";
-//            hour = (Integer.parseInt( hour ) < 10 ? "0" : "") + hour;
-//
-//            // Minutes
-//            String minutes = calendar.get( Calendar.MINUTE ) + "";
-//            minutes = (Integer.parseInt( minutes ) < 10 ? "0" : "") + minutes;
-//
-//            // Seconds
-//            String seconds = calendar.get( Calendar.SECOND ) + "";
-//            seconds = (Integer.parseInt( seconds ) < 10 ? "0" : "") + seconds;
-//
-//            // Milliseconds
-//            String ms = calendar.get( Calendar.MILLISECOND ) + "";
-//
-//            // Now create our debug message
-//            String aMsg = "[ " + hour + ":" + minutes + ":" + seconds + "." + ms + " ]"; // Timestamp
-//            aMsg += "[ " + l + " ]"; // Level
-//            aMsg += " " + msg;
-//
-//            // Print message
-//            out.println( aMsg );
-//        }
-//        catch ( Throwable _ )
-//        {
-//        }
-//
-//        // Check if we have something throwable
-//        if ( s != null )
-//            out.println( "\t " + fromLocation( s ) );
     }
 
 

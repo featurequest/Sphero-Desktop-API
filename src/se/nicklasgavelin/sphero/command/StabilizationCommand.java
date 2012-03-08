@@ -6,7 +6,7 @@ package se.nicklasgavelin.sphero.command;
  * to the Sphero cause when running this command the Sphero then gets
  * unresponsive to some other commands.
  *
- * @deprecated Usage of this command results in failure to execute some future
+ * NOTICE: Usage of this command results in failure to execute some future
  * commands such as the RollCommand
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */

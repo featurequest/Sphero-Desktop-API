@@ -4,7 +4,7 @@ package se.nicklasgavelin.sphero.command;
  * Command to steer the direction and speed of the internal motors of the
  * Sphero.
  *
- * @deprecated Sending this command will result in some future commands to fail
+ * NOTICE: Sending this command will result in some future commands to fail
  * to execute on the Sphero for some reason. Has something to do with the logic
  * on the Sphero
  *

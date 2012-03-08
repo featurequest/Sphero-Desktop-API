@@ -45,6 +45,7 @@ to compile the code into dist/ without the java doc or you can run
 to compile the code into dist/ WITH the java doc.
 
 ## How to use the API
+### Connect
 The API is similar to that of the original Orbotix Sphero API with some modifications to support connecting to multiple
 Sphero devices simultaniously and sending individual commands to these. There is examples in the se.nicklasgavelin.sphero.example
 package that will show a quick example of how to use the API.
@@ -82,17 +83,128 @@ the Sphero device
 
 	r.addListener( <RobotListener> );
 
+### Macro usage
+For creating and sending macros there are two different methods. One is streaming a macro
+to the Sphero which allows for larger macros than the normal method. When streaming you record
+your macro and then asks the Robot.class to send the macro to the Sphero using the streaming method.
+The Robot.class then divides the macro into chunks and sends them when there is enough required space
+on the Sphero device to store and run the macro.
+
+    Notice that macro usage was not supported until later versions of this API and if you have an older version I
+    suggest you pull the newest one from the repository.
+
+#### Normal method
+The normal method is the default method and can be run like this.
+
+    <Already created and connected to Robot r>
+
+    // Create our macro object (seen as a command)
+    MacroObject mo = new MacroObject();
+
+    // Add macro commands to the macro object
+    mo.addCommand( new RGBSD2( Color.RED ) );
+    mo.addCommand( new Delay( 2000 ) );
+    mo.addCommand( new RGBSD2( Color.BLUE ) );
+    mo.addCommand( new Delay( 2000 ) );
+
+    // Send the macro object to the Sphero
+    r.sendCommand( mo );
+
+The above example will first turn the Sphero RED and stay RED for two seconds. Then it will quickly
+turn BLUE and stay that way for another two seconds and then it should return to its original state.
+
+So the above command describes the normal method for sending a single macro. Although this method
+only allows for up to 256 byte macros (including surrounding packet headers). So instead a better
+method is to use the streaming method described below.
+
+#### Cached streaming method
+The cached streaming method is similar to the normal method with the difference that a huge macro
+is divided into chunks instead of being transmitted in its complete form.
+
+    <Already created and connected to Robot r>
+
+    MacroObject mo = new MacroObject();
+    // .... As in previous example
+
+    // Set cached streaming mode
+    mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
+
+    // Send the command to the Sphero
+    r.sendCommand( mo );
+
+### Experimental code
+There are some code that is experimental and is implemented and tested in the "experimental" package. You can look
+there from time to time to see what is up and example methods and usages of the Sphero device.
+
+    Notice however that this code is not under any documentation requirements and may or may not work at time, temporarily lock
+    your Sphero (will require a "reboot" by setting it in the charger until it turns off by blinking in a range of colors) or
+    may in some cases literally run your Sphero into the wall (speed and special movement experiments).
+
+    So folks, no promices about experimental code! Sphero is after all our own little gunnie pig ;-)
+
+
 # Contact & Suggestions
 If you think this README file doesn't cover all it should (as much as a basic readme file should) or if you
 have some suggestions for improvements please send me a mail at nicklas.gavelin@gmail.com.
 
 # Recognition
-This Sphero API port was developed during my thesis work at Lule� University of Technology, http://www.ltu.se and
+This Sphero API port was developed during my thesis work at Luleå University of Technology, http://www.ltu.se and
 is currently actively being worked on (committing all recent updates).
+
+The API was developed by Nicklas Gavelin, http://nicklasgavelin.se from backwards-engineering of the original Android API for Sphero that was developed by Orbotix.
 
 # Versions
 There is no guarantee that packages will maintain their naming standard or that classes will be left intact. Although I'm trying to keep
-the impact on previous versions as small as possible regarding compatibility.
+the impact on previous versions as small as possible regarding compatibility (although as in new projects this isn't always possible).
 
 # License
-Read the LICENSE file for more information :)
+Read the LICENSE file for more information :-)
+
+
+# Sphero
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWWWWNWNWWWWWWWWWMWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWNNHHHHHHHHNNNNNNWWWWWWWWWMWMMMMMMMMMMMMMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWHHHKKKQKKKKKHHHHHNNNNNWWWWWWWMWMMWMMMMMMMMMMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWNHKQDDDDDDQQQKKKHHHHNNNNNWWWWWWWWWWWWMWMMMMMMMMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWNHKDDXSSSXXXDDQQKKKKHHHNNNNNWWWWWWWWWWWWWWWMMWMMMMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNHKDXSS6SSSSXXXDDQQKKKHHHHNNNNNWWWWWWWWWWWWWWWWWMMMMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNHQDSS655566SSXXDDDQQQKKKHHHHHNNNNNNWNWWWWWWWWWWWWMMMMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWHKQXS55YY5566SSXXDDDQQKKKKHHHHHNNNNNNNNNWWWWWWWWWWWWMWMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMNHQXS5YJJJY5556SSXXXDDDQQKKKKHHHHHNNNNNNNNNNNWWWWWWWWWWMWMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMNHQX65JJJJJYY556SSXXDDDQQKKKKKKKKHHHHHHNNHNWNNNNWNWWWWWWWMWMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMNHDX65JJtttJYY566SSXDDDQQQQKKKKD6jccccccccccccjcJNNNWWWWWWWMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMNHQS65JtjjtttJY566SSXDDDQQQQQDYccccccccjQHNNNNNK5jccYNWWWWWWWMWMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMNHQX65JtjjjjjtJY566SXXDDQQQKKKQKQQ6ccc5HHNNNNNNWNNWQccjWWWWWWWWMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMHKDS5JtjjjjjttJY56SSXDDDQQKKKKKKKYcciHHHNNNNNNNNWWNNWXjjKWWWWWMMWMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMNKQX6YJjjcjjjjJY556SSXDDDQQKKKKKKHcccKKHNHNKjjjXNWKjjKW5jjWWWWWMWMWMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMKQDS5JJjjcjjjjJY556SSXDDDQQKKKKKKQcccHHHNNNtjjjjQWXjjjMHjjWWWMMMWMWMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMWKQXS5JtjjcjjjtJY556SSXDDQQKKKKHKKKcciHHHNNNSjjjjSMMYj6MHjjWWMWMMMMWMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMWQDXSYJtjcjcjjjJY56SSXXDDDQKKKKKHKHcccDHHNNNNQjjjMMMMMMMXjjWWWMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMWQDX6YJtjcccjjjJY55SSXXDDQKKKKHHHKKQcccHNNNNNNWWMMMMMMMHtjQWWWWMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMQDX6YJtjcccjjjJY566SXXDDQQKKKKHHHHHHcccjHNNNNNWWWWMMMXJtQWWWWMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMKDX6YJtjjcjjjjJY55SSXXDDQQKKKHHHHHHHH5jcjjJHNNNNWNXjttYWWWWWWMWMMMMWMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMHQXS5JtjcjcjttJY56SSXXDDQQKKKHKHHHHNHHHKcjcccjjjjjjtSWWWWWWMMMWMMMWMMMMMWMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMWQDS6YJtjccjjtJY55SSXDDDQQKKKHHHHNHNNNNNNHNNWNNNWNNWWWWWWWWMMMMMMMMMMMMWMMMW
+    MMMMMMMMMMMMMMMMMMMMMMMMWHQXS5YJjjcjjtJY556SXXDDQQKKKKHHHHNNNNNNNNNNNNNWWWWWWWWWWWMWMWMMMMMMMMMWWWWM
+    MMMMMMMMMMMMMMMMMMMMMWMWWWHQXS5YJtjjjjtJ556SSXDDQQKKKKHHHNNNNNNNWNNWWWWWWWWWWWWWWWMMWWMMWMMMMMWWWWWW
+    MMMMMMMMMMMMMMMMMMMMMWWWWWWKQXS5YJtttttJY566SXDDDQKKKKHHHHNNNNNNNWWWWWWWWWWWWWWWWMWWMWWMWMWMMWWWWWWW
+    MMMMMMMMMMMMMMMMMMWMWWWWWWWWKQDX65YJJtJJY566SXDDDQKKKKKHHHNNNNNNNWNWWWWWWWWWWWWWWWWWWMMMMMMWWWWWWWWW
+    MMMMMMMMMMMMMMMMMWWWWWWWWWWWWKKDXS55YYYYY566SXXDDQQKKKKHHHNNNNNNNWNWWWWWWWWWWWWWWWWWWMWMMMMWNWNWWWWW
+    MMMMMMMMMMMMMMMMWWWWWWWWWWWNNNNKQDXS65555566SSXDDQKKKKKHHHNHNNNNNNWNWWWWWWWWWWWWWWWWMWMMMWKHHHHHHHHN
+    MMMMMMMMMMMMMMMWWWWWWWWWNNNNNNHNKKQDXSS6666SSSXDDQQKKKKHHHHNNNNNNNWWNWWWWWWWWWWWWWWWWMMMKDDDQQQKKKKK
+    MMMMMMMMMMMMMMWWWWWWWWWNNNNHHHHHKNKKQDXSSSSSXSXDDDQKKKKKHHNHNNNNNNWWWWWWWWWWWWWWWWWWMMNSXXXXDDDDDQQQ
+    MMMMMMMMMMMMWWWWWWWWWNNNHHHHKKQQQDDHHKKQDDXXDXDDDDQKKKKKHHHNNNNNNNWNWWWWWWWWWWWWWWWMSY566SSSSXXXDDDD
+    MMMMMMMMMMWWWWWWWWWNNNNHHHKKQQQDDXXSSXHHKKQQQQDQQQKKKKKKHHHHNHNNNNWNWWWWWWWWWWWWWMtjtJJY5566SSSXXXDD
+    MMMMMMMMMWWMWWWWNNNNNHHHHKKQQDDDXXSS655YDHHHHKKKKKKKKKHHHHNHNNNNNWWWWWWWWWWWWWMciccjjttJJY5566SSSXXX
+    MMMMMMMMMMWWWWWWWNNNNHHHKKKQQDDDXSSS6655YYJYHNNHHHHHHHHNHNNNNNNWNWWWWWWWWWWQiiiccccjjtttJJYY566SSSXX
+    MMMMMMMMMMWWWWWWNNNNNHHHHKKQQQDDXXXSSSS66S655YJtjccii===============iiiiccccjjjtjjjtttJJJY55566SSSXX
+    MMMMMMMMMMMMMWWWWWWWNNNNNHHHHKKKQQDDDQDDDXSSSSS6665YYJJJttttttjttjjjtjtjttttttJJJYYYYY55566SSSSXXXDD
+    MMMMMMMMMMMMMMMMWWWWWWWWNNNNHHHHHKQKKKQQDDDDDXXXXSSSS6655YYYJJJJJJJJJJJJJJJYYJYY55566666SSSSXXDDDDDD
+    MMMMMMMMMMMMMMMMMMWWWWWWWWWNNNNNHHHHHHKKKKKKQQQQDDDDDDXXXXSSSSS666665656566666S6SSSXXDDXXDDDDDDDDQQQ
+    MMMMMMMMMMMMMMMMMMMMMMMWWWWWWWWWNWNNNNNHHHHHHKKKKKKQKQQQQQQDDDDDDDDDDDDDDDDDDDDDDDQQQQKKQQQKKKKKKKKH
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMWWWWWWWWWWWWWNNNNNNHHHHHHHHHHHHHKKHKHHHHKHHHHHHHHHHHHHHHHNNNNNHHNNNNNNHNN
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWMMMWMWWWWWWWWWWWWNNNNNNNNNNNNNNNNNNNNNNNNNNWNWWWWWWWWWWWWWWWWWWWWWWWW
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWWWMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWMWMWWMWWWWWWW
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWWWWWWWWMWWWWWWWWWWMMMWMWMWMMMMMMMMMMMMMMMMMMMMMMMMM
+    MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM

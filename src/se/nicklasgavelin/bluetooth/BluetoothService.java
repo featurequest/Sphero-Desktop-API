@@ -46,7 +46,7 @@ public class BluetoothService extends Observable implements Runnable
 
 	private BluetoothDevice device;
 	private ServiceRecord record;
-//	private final Bluetooth bt;
+	// private final Bluetooth bt;
 	private String name;
 	private String description;
 	private String provider;
@@ -59,12 +59,14 @@ public class BluetoothService extends Observable implements Runnable
 	 * @param device The Bluetooth device for this service
 	 * @param record The service record
 	 */
-	protected BluetoothService( BluetoothDevice device, ServiceRecord record )//, Bluetooth bt )
+	protected BluetoothService( BluetoothDevice device, ServiceRecord record )// ,
+																				// Bluetooth
+																				// bt )
 	{
 		// Store objects
 		this.device = device;
 		this.record = record;
-//		this.bt = bt;
+		// this.bt = bt;
 
 		DataElement element;
 
@@ -97,23 +99,38 @@ public class BluetoothService extends Observable implements Runnable
 	 */
 	protected BluetoothService( String serviceConnectionURL )
 	{
-//		this.bt = null;
+		// this.bt = null;
 		this.serviceConnectionURL = serviceConnectionURL;
 		this.name = UNKNOWN;
 		this.description = UNKNOWN;
 		this.provider = UNKNOWN;
 	}
 
+	/**
+	 * Returns the name of the service
+	 * 
+	 * @return The service name
+	 */
 	public String getName()
 	{
 		return this.name;
 	}
 
+	/**
+	 * Returns service description
+	 * 
+	 * @return Service description
+	 */
 	public String getDescription()
 	{
 		return this.description;
 	}
 
+	/**
+	 * Returns provider name
+	 * 
+	 * @return Provider name
+	 */
 	public String getProvider()
 	{
 		return this.provider;
@@ -130,7 +147,7 @@ public class BluetoothService extends Observable implements Runnable
 		// Check if we can return something
 		if( this.record != null )
 			return this.record.getConnectionURL( ServiceRecord.AUTHENTICATE_NOENCRYPT, false );
-		if( this.serviceConnectionURL != null )
+		else if( this.serviceConnectionURL != null )
 			return this.serviceConnectionURL;
 
 		return null;

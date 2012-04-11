@@ -58,6 +58,7 @@ To connect to a Sphero device you may either perform a bluetooth device search a
 the direct bluetooth address to connect to it directly without having to perform a search. Although the second method will prevent
 some commands to be performed correctly and the bluetooth name will not be retrieved properly.
 
+    String id = "<BluetoothIdForSphero>";
 	Bluetooth bt = new Bluetooth( this, Bluetooth.SERIAL_COM );
 	BluetoothDevice btd = new BluetoothDevice( bt, "btspp://" + id + ":1;authenticate=true;encrypt=false;master=false" );
 	Robot r = new Robot( btd );

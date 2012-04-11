@@ -148,8 +148,8 @@ If you think this README file doesn't cover all it should (as much as a basic re
 have some suggestions for improvements please send me a mail at nicklas.gavelin@gmail.com.
 
 # Recognition
-This Sphero API port was developed during my thesis work at Luleå University of Technology, http://www.ltu.se and
-is currently actively being worked on (committing all recent updates).
+This Sphero API port was developed during my thesis work at Luleå University of Technology, http://www.ltu.se, and for the SITE project.
+Updates are pushed when time is found during the thesis work (as this is only a part of my work development will not solely be aimed at this API).
 
 The API was developed by Nicklas Gavelin, http://nicklasgavelin.se from backwards-engineering of the original Android API for Sphero that was developed by Orbotix.
 

@@ -3,8 +3,12 @@
 ## Overview
 
 ## Compatibility
-    Works in Windows, MAC and Linux (In linux an extra Bluecove library named Bluecove GPL located at
+    Works in Windows, Mac and Linux (In linux an extra Bluecove library named Bluecove GPL located at
     http://bluecove.org/bluecove-gpl/ may be needed to get the API working)
+
+    Only tested on Windows and Mac (10.7). A hardware bluetooth module is required to allow for the connection
+    between Sphero and desktop. All bluetooth modules supported by bluecove should work just fine with the API.
+    If there is anything that doesn't work, feel free to contact me (I will respond when time allows it).
 
 ## IDE
 	Sphero API Desktop Port will work with Netbeans and Eclipse out of the box (hopefully ;))

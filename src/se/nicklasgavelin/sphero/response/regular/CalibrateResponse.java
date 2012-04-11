@@ -14,8 +14,8 @@ public class CalibrateResponse extends ResponseMessage
      *
      * @param data The received data
      */
-    public CalibrateResponse( ResponseHeader rh )//byte[] data )
+    public CalibrateResponse( ResponseHeader rh )
     {
-        super( rh );//super( DEVICE_COMMAND.CALIBRATE, data );
+        super( rh );
     }
 }

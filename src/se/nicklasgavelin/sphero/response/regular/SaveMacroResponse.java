@@ -7,14 +7,14 @@ package se.nicklasgavelin.sphero.response.regular;
 import se.nicklasgavelin.sphero.response.ResponseMessage;
 
 /**
- *
+ * 
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
- * Technology
+ *         Technology
  */
 public class SaveMacroResponse extends ResponseMessage
 {
-    public SaveMacroResponse( ResponseHeader rh )//byte[] data )
-    {
-        super( rh );//super( DeviceCommand.DEVICE_COMMAND.SAVE_MACRO, data );
-    }
+	public SaveMacroResponse( ResponseHeader rh )
+	{
+		super( rh );
+	}
 }

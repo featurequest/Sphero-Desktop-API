@@ -14,8 +14,8 @@ public class Level1DiagnosticsResponse extends ResponseMessage
      *
      * @param data The received data
      */
-    public Level1DiagnosticsResponse( ResponseHeader rh )//byte[] data )
+    public Level1DiagnosticsResponse( ResponseHeader rh )
     {
-        super( rh );//super( DEVICE_COMMAND.LEVEL_1_DIAGNOSTICS, data );
+        super( rh );
     }
 }

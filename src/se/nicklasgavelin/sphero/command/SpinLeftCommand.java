@@ -7,8 +7,8 @@ import se.nicklasgavelin.util.Value;
  * Command to spin the Sphero left
  *
  * NOTICE: Sending this command will result in some future commands to fail
- * to execute on the Sphero for some reason. Has something to do with the logic
- * on the Sphero
+ * to execute on the Sphero for some reason. 
+ * 
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class SpinLeftCommand extends CommandMessage
@@ -32,12 +32,12 @@ public class SpinLeftCommand extends CommandMessage
     @Override
     protected byte[] getPacketData()
     {
-        byte[] data = new byte[ 4 ];
-
-        data[0] = ( byte ) MOTOR_MODE.FORWARD.getValue();
-        data[1] = ( byte ) this.speed;
-        data[2] = ( byte ) MOTOR_MODE.REVERSE.getValue();
-        data[3] = ( byte ) this.speed;
+        byte[] data = {
+        		( byte ) MOTOR_MODE.FORWARD.getValue(),
+        		( byte ) this.speed,
+        		( byte ) MOTOR_MODE.REVERSE.getValue(),
+        		( byte ) this.speed
+		};
 
         return data;
     }

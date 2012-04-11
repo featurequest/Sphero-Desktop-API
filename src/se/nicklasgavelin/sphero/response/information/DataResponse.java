@@ -12,37 +12,33 @@ import se.nicklasgavelin.sphero.response.InformationResponseMessage;
  */
 public class DataResponse extends InformationResponseMessage
 {
-    /**
-     * Response message for sensor data
-     *
-     * @param rh The response header
-     */
-    public DataResponse( ResponseHeader rh )
-    {
-        super( rh );
+	/**
+	 * Response message for sensor data
+	 * 
+	 * @param rh The response header
+	 */
+	public DataResponse( ResponseHeader rh )
+	{
+		super( rh );
+	}
 
-//        System.err.println( "DATA: " + rh.getPacketPayload() );
-    }
+	/**
+	 * Returns the data received in the data message
+	 * 
+	 * @return The data for the sensors
+	 */
+	public byte[] getSensorData()
+	{
+		return super.getMessageHeader().getPacketPayload();
+	}
 
-
-    /**
-     * Returns the data received in the data message
-     *
-     * @return The data for the sensors
-     */
-    public byte[] getSensorData()
-    {
-        return super.getMessageHeader().getPacketPayload();
-    }
-
-
-    /**
-     * Returns the length of the sensor data
-     *
-     * @return The sensor data length
-     */
-    public int getSensorDataLength()
-    {
-        return super.getPacketPayload().length;
-    }
+	/**
+	 * Returns the length of the sensor data
+	 * 
+	 * @return The sensor data length
+	 */
+	public int getSensorDataLength()
+	{
+		return super.getPacketPayload().length;
+	}
 }

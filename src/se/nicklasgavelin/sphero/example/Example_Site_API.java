@@ -22,327 +22,316 @@ import se.nicklasgavelin.sphero.response.InformationResponseMessage;
 
 /**
  * Simple test class to test the Sphero API
- *
+ * 
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of Technology
  */
 public class Example_Site_API extends JFrame
 {
-    // Internal storage
-    private int responses = 0;
-    private ConnectThread ct;
-    private JButton connectButton, disconnectButton;
+	// Internal storage
+	private int responses = 0;
+	private ConnectThread ct;
+	private JButton connectButton, disconnectButton;
 
+	/**
+	 * Main method
+	 * 
+	 * @param args Will be ignored
+	 */
+	public static void main( String[] args )
+	{
+		Example_Site_API example_Site_API = new Example_Site_API();
+		// new Thread( new Example_Site_API() ).start();
+	}
 
-    /**
-     * Main method
-     *
-     * @param args Will be ignored
-     */
-    public static void main( String[] args )
-    {
-        Example_Site_API example_Site_API = new Example_Site_API();
-        //new Thread( new Example_Site_API() ).start();
-    }
+	/**
+	 * Our example application
+	 */
+	public Example_Site_API()
+	{
+		super( "Example API usage" );
+		this.setLayout( new GridLayout( 2, 1 ) );
 
+		// Connect button
+		connectButton = new JButton( "Connect to available devices" );
+		disconnectButton = new JButton( "Disconnect from all devices" );
 
-    /**
-     * Our example application
-     */
-    public Example_Site_API()
-    {
-        super( "Example API usage" );
-        this.setLayout( new GridLayout( 2, 1 ) );
+		// Bind action to our connect button
+		connectButton.addActionListener( new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent e )
+			{
+				// Check if we have something previous to stop
+				if( ct != null )
+					ct.stopThread();
 
-        // Connect button
-        connectButton = new JButton( "Connect to available devices" );
-        disconnectButton = new JButton( "Disconnect from all devices" );
+				// Create a new thread
+				ct = new ConnectThread();
+				ct.start();
 
-        // Bind action to our connect button
-        connectButton.addActionListener( new ActionListener()
-        {
-            @Override
-            public void actionPerformed( ActionEvent e )
-            {
-                // Check if we have something previous to stop
-                if ( ct != null )
-                    ct.stopThread();
+				// Toggle our button
+				connectButton.setEnabled( false );
+				disconnectButton.setEnabled( true );
+			}
+		} );
 
-                // Create a new thread
-                ct = new ConnectThread();
-                ct.start();
+		// Bind action to the disconnect button
+		disconnectButton.addActionListener( new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent e )
+			{
+				// Check if we have something to stop
+				if( ct != null )
+					ct.stopThread();
 
-                // Toggle our button
-                connectButton.setEnabled( false );
-                disconnectButton.setEnabled( true );
-            }
-        } );
+				// Toggle our buttons
+				connectButton.setEnabled( true );
+				disconnectButton.setEnabled( false );
+			}
+		} );
 
-        // Bind action to the disconnect button
-        disconnectButton.addActionListener( new ActionListener()
-        {
-            @Override
-            public void actionPerformed( ActionEvent e )
-            {
-                // Check if we have something to stop
-                if ( ct != null )
-                    ct.stopThread();
+		// Add buttons to our GUI
+		this.add( connectButton );
+		this.add( disconnectButton );
 
-                // Toggle our buttons
-                connectButton.setEnabled( true );
-                disconnectButton.setEnabled( false );
-            }
-        } );
+		// Set some default stuff
+		this.pack();
+		this.setVisible( true );
+		this.setDefaultCloseOperation( EXIT_ON_CLOSE );
+	}
 
-        // Add buttons to our GUI
-        this.add( connectButton );
-        this.add( disconnectButton );
+	/**
+	 * Set connect button state (also affects the disconnect button)
+	 * 
+	 * @param enabled True to enable, false otherwise
+	 */
+	private void setConnectEnabled( boolean enabled )
+	{
+		this.connectButton.setEnabled( enabled );
+		this.disconnectButton.setEnabled( !enabled );
+	}
 
-        // Set some default stuff
-        this.pack();
-        this.setVisible( true );
-        this.setDefaultCloseOperation( EXIT_ON_CLOSE );
-    }
+	/**
+	 * Handles the detection of new devices and listens on our robots for
+	 * responses and events
+	 */
+	private class ConnectThread extends Thread implements BluetoothDiscoveryListener, Runnable, RobotListener
+	{
+		// Internal storage
+		private Bluetooth bt;
+		private boolean stop = false;
+		private Collection<Robot> robots;
 
+		/**
+		 * Create a connect thread
+		 */
+		public ConnectThread()
+		{
+			this.robots = new ArrayList<Robot>();
+		}
 
-    /**
-     * Set connect button state (also affects the disconnect button)
-     *
-     * @param enabled True to enable, false otherwise
-     */
-    private void setConnectEnabled( boolean enabled )
-    {
-        this.connectButton.setEnabled( enabled );
-        this.disconnectButton.setEnabled( !enabled );
-    }
+		/**
+		 * Stop everything regarding the connection and robots
+		 */
+		private void stopThread()
+		{
+			if( bt != null )
+				bt.cancelDiscovery();
+			this.stop = true;
 
-    /**
-     * Handles the detection of new devices and listens on our robots for
-     * responses and events
-     */
-    private class ConnectThread extends Thread implements BluetoothDiscoveryListener, Runnable, RobotListener
-    {
-        // Internal storage
-        private Bluetooth bt;
-        private boolean stop = false;
-        private Collection<Robot> robots;
+			// Disconnect from all robots and clear the connected list
+			for( Robot r : robots )
+				r.disconnect();
+			robots.clear();
+		}
 
+		@Override
+		public void run()
+		{
+			try
+			{
+				// Will perform a bluetooth discovery before connecting to
+				// any devices
+				bt = new Bluetooth( this, Bluetooth.SERIAL_COM );
+				bt.discover(); // # COMMENT THIS IF UNCOMMENTING THE BELOW AREA #
 
-        /**
-         * Create a connect thread
-         */
-        public ConnectThread()
-        {
-            this.robots = new ArrayList<Robot>();
-        }
+				// Uncomment the code below and comment out the bt.discover() line above
+				// to
+				// connect directly to a given Sphero
 
+				// // ## START UNCOMMENT ##
+				// final String bluetoothAddress = "0006664438B8";
+				// BluetoothDevice btd = new BluetoothDevice( bt, "btspp://" +
+				// bluetoothAddress + ":1;authenticate=true;encrypt=false;master=false" );
+				//
+				// // Create the robot from the bluetooth device
+				// Robot r = new Robot( btd );
+				//
+				// // Try to connect to the robot
+				// if ( r.connect() )
+				// {
+				// // Add ourselves as listeners
+				// r.addListener( this );
+				//
+				// // Send a rgb transition command macro
+				// r.rgbTransition( 255, 0, 0, 0, 255, 255, 50 );
+				//
+				// // Send a direct command
+				// r.sendCommand( new FrontLEDCommand( 1F ) );
+				// }
+				// // ## END UNCOMMENT ##
 
-        /**
-         * Stop everything regarding the connection and robots
-         */
-        private void stopThread()
-        {
-            if ( bt != null )
-                bt.cancelDiscovery();
-            this.stop = true;
+				// Run forever, euheuheuh!
+				while( !stop )
+				{
+					try
+					{
+						Thread.sleep( 5000 );
+					}
+					catch( InterruptedException e )
+					{
+					}
+				}
+			}
+			catch( Exception e )
+			{
+				// Failure in searching for devices for some reason.
+				e.printStackTrace();
+			}
+		}
 
-            // Disconnect from all robots and clear the connected list
-            for (Robot r : robots)
-                r.disconnect();
-            robots.clear();
-        }
+		/*
+		 * *************************************
+		 * BLUETOOTH DISCOVERY STUFF
+		 */
 
+		/**
+		 * Called when the device search is completed with detected devices
+		 * 
+		 * @param devices The devices detected
+		 */
+		@Override
+		public void deviceSearchCompleted( Collection<BluetoothDevice> devices )
+		{
+			// Device search is completed
+			System.out.println( "Completed device discovery" );
 
-        @Override
-        public void run()
-        {
-            try
-            {
-                // Will perform a bluetooth discovery before connecting to
-                // any devices
-                bt = new Bluetooth( this, Bluetooth.SERIAL_COM );
-                bt.discover(); // # COMMENT THIS IF UNCOMMENTING THE BELOW AREA #
+			// Try and see if we can find any Spheros in the found devices
+			for( BluetoothDevice d : devices )
+			{
+				// Check if the Bluetooth device is a Sphero device or not
+				if( Robot.isValidDevice( d ) )
+				{
+					System.out.println( "Found robot " + d.getAddress() );
 
-                // Uncomment the code below and comment out the bt.discover() line above to
-                // connect directly to a given Sphero
+					// We got a valid device (Sphero device), connect to it and
+					// have some fun with colors.
+					try
+					{
+						// Create our robot from the Bluetooth device that we got
+						Robot r = new Robot( d );
 
-                //            //  ## START UNCOMMENT ##
-                //            final String bluetoothAddress = "0006664438B8";
-                //            BluetoothDevice btd = new BluetoothDevice( bt, "btspp://" + bluetoothAddress + ":1;authenticate=true;encrypt=false;master=false" );
-                //
-                //            // Create the robot from the bluetooth device
-                //            Robot r = new Robot( btd );
-                //
-                //            // Try to connect to the robot
-                //            if ( r.connect() )
-                //            {
-                //                // Add ourselves as listeners
-                //                r.addListener( this );
-                //
-                //                // Send a rgb transition command macro
-                //                r.rgbTransition( 255, 0, 0, 0, 255, 255, 50 );
-                //
-                //                // Send a direct command
-                //                r.sendCommand( new FrontLEDCommand( 1F ) );
-                //            }
-                //            // ## END UNCOMMENT ##
+						// Add ourselves as listeners for the responses
+						r.addListener( this );
 
-                // Run forever, euheuheuh!
-                while ( !stop )
-                {
-                    try
-                    {
-                        Thread.sleep( 5000 );
-                    }
-                    catch ( InterruptedException e )
-                    {
-                    }
-                }
-            }
-            catch ( Exception e )
-            {
-                // Failure in searching for devices for some reason.
-                e.printStackTrace();
-            }
-        }
+						// Check if we can connect
+						if( r.connect() )
+						{
+							// Add robots to our connected robots list
+							robots.add( r );
 
-        /*
-         * *************************************
-         * BLUETOOTH DISCOVERY STUFF
-         */
+							System.out.println( "Connected to " + d.getName() + " : " + d.getAddress() );
+							r.rgbTransition( 255, 0, 0, 0, 255, 255, 50 );
 
-        /**
-         * Called when the device search is completed with detected devices
-         *
-         * @param devices The devices detected
-         */
-        @Override
-        public void deviceSearchCompleted( Collection<BluetoothDevice> devices )
-        {
-            // Device search is completed
-            System.out.println( "Completed device discovery" );
+							// Send direct command
+							r.sendCommand( new FrontLEDCommand( 1 ) );
+						}
+						else
+							System.err.println( "Failed to connect to robot" );
+					}
+					catch( InvalidRobotAddressException ex )
+					{
+						ex.printStackTrace();
+					}
+					catch( RobotBluetoothException ex )
+					{
+						ex.printStackTrace();
+					}
+				}
+			}
 
-            // Try and see if we can find any Spheros in the found devices
-            for (BluetoothDevice d : devices)
-            {
-                // Check if the Bluetooth device is a Sphero device or not
-                if ( Robot.isValidDevice( d ) )
-                {
-                    System.out.println( "Found robot " + d.getAddress() );
+			// Disable the thread and set connected button state
+			if( robots.isEmpty() )
+			{
+				this.stopThread();
+				setConnectEnabled( true );
+			}
+		}
 
-                    // We got a valid device (Sphero device), connect to it and
-                    // have some fun with colors.
-                    try
-                    {
-                        // Create our robot from the Bluetooth device that we got
-                        Robot r = new Robot( d );
+		/**
+		 * Called when the search is started
+		 */
+		@Override
+		public void deviceSearchStarted()
+		{
+			System.out.println( "Started device search" );
+		}
 
-                        // Add ourselves as listeners for the responses
-                        r.addListener( this );
+		/**
+		 * Called if something went wrong with the device search
+		 * 
+		 * @param error The error that occurred
+		 */
+		@Override
+		public void deviceSearchFailed( EVENT error )
+		{
+			System.err.println( "Failed with device search: " + error );
+		}
 
-                        // Check if we can connect
-                        if ( r.connect() )
-                        {
-                            // Add robots to our connected robots list
-                            robots.add( r );
+		/**
+		 * Called when a Bluetooth device is discovered
+		 * 
+		 * @param device The device discovered
+		 */
+		@Override
+		public void deviceDiscovered( BluetoothDevice device )
+		{
+			System.out.println( "Discovered device " + device.getName() + " : " + device.getAddress() );
+		}
 
-                            System.out.println( "Connected to " + d.getName() + " : " + d.getAddress() );
-                            r.rgbTransition( 255, 0, 0, 0, 255, 255, 50 );
+		/*
+		 * ********************************************
+		 * ROBOT STUFF
+		 */
 
-                            // Send direct command
-                            r.sendCommand( new FrontLEDCommand( 1 ) );
-                        }
-                        else
-                            System.err.println( "Failed to connect to robot" );
-                    }
-                    catch ( InvalidRobotAddressException ex )
-                    {
-                        ex.printStackTrace();
-                    }
-                    catch ( RobotBluetoothException ex )
-                    {
-                        ex.printStackTrace();
-                    }
-                }
-            }
+		/**
+		 * Called when a response is received from a robot
+		 * 
+		 * @param r The robot the event concerns
+		 * @param response The response received
+		 * @param dc The command the response is concerning
+		 */
+		@Override
+		public void responseReceived( Robot r, ResponseMessage response, CommandMessage dc )
+		{
+			System.out.println( "(" + ( ++responses ) + ") Received response: " + response.getResponseCode() + " to message " + dc.getCommand() );
+		}
 
-            // Disable the thread and set connected button state
-            if ( robots.isEmpty() )
-            {
-                this.stopThread();
-                setConnectEnabled( true );
-            }
-        }
+		/**
+		 * Event that may occur for a robot
+		 * 
+		 * @param r The robot the event concerns
+		 * @param code The event code for the event
+		 */
+		@Override
+		public void event( Robot r, EVENT_CODE code )
+		{
+			System.out.println( "Received event: " + code );
+		}
 
-
-        /**
-         * Called when the search is started
-         */
-        @Override
-        public void deviceSearchStarted()
-        {
-            System.out.println( "Started device search" );
-        }
-
-
-        /**
-         * Called if something went wrong with the device search
-         *
-         * @param error The error that occurred
-         */
-        @Override
-        public void deviceSearchFailed( EVENT error )
-        {
-            System.err.println( "Failed with device search: " + error );
-        }
-
-
-        /**
-         * Called when a Bluetooth device is discovered
-         *
-         * @param device The device discovered
-         */
-        @Override
-        public void deviceDiscovered( BluetoothDevice device )
-        {
-            System.out.println( "Discovered device " + device.getName() + " : " + device.getAddress() );
-        }
-
-        /*
-         * ********************************************
-         * ROBOT STUFF
-         */
-
-        /**
-         * Called when a response is received from a robot
-         *
-         * @param r        The robot the event concerns
-         * @param response The response received
-         * @param dc       The command the response is concerning
-         */
-        @Override
-        public void responseReceived( Robot r, ResponseMessage response, CommandMessage dc )
-        {
-            System.out.println( "(" + (++responses) + ") Received response: " + response.getResponseCode() + " to message " + dc.getCommand() );
-        }
-
-
-        /**
-         * Event that may occur for a robot
-         *
-         * @param r    The robot the event concerns
-         * @param code The event code for the event
-         */
-        @Override
-        public void event( Robot r, EVENT_CODE code )
-        {
-            System.out.println( "Received event: " + code );
-        }
-
-
-        @Override
-        public void informationResponseReceived( Robot r, InformationResponseMessage response )
-        {
-            // Information response (Ex. Sensor data)
-        }
-    }
+		@Override
+		public void informationResponseReceived( Robot r, InformationResponseMessage response )
+		{
+			// Information response (Ex. Sensor data)
+		}
+	}
 }

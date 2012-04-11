@@ -14,8 +14,8 @@ public class GetConfigurationBlockResponse extends ResponseMessage
      *
      * @param data The received data
      */
-    public GetConfigurationBlockResponse( ResponseHeader rh )//byte[] data )
+    public GetConfigurationBlockResponse( ResponseHeader rh )
     {
-        super( rh );//super( DEVICE_COMMAND.GET_CONFIGURATION_BLOCK, data );
+        super( rh );
     }
 }

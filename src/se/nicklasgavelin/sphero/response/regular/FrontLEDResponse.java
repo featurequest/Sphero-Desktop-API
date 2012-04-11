@@ -13,8 +13,8 @@ public class FrontLEDResponse extends ResponseMessage
     /**
      * Create a FrontLEDResponse from a given received data
      */
-    public FrontLEDResponse( ResponseHeader rh )//byte[] data )
+    public FrontLEDResponse( ResponseHeader rh )
     {
-        super( rh );//super( DEVICE_COMMAND.FRONT_LED_OUTPUT, data );
+        super( rh );
     }
 }

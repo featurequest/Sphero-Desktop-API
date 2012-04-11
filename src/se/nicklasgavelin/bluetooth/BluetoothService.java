@@ -189,10 +189,10 @@ public class BluetoothService extends Observable implements Runnable
          * }
          */
         /*
-         * try {
-         * bt.server.close();
-         * } catch (IOException ioe) {
-         * }
-         */
-    }
+		 * try {
+		 * bt.server.close();
+		 * } catch (IOException ioe) {
+		 * }
+		 */
+	}
 }

@@ -140,7 +140,7 @@ public class CommandMessage
         checksum = ( byte ) (checksum + device_id);
         buffer[ INDEX_DEVICE_ID] = device_id;
 
-        byte cmd = this.command.getCommandId();//getCommandId();
+        byte cmd = this.command.getCommandId();
         checksum = ( byte ) (checksum + cmd);
         buffer[ INDEX_COMMAND] = cmd;
 

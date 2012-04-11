@@ -15,8 +15,8 @@ public class JumpToBootloaderResponse extends ResponseMessage
      *
      * @param data The received data
      */
-    public JumpToBootloaderResponse( ResponseHeader rh )//byte[] data )
+    public JumpToBootloaderResponse( ResponseHeader rh )
     {
-        super( rh );//super( DEVICE_COMMAND.JUMP_TO_BOOTLOADER, data );
+        super( rh );
     }
 }

@@ -12,7 +12,7 @@ public class RawMotorResponse extends ResponseMessage
 	/**
 	 * Create a RawMotorResponse from the received data
 	 * 
-	 * @param data The received data
+	 * @param  rh The response header containing the response data
 	 */
 	public RawMotorResponse( ResponseHeader rh )
 	{

@@ -12,7 +12,7 @@ public class SpinRightResponse extends ResponseMessage
 	/**
 	 * Create a SpinRightResponse from the received data
 	 * 
-	 * @param data The received data
+	 * @param rh The response header containing the response data
 	 */
 	public SpinRightResponse( ResponseMessage.ResponseHeader rh )
 	{

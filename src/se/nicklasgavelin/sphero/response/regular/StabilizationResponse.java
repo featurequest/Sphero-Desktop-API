@@ -12,7 +12,7 @@ public class StabilizationResponse extends ResponseMessage
 	/**
 	 * Create a StabilizationResponse from the received data
 	 * 
-	 * @param data The received data
+	 * @param rh The response header containing the response data
 	 */
 	public StabilizationResponse( ResponseHeader rh )
 	{

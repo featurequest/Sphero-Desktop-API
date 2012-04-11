@@ -13,7 +13,7 @@ public class JumpToBootloaderResponse extends ResponseMessage
     /**
      * Create the JumpToBootloaderResponse from the received data
      *
-     * @param data The received data
+     * @param rh The response header containing the response data
      */
     public JumpToBootloaderResponse( ResponseHeader rh )
     {

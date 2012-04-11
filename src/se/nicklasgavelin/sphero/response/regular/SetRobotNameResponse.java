@@ -12,7 +12,7 @@ public class SetRobotNameResponse extends ResponseMessage
 	/**
 	 * Create a SetRobotNameResponse from the received data
 	 * 
-	 * @param data The received data
+	 * @param rh The response header containing the response data
 	 */
 	public SetRobotNameResponse( ResponseHeader rh )
 	{

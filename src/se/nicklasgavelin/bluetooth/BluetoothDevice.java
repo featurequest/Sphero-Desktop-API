@@ -306,7 +306,7 @@ public class BluetoothDevice implements DiscoveryListener
 		if( this.activeSearch == transId )
 		{
 			if( records.length > 0 )
-				this.service = new BluetoothService( this, records[0], this.bt );// TODO:
+				this.service = new BluetoothService( this, records[0] );//, this.bt );// TODO:
 																					// Will
 																					// there
 																					// ever

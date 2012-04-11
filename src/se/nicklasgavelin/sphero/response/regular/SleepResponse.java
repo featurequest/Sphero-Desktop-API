@@ -12,7 +12,7 @@ public class SleepResponse extends ResponseMessage
 	/**
 	 * Create a SleepResponse from the received data
 	 * 
-	 * @param data The received data
+	 * @param rh The response header containing the response data
 	 */
 	public SleepResponse( ResponseHeader rh )
 	{

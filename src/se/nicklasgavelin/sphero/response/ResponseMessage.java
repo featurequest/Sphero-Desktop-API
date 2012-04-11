@@ -122,10 +122,10 @@ public class ResponseMessage
 	}
 
 	/**
-	 * Get the device response from a given command and received data
+	 * Get the device response from a given command and received response header
 	 * 
 	 * @param dc The device command to receive response for
-	 * @param data The data received
+	 * @param rh The response header
 	 * 
 	 * @return The device response or null if no device response could be
 	 *         created
@@ -563,7 +563,7 @@ public class ResponseMessage
 		 * Return the ENUM representation of the code value
 		 * 
 		 * @param code The code
-		 * @param header The header type
+		 * @param type The response type
 		 * 
 		 * @return The response code represented by the code
 		 */
@@ -581,10 +581,10 @@ public class ResponseMessage
 		}
 
 		/**
-		 * Return the enum representation of the code value
+		 * Return the ENUM representation of the code value
 		 * 
 		 * @param code The code
-		 * @param header The header type
+		 * @param type The response type
 		 * 
 		 * @return The response code represented by the code
 		 */

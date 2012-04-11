@@ -12,6 +12,8 @@ public class FrontLEDResponse extends ResponseMessage
 {
     /**
      * Create a FrontLEDResponse from a given received data
+     * 
+     * @param rh The response header containing the response data
      */
     public FrontLEDResponse( ResponseHeader rh )
     {

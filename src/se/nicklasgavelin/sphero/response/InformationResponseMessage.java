@@ -4,8 +4,6 @@
  */
 package se.nicklasgavelin.sphero.response;
 
-import se.nicklasgavelin.util.Array;
-
 /**
  * 
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
@@ -53,9 +51,9 @@ public class InformationResponseMessage extends ResponseMessage
 	private INFORMATION_RESPONSE_CODE responseType;
 
 	/**
-	 * Create an information response from received data
+	 * Create an information response from the response header
 	 * 
-	 * @param data The recevied data
+	 * @param rh The response header
 	 */
 	public InformationResponseMessage( ResponseHeader rh )
 	{
@@ -76,7 +74,7 @@ public class InformationResponseMessage extends ResponseMessage
 	/**
 	 * Fetch the information response from the data
 	 * 
-	 * @param data The data to fetch for
+	 * @param rh The response header
 	 * @return The information response or null
 	 */
 	public static InformationResponseMessage valueOf( ResponseHeader rh )

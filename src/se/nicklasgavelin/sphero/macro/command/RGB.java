@@ -73,9 +73,9 @@ public class RGB extends MacroCommand
 	}
 
 	/**
-	 * Returns the colors set for the command as an integer array
+	 * Returns the colors set for the command as a java.awt.Color object
 	 * 
-	 * @return
+	 * @return The internal color value
 	 */
 	public Color getColor()
 	{

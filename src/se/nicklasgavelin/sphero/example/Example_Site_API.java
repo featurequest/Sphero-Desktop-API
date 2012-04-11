@@ -27,6 +27,8 @@ import se.nicklasgavelin.sphero.response.InformationResponseMessage;
  */
 public class Example_Site_API extends JFrame
 {
+	private static final long serialVersionUID = 6998786554264771793L;
+	
 	// Internal storage
 	private int responses = 0;
 	private ConnectThread ct;
@@ -37,6 +39,7 @@ public class Example_Site_API extends JFrame
 	 * 
 	 * @param args Will be ignored
 	 */
+	@SuppressWarnings( "unused" )
 	public static void main( String[] args )
 	{
 		Example_Site_API example_Site_API = new Example_Site_API();

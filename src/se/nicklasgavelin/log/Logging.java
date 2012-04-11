@@ -271,19 +271,19 @@ public class Logging
 		Logging.logger.logp( l.getLevel(), s.className, s.methodName, "\t" + msg + "\n", t );
 	}
 
-	/**
-	 * Returns the location from which the message was created
-	 * 
-	 * @param s The stack location
-	 * 
-	 * @return The location or ""
-	 */
-	private static String fromLocation( UtilsJavaSE.StackTraceLocation s )
-	{
-		if( s == null )
-			return "";
-		return s.className + "." + s.methodName + "(" + s.fileName + ":" + s.lineNumber + ")";
-	}
+//	/**
+//	 * Returns the location from which the message was created
+//	 * 
+//	 * @param s The stack location
+//	 * 
+//	 * @return The location or ""
+//	 */
+//	private static String fromLocation( UtilsJavaSE.StackTraceLocation s )
+//	{
+//		if( s == null )
+//			return "";
+//		return s.className + "." + s.methodName + "(" + s.fileName + ":" + s.lineNumber + ")";
+//	}
 
 	/**
 	 * Add an appender to call when running callAppenders

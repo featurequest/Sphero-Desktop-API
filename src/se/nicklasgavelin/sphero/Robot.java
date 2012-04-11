@@ -46,7 +46,7 @@ import se.nicklasgavelin.util.Value;
  * 
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  *         Technology
- * @version 1.1
+ * @version 1.2
  * 
  *          TODO: Set temporary internal values on sending commands so that we don't
  *          update them too late if we send multiple commands
@@ -54,455 +54,6 @@ import se.nicklasgavelin.util.Value;
 public class Robot
 {
 	private RobotSetting rs;
-
-	/**
-	 * Manages sending of macro commands
-	 * 
-	 * @author Orbotix
-	 * @author Nicklas Gavelin
-	 */
-	private class MACRO_SETTINGS
-	{
-		private final Collection<MacroCommand> commands;
-		private final Collection<CommandMessage> sendingQueue;
-		private final Collection<Integer> ballMemory;
-		private boolean macroRunning, macroStreamingEnabled;
-		private int emits = 0;
-
-		/**
-		 * Create a macro settings object
-		 */
-		private MACRO_SETTINGS()
-		{
-			commands = new ArrayList<MacroCommand>();
-			sendingQueue = new ArrayList<CommandMessage>();
-			ballMemory = new ArrayList<Integer>();
-			macroRunning = false;
-			macroStreamingEnabled = true;
-		}
-
-		/**
-		 * Stop any current macros from running
-		 */
-		private void stopMacro()
-		{
-			// Abort the current macro
-			sendCommand( new AbortMacroCommand() );
-
-			// Clear the memory
-			this.commands.clear();
-			this.ballMemory.clear();
-
-			// Set motorStop flag
-			this.macroRunning = false;
-		}
-
-		/**
-		 * Stop macro from executing (finished)
-		 */
-		protected void stopIfFinished()
-		{
-			emits = ( emits > 0 ? emits - 1 : 0 );
-			if( this.commands.isEmpty() && this.macroRunning && emits == 0 )
-			{
-				for( CommandMessage cmd : this.sendingQueue )
-					sendCommand( cmd );
-				this.sendingQueue.clear();
-				this.stopMacro();
-
-				// Notify listeners about macro done event
-				Robot.this.notifyListenerEvent( EVENT_CODE.MACRO_DONE );
-			}
-		}
-
-		/**
-		 * Play a given macro object
-		 * 
-		 * @param macro The given macro object
-		 */
-		private void playMacro( MacroObject macro )
-		{
-			if( macro.getMode().equals( MacroObject.MacroObjectMode.Normal ) )
-			{
-				// Normal macro mode
-				Robot.this.sendSystemCommand( new SaveTemporaryMacroCommand( 1, macro.generateMacroData() ) );
-				Robot.this.sendSystemCommand( new RunMacroCommand( -1 ) );
-			}
-			else
-			{
-				if( !macroStreamingEnabled )
-					return;
-
-				if( macro.getMode().equals( MacroObject.MacroObjectMode.CachedStreaming ) )
-				{
-					// Cached streaming mode
-					if( !macro.getCommands().isEmpty() )
-					{
-						// Get all macro commands localy instead
-						// this.commands.clear();
-						this.commands.addAll( macro.getCommands() );
-
-						this.macroRunning = true;
-
-						// Now empty our queue
-						this.emptyMacroCommandQueue();
-
-						// if ( !this.macroRunning )
-						// {
-						// this.macroRunning = true;
-						// // this.sendSystemCommand( new RunMacroCommand( -2 ) );
-						// }
-					}
-				}
-			}
-		}
-
-		/**
-		 * Send a command after a CachedStreaming macro has run
-		 * 
-		 * @param command The command to send after the macro is finished
-		 *            running
-		 */
-		public void sendCommandAfterMacro( CommandMessage command )
-		{
-			this.sendingQueue.add( command );
-		}
-
-		/**
-		 * Clears the queue used for storing commands to send after the macro
-		 * has finished running
-		 */
-		public void clearSendingQueue()
-		{
-			this.sendingQueue.clear();
-		}
-
-		/**
-		 * Continue emptying the macro command queue by creating new commands
-		 * and sending them to the Sphero device
-		 */
-		private synchronized void emptyMacroCommandQueue()
-		{
-			// Calculate number of free bytes that we have
-			int ballSpace = freeBallMemory(), freeBytes = ( ballSpace > rs.macroMaxSize ? rs.macroMaxSize : ballSpace ), chunkSize = 0;
-
-			// Check if we need or can create more commands
-			if( this.commands.isEmpty() || ballSpace <= rs.macroMinSpaceSize )
-				return;
-
-			// Create our sending collection (stuff that we want to send)
-			Collection<MacroCommand> send = new ArrayList<MacroCommand>();
-
-			// Emit marker (we will receive a message from the Sphero when this emit
-			// marker is reached)
-			Emit em = new Emit( 1 );
-			int emitLength = em.getLength();
-
-			// Go through new commands that we want to send
-			for( MacroCommand cmd : this.commands )
-			{
-				// Check if we allow for the new command to be added (that we still got
-				// enough space left to add it)
-				if( freeBytes - ( chunkSize + cmd.getLength() + emitLength ) <= 0 || ( chunkSize + cmd.getLength() + emitLength ) > rs.macroMaxSize )
-					break;
-
-				// Add the command to the send queue and increase the space we've used
-				send.add( cmd );
-				chunkSize += cmd.getLength();
-			}
-
-			// Remove the commands that we can send from the waiting command queue
-			this.commands.removeAll( send );
-
-			// Add emitter
-			send.add( em );
-			chunkSize += em.getLength();
-
-			// Create our sending buffer to add commands to
-			ByteArrayBuffer sendBuffer = new ByteArrayBuffer( chunkSize );
-
-			// Add all commands to the buffer
-			for( MacroCommand cmd : send )
-				sendBuffer.append( cmd.getByteRepresentation() );
-
-			if( commands.isEmpty() )
-				sendBuffer.append( MacroCommand.MACRO_COMMAND.MAC_END.getValue() );
-
-			this.ballMemory.add( chunkSize );
-
-			// Send a save macro command to the Sphero with the new data
-			SaveMacroCommand svc = new SaveMacroCommand( SaveMacroCommand.MacroFlagMotorControl, SaveMacroCommand.MACRO_STREAMING_DESTINATION, sendBuffer.toByteArray() );
-
-			emits++;
-			Robot.this.sendSystemCommand( svc );
-
-			// Check if we can continue creating more messages to send
-			if( !this.commands.isEmpty() && freeBallMemory() > rs.macroMinSpaceSize )
-				this.emptyMacroCommandQueue();
-		}
-
-		/**
-		 * Returns the number of free bytes for the ball
-		 * 
-		 * @return The number of free bytes for the Sphero device
-		 */
-		private int freeBallMemory()
-		{
-			int bytesInUse = 0;
-			for( Iterator<Integer> i = this.ballMemory.iterator(); i.hasNext(); )
-				bytesInUse = bytesInUse + i.next().intValue();
-
-			return( rs.macroRobotStorageSize - bytesInUse );
-		}
-	}
-
-	/**
-	 * Holds the robot position, rotation rate and the drive algorithm used.
-	 * All the internal values may be accessed with the get methods that are
-	 * available.
-	 * 
-	 * @author Nicklas Gavelin
-	 */
-	public class RobotMovement
-	{
-		// The current values
-		private float heading, velocity, rotationRate;
-		private boolean stop = true;
-		// The current drive algorithm that is used for calculating velocity
-		// and motorHeading when running .drive no Robot
-		private DriveAlgorithm algorithm;
-
-		/**
-		 * Create a new robot movement object
-		 */
-		private RobotMovement()
-		{
-			this.reset();
-		}
-
-		/**
-		 * Returns the current motorHeading of the robot
-		 * 
-		 * @return The current motorHeading of the robot (0-360)
-		 */
-		public float getHeading()
-		{
-			return this.heading;
-		}
-
-		/**
-		 * Returns the current velocity of the robot
-		 * 
-		 * @return The current velocity (0-1)
-		 */
-		public float getVelocity()
-		{
-			return this.velocity;
-		}
-
-		/**
-		 * Returns the current rotation rate of the robot.
-		 * 
-		 * @return The current rotation rate (0-1)
-		 */
-		public float getRotationRate()
-		{
-			return this.rotationRate;
-		}
-
-		/**
-		 * Returns the current motorStop value of the robot.
-		 * True means the robot is stopped, false means it's
-		 * moving with a certain velocity
-		 * 
-		 * @return True if moving, false otherwise
-		 */
-		public boolean getStop()
-		{
-			return this.stop;
-		}
-
-		/**
-		 * Returns the current drive algorithm that is used to
-		 * calculate the velocity and motorHeading when running .drive on Robot
-		 * 
-		 * @return The current drive algorithm
-		 */
-		public DriveAlgorithm getDriveAlgorithm()
-		{
-			return this.algorithm;
-		}
-
-		/**
-		 * Resets all values of the class instance.
-		 * Will NOT send any commands to the robot, this has to be
-		 * done manually! BE SURE TO DO IT!
-		 */
-		private void reset()
-		{
-			this.heading = rs.motorHeading;
-			this.velocity = rs.motorStartSpeed;
-			this.rotationRate = rs.motorRotationRate;
-			this.stop = rs.motorStop;
-			this.algorithm = new RCDriveAlgorithm();
-		}
-	}
-
-	/**
-	 * Raw movement values for the robot. These have no
-	 * connection to the ordinary robot movement RobotMovement as
-	 * these use direct commends to the engines instead of pre-defined
-	 * commands.
-	 */
-	public class RobotRawMovement
-	{
-		// Holds motor speed and mode (Forward, Reverse)
-		private int leftMotorSpeed, rightMotorSpeed;
-		private MOTOR_MODE leftMotorMode, rightMotorMode;
-
-		/**
-		 * Create a new raw robot movement
-		 */
-		private RobotRawMovement()
-		{
-			this.reset();
-		}
-
-		/**
-		 * Returns the left motor speed
-		 * 
-		 * @return The left motor speed
-		 */
-		public int getLeftMotorSpeed()
-		{
-			return this.leftMotorSpeed;
-		}
-
-		/**
-		 * Returns the right motor speed
-		 * 
-		 * @return The right motor speed
-		 */
-		public int getRightMotorSpeed()
-		{
-			return this.rightMotorSpeed;
-		}
-
-		/**
-		 * Returns the left motor mode
-		 * 
-		 * @return The left motor mode (Forward/Reverse)
-		 */
-		public MOTOR_MODE getLeftMotorMode()
-		{
-			return this.leftMotorMode;
-		}
-
-		/**
-		 * Returns the right motor mode
-		 * 
-		 * @return The right motor mode (Forward/Reverse)
-		 */
-		public MOTOR_MODE getRightMotorMode()
-		{
-			return this.rightMotorMode;
-		}
-
-		/**
-		 * Resets the internal values.
-		 * WARNING: WILL NOT SEND _ANY_ COMMANDS TO THE SPHERO DEVICE, THIS
-		 * HAS TO BE DONE MANUALLY!
-		 */
-		private void reset()
-		{
-			this.leftMotorSpeed = this.rightMotorSpeed = rs.motorStartSpeed;
-			this.leftMotorMode = this.rightMotorMode = rs.motorMode;
-		}
-	}
-
-	/**
-	 * Holds information about the current LED color
-	 * 
-	 * @author Nicklas Gavelin
-	 */
-	public class RobotLED
-	{
-		// Internal values
-		private int red, green, blue;
-		private float brightness;
-
-		/**
-		 * Create a new robot led object
-		 */
-		private RobotLED()
-		{
-			this.reset();
-		}
-
-		/**
-		 * Returns the red color value (0-255)
-		 * 
-		 * @return The red color value
-		 */
-		public int getRGBRed()
-		{
-			return this.red;
-		}
-
-		/**
-		 * Returns the green color value (0-255)
-		 * 
-		 * @return The green color value
-		 */
-		public int getRGBGreen()
-		{
-			return this.green;
-		}
-
-		/**
-		 * Returns the blue color value (0-255)
-		 * 
-		 * @return The blue color value
-		 */
-		public int getRGBBlue()
-		{
-			return this.blue;
-		}
-
-		/**
-		 * Returns the RGB Color value for the internal RGB LED
-		 * 
-		 * @return The color for the RGB LED
-		 */
-		public Color getRGBColor()
-		{
-			return( new Color( this.red, this.green, this.blue ) );
-		}
-
-		/**
-		 * Returns the ledBrightness of the front led (0-1)
-		 * 
-		 * @return The ledBrightness level of the front led
-		 */
-		public float getFrontLEDBrightness()
-		{
-			return this.brightness;
-		}
-
-		/**
-		 * Resets the internal values to default values
-		 */
-		private void reset()
-		{
-			// Set white color (default for connected devices)
-			this.red = rs.ledRGB.getRed();
-			this.green = rs.ledRGB.getGreen();
-			this.blue = rs.ledRGB.getBlue();
-
-			// Reset the ledBrightness to 0 (off)
-			this.brightness = rs.ledBrightness;
-		}
-	}
 
 	// Bluetooth
 	private final BluetoothDevice bt;
@@ -609,7 +160,9 @@ public class Robot
 				{
 					// Wait for disconnect event
 					Robot.this.disconnect( false );
-					Robot.this.sendingTimer.w.join();
+					
+					if( Robot.this.sendingTimer != null && Robot.this.sendingTimer.w != null )
+						Robot.this.sendingTimer.w.join();
 				}
 				catch( InterruptedException ex )
 				{
@@ -1102,7 +655,7 @@ public class Robot
 	/**
 	 * Roll the robot with a given motorHeading and speed
 	 * 
-	 * @param motorHeading The motorHeading (0-360)
+	 * @param heading The motorHeading (0-360)
 	 * @param speed The speed (0-1)
 	 */
 	public void roll( float heading, float speed )
@@ -1115,7 +668,7 @@ public class Robot
 	 * robot to this
 	 * motorHeading)
 	 * 
-	 * @param motorHeading The motorHeading to calibrate to (0-359)
+	 * @param heading The motorHeading to calibrate to (0-359)
 	 */
 	public void calibrate( float heading )
 	{
@@ -1245,7 +798,7 @@ public class Robot
 	/**
 	 * Rotate the robot
 	 * 
-	 * @param motorHeading The new motorHeading, 0-360
+	 * @param heading The new motorHeading, 0-360
 	 */
 	public void rotate( float heading )
 	{
@@ -1333,7 +886,7 @@ public class Robot
 	/**
 	 * Set ledBrightness of the front led. 0-1
 	 * 
-	 * @param ledBrightness The ledBrightness value, 0-1
+	 * @param brightness The ledBrightness value, 0-1
 	 */
 	public void setFrontLEDBrightness( float brightness )
 	{
@@ -1564,16 +1117,17 @@ public class Robot
 		return n;
 	}
 
-	/**
-	 * Returns this, used in threads to access the robot as you
-	 * can't use "this"
-	 * 
-	 * @return The robot
-	 */
-	private Robot getRobot()
-	{
-		return this;
-	}
+//	/**
+//	 * Returns this, used in threads to access the robot as you
+//	 * can't use "this"
+//	 * 
+//	 * @deprecated Use Robot.this instead
+//	 * @return The robot
+//	 */
+//	private Robot getRobot()
+//	{
+//		return this;
+//	}
 
 	/**
 	 * Returns the robot led
@@ -1987,29 +1541,29 @@ public class Robot
 		}
 	}
 
-	/**
-	 * Performs updates depending on which messages that are sent
-	 * 
-	 * @param sent The sent messages
-	 */
-	private void update( Collection<Pair<CommandMessage, Boolean>> sent )
-	{
-		for( Pair<CommandMessage, Boolean> p : sent )
-		{
-			switch ( p.getFirst().getCommand() )
-			{
-				case SAVE_MACRO:
-					if( this.macroSettings.macroRunning )
-					{
-						// Macro has been saved, now get the fuck out!
-						if( this.macroSettings.ballMemory.size() > 0 )
-							this.macroSettings.ballMemory.remove( 0 );
-						this.macroSettings.emptyMacroCommandQueue();
-					}
-					break;
-			}
-		}
-	}
+//	/**
+//	 * Performs updates depending on which messages that are sent
+//	 * 
+//	 * @param sent The sent messages
+//	 */
+//	private void update( Collection<Pair<CommandMessage, Boolean>> sent )
+//	{
+//		for( Pair<CommandMessage, Boolean> p : sent )
+//		{
+//			switch ( p.getFirst().getCommand() )
+//			{
+//				case SAVE_MACRO:
+//					if( this.macroSettings.macroRunning )
+//					{
+//						// Macro has been saved, now get the fuck out!
+//						if( this.macroSettings.ballMemory.size() > 0 )
+//							this.macroSettings.ballMemory.remove( 0 );
+//						this.macroSettings.emptyMacroCommandQueue();
+//					}
+//					break;
+//			}
+//		}
+//	}
 
 	/**
 	 * Handles the sending of commands to the active robot.
@@ -2102,20 +1656,20 @@ public class Robot
 			this.enqueue( command, delay, false );
 		}
 
-		/**
-		 * Enqueue a command with a certain repeat period and initial delay
-		 * before sending the
-		 * first message. <b>The message will be repeated as long as the writer
-		 * allows it</b>.
-		 * 
-		 * @param command The command to transmit
-		 * @param initialDelay The initial delay before sending the first one
-		 * @param periodLength The period length between the transmissions
-		 */
-		public void enqueue( CommandMessage command, float initialDelay, float periodLength )
-		{
-			this.enqueue( command, false, initialDelay, periodLength );
-		}
+//		/**
+//		 * Enqueue a command with a certain repeat period and initial delay
+//		 * before sending the
+//		 * first message. <b>The message will be repeated as long as the writer
+//		 * allows it</b>.
+//		 * 
+//		 * @param command The command to transmit
+//		 * @param initialDelay The initial delay before sending the first one
+//		 * @param periodLength The period length between the transmissions
+//		 */
+//		public void enqueue( CommandMessage command, float initialDelay, float periodLength )
+//		{
+//			this.enqueue( command, false, initialDelay, periodLength );
+//		}
 
 		/**
 		 * Enqueue a command with a certain repeat period and initial delay
@@ -2241,7 +1795,9 @@ public class Robot
 		}
 
 		/**
-		 * Handles all writing to the robot
+		 * Handles all transmissions to the Sphero device.
+		 * 
+		 * @author Nicklas Gavelin
 		 */
 		private class Writer extends Thread
 		{
@@ -2256,11 +1812,9 @@ public class Robot
 				{
 					try
 					{
-						// Try and fetch some message
+						// Fetch a message from the sending queue and append the data of that packet to our
+						// sending buffer. We will then try to add more data to our sending buffer.
 						Pair<CommandMessage, Boolean> p = sendingQueue.take();
-
-						// Collection<Pair<CommandMessage, Boolean>> sent = new
-						// ArrayList<Pair<CommandMessage, Boolean>>();
 
 						// Append message to sending buffer
 						sendingBuffer.append( p.getFirst().getPacket(), 0, p.getFirst().getPacketLength() );
@@ -2272,12 +1826,12 @@ public class Robot
 						Logging.debug( "Queueing " + p.getFirst() );
 
 						// Lock until we have sent our messages in-case someone
-						// else tries to do this at the same time
+						// else tries to do access our sendingQueue at the same time (enqueue)
 						synchronized( sendingQueue )
 						{
 							try
 							{
-								// Check if we can send more
+								// We will try to send as much as we can
 								if( !sendingQueue.isEmpty() )
 								{
 									// Go through all the messages that we can
@@ -2334,6 +1888,460 @@ public class Robot
 					} // Nothing important, just continue on
 				}
 			}
+		}
+	}
+
+	/**
+	 * Manages transmission of Macro commands and allows for 
+	 * streaming possibilities (dividing macro into pieces and sending them off
+	 * one by one until the whole macro has been transmitted and played)
+	 * 
+	 * @author Orbotix
+	 * @author Nicklas Gavelin
+	 */
+	private class MACRO_SETTINGS
+	{
+		private final Collection<MacroCommand> commands;
+		private final Collection<CommandMessage> sendingQueue;
+		private final Collection<Integer> ballMemory;
+		private boolean macroRunning, macroStreamingEnabled;
+//		private int emits = 0;
+
+		/**
+		 * Create a macro settings object
+		 */
+		private MACRO_SETTINGS()
+		{
+			commands = new ArrayList<MacroCommand>();
+			sendingQueue = new ArrayList<CommandMessage>();
+			ballMemory = new ArrayList<Integer>();
+			macroRunning = false;
+			macroStreamingEnabled = true;
+		}
+
+		/**
+		 * Stop any current macros from running
+		 */
+		private void stopMacro()
+		{
+			// Abort the current macro
+			sendCommand( new AbortMacroCommand() );
+
+			// Clear the memory
+			this.commands.clear();
+			this.ballMemory.clear();
+
+			// Set motorStop flag
+			this.macroRunning = false;
+		}
+
+//		/**
+//		 * Stop macro from executing (finished)
+//		 */
+//		protected void stopIfFinished()
+//		{
+//			emits = ( emits > 0 ? emits - 1 : 0 );
+//			if( this.commands.isEmpty() && this.macroRunning && emits == 0 )
+//			{
+//				for( CommandMessage cmd : this.sendingQueue )
+//					sendCommand( cmd );
+//				this.sendingQueue.clear();
+//				this.stopMacro();
+//
+//				// Notify listeners about macro done event
+//				Robot.this.notifyListenerEvent( EVENT_CODE.MACRO_DONE );
+//			}
+//		}
+
+		/**
+		 * Play a given macro object
+		 * 
+		 * @param macro The given macro object
+		 */
+		private void playMacro( MacroObject macro )
+		{
+			if( macro.getMode().equals( MacroObject.MacroObjectMode.Normal ) )
+			{
+				// Normal macro mode
+				Robot.this.sendSystemCommand( new SaveTemporaryMacroCommand( 1, macro.generateMacroData() ) );
+				Robot.this.sendSystemCommand( new RunMacroCommand( -1 ) );
+			}
+			else
+			{
+				if( !macroStreamingEnabled )
+					return;
+
+				if( macro.getMode().equals( MacroObject.MacroObjectMode.CachedStreaming ) )
+				{
+					// Cached streaming mode
+					if( !macro.getCommands().isEmpty() )
+					{
+						// Get all macro commands localy instead
+						// this.commands.clear();
+						this.commands.addAll( macro.getCommands() );
+
+						this.macroRunning = true;
+
+						// Now empty our queue
+						this.emptyMacroCommandQueue();
+
+						// if ( !this.macroRunning )
+						// {
+						// this.macroRunning = true;
+						// // this.sendSystemCommand( new RunMacroCommand( -2 ) );
+						// }
+					}
+				}
+			}
+		}
+
+		/**
+		 * Send a command after a CachedStreaming macro has run
+		 * 
+		 * @param command The command to send after the macro is finished
+		 *            running
+		 */
+		public void sendCommandAfterMacro( CommandMessage command )
+		{
+			this.sendingQueue.add( command );
+		}
+
+		/**
+		 * Clears the queue used for storing commands to send after the macro
+		 * has finished running
+		 */
+		public void clearSendingQueue()
+		{
+			this.sendingQueue.clear();
+		}
+
+		/**
+		 * Continue emptying the macro command queue by creating new commands
+		 * and sending them to the Sphero device
+		 */
+		private synchronized void emptyMacroCommandQueue()
+		{
+			// Calculate number of free bytes that we have
+			int ballSpace = freeBallMemory(), freeBytes = ( ballSpace > rs.macroMaxSize ? rs.macroMaxSize : ballSpace ), chunkSize = 0;
+
+			// Check if we need or can create more commands
+			if( this.commands.isEmpty() || ballSpace <= rs.macroMinSpaceSize )
+				return;
+
+			// Create our sending collection (stuff that we want to send)
+			Collection<MacroCommand> send = new ArrayList<MacroCommand>();
+
+			// Emit marker (we will receive a message from the Sphero when this emit
+			// marker is reached)
+			Emit em = new Emit( 1 );
+			int emitLength = em.getLength();
+
+			// Go through new commands that we want to send
+			for( MacroCommand cmd : this.commands )
+			{
+				// Check if we allow for the new command to be added (that we still got
+				// enough space left to add it)
+				if( freeBytes - ( chunkSize + cmd.getLength() + emitLength ) <= 0 || ( chunkSize + cmd.getLength() + emitLength ) > rs.macroMaxSize )
+					break;
+
+				// Add the command to the send queue and increase the space we've used
+				send.add( cmd );
+				chunkSize += cmd.getLength();
+			}
+
+			// Remove the commands that we can send from the waiting command queue
+			this.commands.removeAll( send );
+
+			// Add emitter
+			send.add( em );
+			chunkSize += em.getLength();
+
+			// Create our sending buffer to add commands to
+			ByteArrayBuffer sendBuffer = new ByteArrayBuffer( chunkSize );
+
+			// Add all commands to the buffer
+			for( MacroCommand cmd : send )
+				sendBuffer.append( cmd.getByteRepresentation() );
+
+			if( commands.isEmpty() )
+				sendBuffer.append( MacroCommand.MACRO_COMMAND.MAC_END.getValue() );
+
+			this.ballMemory.add( chunkSize );
+
+			// Send a save macro command to the Sphero with the new data
+			SaveMacroCommand svc = new SaveMacroCommand( SaveMacroCommand.MacroFlagMotorControl, SaveMacroCommand.MACRO_STREAMING_DESTINATION, sendBuffer.toByteArray() );
+
+//			emits++;
+			Robot.this.sendSystemCommand( svc );
+
+			// Check if we can continue creating more messages to send
+			if( !this.commands.isEmpty() && freeBallMemory() > rs.macroMinSpaceSize )
+				this.emptyMacroCommandQueue();
+		}
+
+		/**
+		 * Returns the number of free bytes for the ball
+		 * 
+		 * @return The number of free bytes for the Sphero device
+		 */
+		private int freeBallMemory()
+		{
+			int bytesInUse = 0;
+			for( Iterator<Integer> i = this.ballMemory.iterator(); i.hasNext(); )
+				bytesInUse = bytesInUse + i.next().intValue();
+
+			return( rs.macroRobotStorageSize - bytesInUse );
+		}
+	}
+
+	/**
+	 * Holds the robot position, rotation rate and the drive algorithm used.
+	 * All the internal values may be accessed with the get methods that are
+	 * available.
+	 * 
+	 * @author Nicklas Gavelin
+	 */
+	public class RobotMovement
+	{
+		// The current values
+		private float heading, velocity, rotationRate;
+		private boolean stop = true;
+		// The current drive algorithm that is used for calculating velocity
+		// and motorHeading when running .drive no Robot
+		private DriveAlgorithm algorithm;
+
+		/**
+		 * Create a new robot movement object
+		 */
+		private RobotMovement()
+		{
+			this.reset();
+		}
+
+		/**
+		 * Returns the current motorHeading of the robot
+		 * 
+		 * @return The current motorHeading of the robot (0-360)
+		 */
+		public float getHeading()
+		{
+			return this.heading;
+		}
+
+		/**
+		 * Returns the current velocity of the robot
+		 * 
+		 * @return The current velocity (0-1)
+		 */
+		public float getVelocity()
+		{
+			return this.velocity;
+		}
+
+		/**
+		 * Returns the current rotation rate of the robot.
+		 * 
+		 * @return The current rotation rate (0-1)
+		 */
+		public float getRotationRate()
+		{
+			return this.rotationRate;
+		}
+
+		/**
+		 * Returns the current motorStop value of the robot.
+		 * True means the robot is stopped, false means it's
+		 * moving with a certain velocity
+		 * 
+		 * @return True if moving, false otherwise
+		 */
+		public boolean getStop()
+		{
+			return this.stop;
+		}
+
+		/**
+		 * Returns the current drive algorithm that is used to
+		 * calculate the velocity and motorHeading when running .drive on Robot
+		 * 
+		 * @return The current drive algorithm
+		 */
+		public DriveAlgorithm getDriveAlgorithm()
+		{
+			return this.algorithm;
+		}
+
+		/**
+		 * Resets all values of the class instance.
+		 * Will NOT send any commands to the robot, this has to be
+		 * done manually! BE SURE TO DO IT!
+		 */
+		private void reset()
+		{
+			this.heading 		= rs.motorHeading;
+			this.velocity 		= rs.motorStartSpeed;
+			this.rotationRate 	= rs.motorRotationRate;
+			this.stop 			= rs.motorStop;
+			this.algorithm 		= new RCDriveAlgorithm();
+		}
+	}
+
+	/**
+	 * Raw movement values for the robot. These have no
+	 * connection to the ordinary robot movement RobotMovement as
+	 * these use direct commends to the engines instead of pre-defined
+	 * commands.
+	 * 
+	 * @author Nicklas Gavelin
+	 */
+	public class RobotRawMovement
+	{
+		// Holds motor speed and mode (Forward, Reverse)
+		private int leftMotorSpeed, rightMotorSpeed;
+		private MOTOR_MODE leftMotorMode, rightMotorMode;
+
+		/**
+		 * Create a new raw robot movement
+		 */
+		private RobotRawMovement()
+		{
+			this.reset();
+		}
+
+		/**
+		 * Returns the left motor speed
+		 * 
+		 * @return The left motor speed
+		 */
+		public int getLeftMotorSpeed()
+		{
+			return this.leftMotorSpeed;
+		}
+
+		/**
+		 * Returns the right motor speed
+		 * 
+		 * @return The right motor speed
+		 */
+		public int getRightMotorSpeed()
+		{
+			return this.rightMotorSpeed;
+		}
+
+		/**
+		 * Returns the left motor mode
+		 * 
+		 * @return The left motor mode (Forward/Reverse)
+		 */
+		public MOTOR_MODE getLeftMotorMode()
+		{
+			return this.leftMotorMode;
+		}
+
+		/**
+		 * Returns the right motor mode
+		 * 
+		 * @return The right motor mode (Forward/Reverse)
+		 */
+		public MOTOR_MODE getRightMotorMode()
+		{
+			return this.rightMotorMode;
+		}
+
+		/**
+		 * Resets the internal values.
+		 * WARNING: WILL NOT SEND _ANY_ COMMANDS TO THE SPHERO DEVICE, THIS
+		 * HAS TO BE DONE MANUALLY!
+		 */
+		private void reset()
+		{
+			this.leftMotorSpeed = this.rightMotorSpeed = rs.motorStartSpeed;
+			this.leftMotorMode 	= this.rightMotorMode = rs.motorMode;
+		}
+	}
+
+	/**
+	 * Manages the RGB and LED brightness information to prevent 
+	 * storing this directly in objects in the Robot instance.
+	 * 
+	 * @author Nicklas Gavelin
+	 */
+	public class RobotLED
+	{
+		// Internal values
+		private int red, green, blue;
+		private float brightness;
+
+		/**
+		 * Create a new robot led object
+		 */
+		private RobotLED()
+		{
+			this.reset();
+		}
+
+		/**
+		 * Returns the red color value (0-255)
+		 * 
+		 * @return The red color value
+		 */
+		public int getRGBRed()
+		{
+			return this.red;
+		}
+
+		/**
+		 * Returns the green color value (0-255)
+		 * 
+		 * @return The green color value
+		 */
+		public int getRGBGreen()
+		{
+			return this.green;
+		}
+
+		/**
+		 * Returns the blue color value (0-255)
+		 * 
+		 * @return The blue color value
+		 */
+		public int getRGBBlue()
+		{
+			return this.blue;
+		}
+
+		/**
+		 * Returns the RGB Color value for the internal RGB LED
+		 * 
+		 * @return The color for the RGB LED
+		 */
+		public Color getRGBColor()
+		{
+			return( new Color( this.red, this.green, this.blue ) );
+		}
+
+		/**
+		 * Returns the ledBrightness of the front led (0-1)
+		 * 
+		 * @return The ledBrightness level of the front led
+		 */
+		public float getFrontLEDBrightness()
+		{
+			return this.brightness;
+		}
+
+		/**
+		 * Resets the internal values to default values
+		 */
+		private void reset()
+		{
+			// Set white color (default for connected devices)
+			this.red 	= rs.ledRGB.getRed();
+			this.green 	= rs.ledRGB.getGreen();
+			this.blue 	= rs.ledRGB.getBlue();
+
+			// Reset the ledBrightness to 0 (off)
+			this.brightness = rs.ledBrightness;
 		}
 	}
 }

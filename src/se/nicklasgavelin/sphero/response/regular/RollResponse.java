@@ -12,7 +12,7 @@ public class RollResponse extends ResponseMessage
 	/**
 	 * Create a RollResponse from the received data
 	 * 
-	 * @param data The received data
+	 * @param rh The response header containing the response data
 	 */
 	public RollResponse( ResponseHeader rh )
 	{

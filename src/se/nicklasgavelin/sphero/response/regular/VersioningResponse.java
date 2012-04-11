@@ -34,7 +34,7 @@ public class VersioningResponse extends ResponseMessage
     /**
      * Create a version response from a data array
      *
-     * @param data The data received
+     * @param rh The response header containing the response data
      */
     public VersioningResponse( ResponseHeader rh )//byte[] data )
     {

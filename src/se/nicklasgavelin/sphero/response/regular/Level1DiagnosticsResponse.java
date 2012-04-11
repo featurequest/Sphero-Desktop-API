@@ -12,7 +12,7 @@ public class Level1DiagnosticsResponse extends ResponseMessage
     /**
      * Create a Level1DiagnosticsResponse from the received data
      *
-     * @param data The received data
+     * @param rh The response header containing the response data
      */
     public Level1DiagnosticsResponse( ResponseHeader rh )
     {

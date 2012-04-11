@@ -12,7 +12,7 @@ public class RotationRateResponse extends ResponseMessage
 	/**
 	 * Create a RotationRateResponse from the received data
 	 * 
-	 * @param data The received data
+	 * @param rh The response header containing the response data
 	 */
 	public RotationRateResponse( ResponseHeader rh )
 	{

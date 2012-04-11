@@ -12,7 +12,7 @@ public class GetConfigurationBlockResponse extends ResponseMessage
     /**
      * Create a GetCOnfigurationBlockResponse from the received data
      *
-     * @param data The received data
+     * @param rh The response header containing the response data
      */
     public GetConfigurationBlockResponse( ResponseHeader rh )
     {

@@ -485,7 +485,7 @@ public class Bluetooth implements DiscoveryListener, Runnable
 			record.setDeviceServiceClasses( 0x400000 );
 
 			// // set up a service for this record and set it up as the thread
-			BluetoothService s = new BluetoothService( null, record, this );
+			BluetoothService s = new BluetoothService( null, record );//, this );
 			new Thread( s ).start();
 		}
 		catch( Exception e )

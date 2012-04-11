@@ -190,7 +190,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataInputStream.
+	 * @see java.io.DataInputStream#readInt()
 	 */
 	public int readInt() throws IOException
 	{
@@ -198,7 +198,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataInputStream.readUTF
+	 * @see java.io.DataInputStream#readUTF()
 	 */
 	public String readUTF() throws IOException
 	{
@@ -206,7 +206,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataInputStream.skipBytes
+	 * @see java.io.DataInputStream#skipBytes(int)
 	 */
 	public int skipBytes( int bytes ) throws IOException
 	{
@@ -214,7 +214,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataOutputStream.write
+	 * @see java.io.DataOutputStream#write(int)
 	 */
 	public void write( int data ) throws IOException
 	{
@@ -222,7 +222,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataOutputStream.write
+	 * @see java.io.DataOutputStream#write(byte[])
 	 */
 	public void write( byte[] data ) throws IOException
 	{
@@ -230,7 +230,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataOutputStream.writeBoolean
+	 * @see java.io.DataOutputStream#writeBoolean(boolean)
 	 */
 	public void writeBoolean( boolean v ) throws IOException
 	{
@@ -238,7 +238,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataOutputStream.write
+	 * @see java.io.DataOutputStream#writeBytes(String)
 	 */
 	public void writeBytes( String s ) throws IOException
 	{
@@ -246,7 +246,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataOutputStream.writeChar
+	 * @see java.io.DataOutputStream#writeChar(int)
 	 */
 	public void writeChar( int v ) throws IOException
 	{
@@ -254,7 +254,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataOutputStream.writeInt
+	 * @see java.io.DataOutputStream#writeInt(int)
 	 */
 	public void writeInt( int v ) throws IOException
 	{
@@ -262,7 +262,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataOutputStream.writeUTF
+	 * @see java.io.DataOutputStream#writeUTF(String)
 	 */
 	public void writeUTF( String s ) throws IOException
 	{
@@ -270,7 +270,7 @@ public class BluetoothConnection
 	}
 
 	/**
-	 * @see DataOutputStream.flush
+	 * @see java.io.DataOutputStream#flush()
 	 */
 	public void flush() throws IOException
 	{

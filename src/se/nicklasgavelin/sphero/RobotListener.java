@@ -34,7 +34,6 @@ public interface RobotListener
 	 * Called when a specific event has occurred, the code
 	 * given is the type of event that occurred.
 	 * 
-	 * @author Nicklas Gavelin
 	 * @param r The robot that is connected to the event
 	 * @param code The EVENT_CODE that occurred (RobotListener.EVENT_CODE)
 	 */

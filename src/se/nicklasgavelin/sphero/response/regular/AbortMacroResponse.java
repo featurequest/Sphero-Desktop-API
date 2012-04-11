@@ -17,6 +17,12 @@ public class AbortMacroResponse extends ResponseMessage
 	public static final int MACRO_ID_INDEX = 0;
 	private int macroId;
 
+	
+	/**
+	 * Create an abort macro response message
+	 * 
+	 * @param rh The response header containing the response data
+	 */
 	public AbortMacroResponse( ResponseHeader rh )// byte[] data )
 	{
 		super( rh );

@@ -13,6 +13,11 @@ import se.nicklasgavelin.sphero.response.ResponseMessage;
  */
 public class SaveMacroResponse extends ResponseMessage
 {
+	/**
+	 * Create a save macro response message
+	 * 
+	 * @param rh The response header containing the response data
+	 */
 	public SaveMacroResponse( ResponseHeader rh )
 	{
 		super( rh );

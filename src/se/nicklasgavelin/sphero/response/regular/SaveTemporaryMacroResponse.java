@@ -9,6 +9,11 @@ import se.nicklasgavelin.sphero.response.ResponseMessage;
  */
 public class SaveTemporaryMacroResponse extends ResponseMessage
 {
+	/**
+	 * Create a save temporary macro response message
+	 * 
+	 * @param rh The response header containing the response data
+	 */
 	public SaveTemporaryMacroResponse( ResponseHeader rh )
 	{
 		super( rh );

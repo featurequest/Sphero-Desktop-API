@@ -2,7 +2,7 @@ package se.nicklasgavelin.util;
 
 /**
  * A byte array buffer that stores bytes and gives the ability to append new
- * bytes easily
+ * bytes easily. Based upon the Apache library ByteArrayBuffer.
  * 
  * @author Nicklas Gavelin, nicklas.gavelin@gmail.com, Luleå University of
  *         Technology
@@ -20,6 +20,9 @@ public class ByteArrayBuffer
 	 */
 	public ByteArrayBuffer( int capacity )
 	{
+		if( capacity == 0 )
+			throw new IllegalCapacityException();
+		
 		this.buffer = new byte[ capacity ];
 		this.length = 0;
 	}
@@ -196,6 +199,9 @@ public class ByteArrayBuffer
 	 * Set the new capacity of the byte array,
 	 * will keep the current data as long as the new length is larger
 	 * than the current one.
+	 * 
+	 * If the new capacity is smaller than the current capacity and the currently
+	 * stored data exceeds the new capacity length the excessive data will be dropped.
 	 * 
 	 * @param capacity The new capacity (may be larger or smaller)
 	 */

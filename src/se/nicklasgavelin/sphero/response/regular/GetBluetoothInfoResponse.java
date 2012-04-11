@@ -21,7 +21,7 @@ public class GetBluetoothInfoResponse extends ResponseMessage
 	/**
 	 * Create the Bluetooth info response from the received data
 	 * 
-	 * @param data The received data
+	 * @param rh The response header containing the response data
 	 */
 	public GetBluetoothInfoResponse( ResponseHeader rh )
 	{

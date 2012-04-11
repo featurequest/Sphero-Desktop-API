@@ -66,10 +66,10 @@ public class MacroObject
 		int currentLength = 0;
 
 		// Go through all our commands that we got
-		for( Iterator i = this.commands.iterator(); i.hasNext(); )
+		for( Iterator<MacroCommand> i = this.commands.iterator(); i.hasNext(); )
 		{
 			// Fetch the next command
-			MacroCommand command = (MacroCommand) i.next();
+			MacroCommand command = i.next();
 
 			// Check if we still got space left
 			if( command.getLength() + currentLength > MAX_TOTAL_COMMAND_LENGTH )

@@ -11,7 +11,7 @@ public class BoostResponse extends ResponseMessage
     /**
      * Create a boost response from a byte array object
      *
-     * @param data The data for the response
+     * @param rh The response header containing the data
      */
     public BoostResponse( ResponseHeader rh )
     {

@@ -20,9 +20,9 @@ public class EmitResponse extends InformationResponseMessage
 	private byte identifier;
 
 	/**
-	 * Create an Emit response from the received data
+	 * Create an Emit response from the received data (located in the response header)
 	 * 
-	 * @param data The received data
+	 * @param rh The response header
 	 */
 	public EmitResponse( ResponseHeader rh )
 	{

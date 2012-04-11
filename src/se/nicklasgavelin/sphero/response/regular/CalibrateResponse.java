@@ -12,7 +12,7 @@ public class CalibrateResponse extends ResponseMessage
     /**
      * Create a response from the received data
      *
-     * @param data The received data
+     * @param rh The response header containing the response data
      */
     public CalibrateResponse( ResponseHeader rh )
     {

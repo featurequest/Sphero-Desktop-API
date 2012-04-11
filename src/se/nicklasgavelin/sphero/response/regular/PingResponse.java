@@ -12,7 +12,7 @@ public class PingResponse extends ResponseMessage
 	/**
 	 * Create a PingResponse from the received data
 	 * 
-	 * @param data The received data
+	 * @param rh The response header containing the response data
 	 */
 	public PingResponse( ResponseHeader rh )
 	{

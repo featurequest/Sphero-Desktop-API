@@ -187,8 +187,11 @@ public class Robot
 	{
 		Logging.debug( "Adding listener of type " + l.getClass().getCanonicalName() );
 
-		if( !this.listeners.contains( l ) )
-			this.listeners.add( l );
+		synchronized( this.listeners )
+		{
+			if( !this.listeners.contains( l ) )
+				this.listeners.add( l );
+		}
 	}
 
 	/**
@@ -199,9 +202,12 @@ public class Robot
 	 */
 	public void removeListener( RobotListener l )
 	{
-		// Check so that we can remove it
-		if( this.listeners.contains( l ) )
-			this.listeners.remove( l );
+		synchronized( this.listeners )
+		{
+			// Check so that we can remove it
+			if( this.listeners.contains( l ) )
+				this.listeners.remove( l );
+		}
 	}
 
 	/**
@@ -214,17 +220,23 @@ public class Robot
 	{
 		Logging.debug( "Notifying listeners about device respose " + dr + " for device command " + dc );
 
-		// Go through all listeners and notify them
-		for( RobotListener r : this.listeners )
-			r.responseReceived( this, dr, dc );
+		synchronized( this.listeners )
+		{
+			// Go through all listeners and notify them
+			for( RobotListener r : this.listeners )
+				r.responseReceived( this, dr, dc );
+		}
 	}
 
 	private void notifyListenersInformationResponse( InformationResponseMessage dir )
 	{
 		Logging.debug( "Nofifying listeners about information response " + dir );
-
-		for( RobotListener r : this.listeners )
-			r.informationResponseReceived( this, dir );
+		
+		synchronized( this.listeners )
+		{
+			for( RobotListener r : this.listeners )
+				r.informationResponseReceived( this, dir );
+		}
 	}
 
 	/**
@@ -237,8 +249,11 @@ public class Robot
 		Logging.debug( "Notifying listeners about event " + event );
 
 		// Notify all listeners
-		for( RobotListener r : this.listeners )
-			r.event( this, event );
+		synchronized( this.listeners )
+		{
+			for( RobotListener r : this.listeners )
+				r.event( this, event );
+		}
 	}
 
 	/**
@@ -696,7 +711,7 @@ public class Robot
 	{
 		this.rgbTransition( from, to, steps, 25 );
 	}
-
+	
 	/**
 	 * Creates a transition between two different colors with a number of
 	 * changes between the colors (the transition itself). The delay between
@@ -794,7 +809,61 @@ public class Robot
 		// Send macro to the Sphero device
 		this.sendCommand( mo );
 	}
+	
+	private void createFromToColorMacroObject( MacroObject mo, Color from, Color to, int steps, int dDelay )
+	{
+		int tdelay = dDelay;
 
+		// Hue, saturation, intensity
+		final float[] fHSB = Color.RGBtoHSB( from.getRed(), from.getGreen(), from.getBlue(), null );
+		final float[] tHSB = Color.RGBtoHSB( to.getRed(), to.getGreen(), to.getBlue(), null );
+
+		float hDif = Math.abs( fHSB[0] - tHSB[0] );
+		float sDif = Math.abs( fHSB[1] - tHSB[1] );
+		float iDif = Math.abs( fHSB[2] - tHSB[2] );
+
+		boolean iHue = ( fHSB[0] < tHSB[0] );
+		boolean iSat = ( fHSB[1] < tHSB[1] );
+		boolean iInt = ( fHSB[2] < tHSB[2] );
+
+		float incHue = ( hDif / steps );
+		float incSat = ( sDif / steps );
+		float incInt = ( iDif / steps );
+
+		Color c;
+		float[] n = new float[ 3 ];
+
+		// Go through all steps
+		for( int i = 0; i < steps; i++ )
+		{
+			// Calculate hue saturation and intensity
+			n[0] = ( iHue ? fHSB[0] + ( i * incHue ) : fHSB[0] - ( i * incHue ) );
+			n[1] = ( iSat ? fHSB[1] + ( i * incSat ) : fHSB[1] - ( i * incSat ) );
+			n[2] = ( iInt ? fHSB[2] + ( i * incInt ) : fHSB[2] - ( i * incInt ) );
+
+			// Get new color
+			int ik = Color.HSBtoRGB( Value.clamp( n[0], 0, 1 ), Value.clamp( n[1], 0, 1 ), Value.clamp( n[2], 0, 1 ) );
+			c = new Color( ik );
+
+			// Add new RGB commands
+			mo.addCommand( new RGB( c, 0 ) );
+			mo.addCommand( new Delay( tdelay ) );
+		}
+	}
+
+	public void rgbBreath( Color from, Color to, int steps, int dDelay )
+	{
+		MacroObject mo = new MacroObject();
+		this.createFromToColorMacroObject( mo, from, to, steps/2, dDelay/2 );
+		this.createFromToColorMacroObject( mo, to, from, steps/2, dDelay/2 );
+
+		// Set streaming as we don't know if we can fit all macro commands in one message
+		mo.setMode( MacroObject.MacroObjectMode.CachedStreaming );
+
+		// Send macro to the Sphero device
+		this.sendCommand( mo );
+	}
+	
 	/**
 	 * Rotate the robot
 	 * 
@@ -1461,6 +1530,7 @@ public class Robot
 														// data now that we got more
 														// memory on the device
 														Robot.this.macroSettings.emptyMacroCommandQueue();
+														Robot.this.macroSettings.stopIfFinished();
 													}
 													break;
 
@@ -1905,7 +1975,7 @@ public class Robot
 		private final Collection<CommandMessage> sendingQueue;
 		private final Collection<Integer> ballMemory;
 		private boolean macroRunning, macroStreamingEnabled;
-//		private int emits = 0;
+		private int emits = 0;
 
 		/**
 		 * Create a macro settings object
@@ -1935,23 +2005,23 @@ public class Robot
 			this.macroRunning = false;
 		}
 
-//		/**
-//		 * Stop macro from executing (finished)
-//		 */
-//		protected void stopIfFinished()
-//		{
-//			emits = ( emits > 0 ? emits - 1 : 0 );
-//			if( this.commands.isEmpty() && this.macroRunning && emits == 0 )
-//			{
+		/**
+		 * Stop macro from executing (finished)
+		 */
+		protected void stopIfFinished()
+		{
+			emits = ( emits > 0 ? emits - 1 : 0 );
+			if( this.commands.isEmpty() && this.macroRunning && emits == 0 )
+			{
 //				for( CommandMessage cmd : this.sendingQueue )
 //					sendCommand( cmd );
 //				this.sendingQueue.clear();
-//				this.stopMacro();
-//
-//				// Notify listeners about macro done event
-//				Robot.this.notifyListenerEvent( EVENT_CODE.MACRO_DONE );
-//			}
-//		}
+				this.stopMacro();
+
+				// Notify listeners about macro done event
+				Robot.this.notifyListenerEvent( EVENT_CODE.MACRO_DONE );
+			}
+		}
 
 		/**
 		 * Play a given macro object
@@ -2071,7 +2141,7 @@ public class Robot
 			// Send a save macro command to the Sphero with the new data
 			SaveMacroCommand svc = new SaveMacroCommand( SaveMacroCommand.MacroFlagMotorControl, SaveMacroCommand.MACRO_STREAMING_DESTINATION, sendBuffer.toByteArray() );
 
-//			emits++;
+			emits++;
 			Robot.this.sendSystemCommand( svc );
 
 			// Check if we can continue creating more messages to send

@@ -38,8 +38,6 @@ public class VersioningResponse extends ResponseMessage
 		{
 			byte[] data = this.getPacketPayload();
 
-			System.out.println( data.length );
-
 			this.recordVersion = ( ( data[RECORD_VERSION_INDEX] >> 4 ) + "." + ( 0xF & data[RECORD_VERSION_INDEX] ) );
 			this.modelNumber = data[MODEL_VERSION_INDEX];
 			this.hardwareVersion = ( ( data[HARDWARE_VERSION_INDEX] >> 4 ) + "." + ( 0xF & data[HARDWARE_VERSION_INDEX] ) );

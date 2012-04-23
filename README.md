@@ -162,6 +162,19 @@ The API was developed by Nicklas Gavelin, http://nicklasgavelin.se from backward
 There is no guarantee that packages will maintain their naming standard or that classes will be left intact. Although I'm trying to keep
 the impact on previous versions as small as possible regarding compatibility (although as in new projects this isn't always possible).
 
+## Sphero versions
+This API is tested on Sphero robotic balls with versions:
+	
+	recordVersion=0.1, 
+	overlayManagerVersion=0.2, 
+	orbBasicVersion=0.0, 
+	modelNumber=2, 
+	mainApplicationVersion=0.99, 
+	hardwareVersion=0.2, 
+	bootloaderVersion=1.7
+	
+I can't guarantee that it will work on older/newer versions of the Sphero ball.
+
 # License
 Read the LICENSE file for more information :-)
 

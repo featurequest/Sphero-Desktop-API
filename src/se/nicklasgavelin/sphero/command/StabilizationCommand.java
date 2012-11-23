@@ -24,6 +24,7 @@ public class StabilizationCommand extends CommandMessage
 	public StabilizationCommand( boolean on )
 	{
 		super( COMMAND_MESSAGE_TYPE.STABILIZATION );
+		this.on = on;
 	}
 
 	/**

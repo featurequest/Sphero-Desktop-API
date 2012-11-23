@@ -2,6 +2,7 @@ package se.nicklasgavelin.sphero.macro.command;
 
 import se.nicklasgavelin.sphero.macro.MacroCommand;
 import se.nicklasgavelin.util.ByteArrayBuffer;
+import se.nicklasgavelin.util.Value;
 
 /**
  * 
@@ -10,19 +11,16 @@ import se.nicklasgavelin.util.ByteArrayBuffer;
  * @author Sebastian Garn, sgarn@cs.tu-berlin.de, Technical University of Berlin
  */
 public class LoopStart extends MacroCommand {
-
-    private int mCount = Integer.valueOf( 1000 );
-    public static final int MAX_DELAY = 65534, MIN_DELAY = 0;
+    public static final int MIN_LOOP_VALUE = 1, MAX_LOOP_VALUE = 65535;
+    private int mCount;
 
 	public LoopStart(int count) {
 		super( MACRO_COMMAND.MAC_LOOP_START );
-		mCount = count;
+		mCount = Value.clamp(count, MIN_LOOP_VALUE, MAX_LOOP_VALUE );
 	}
 
 	public void setCount(int count) {
-	    if (count == 0) count = 1;
-	    
-	    mCount = count;
+	    mCount = Value.clamp(count, MIN_LOOP_VALUE, MAX_LOOP_VALUE );;
 	}
 	
 	public int getCount() {

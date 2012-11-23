@@ -85,7 +85,9 @@ public abstract class MacroCommand
 		MAC_EMIT( 21, 2 ), // ?
 		MAC_WAIT_UNTIL_STOP( 25, 3 ), // ?
 		MAC_ROTATE( 26, 4 ), // NOT WORKING YET
-		MAC_STREAM_END( 27, 1 ); // TODO: Maybe working?
+		MAC_STREAM_END( 27, 1 ), // TODO: Maybe working?
+		MAC_LOOP_START(30, 2),
+		MAC_LOOP_END(31, 1);
 
 		// Internal storage
 		private int value, length;

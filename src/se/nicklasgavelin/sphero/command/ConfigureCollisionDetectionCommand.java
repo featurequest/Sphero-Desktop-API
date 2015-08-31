@@ -5,7 +5,7 @@ package se.nicklasgavelin.sphero.command;
  * 
  * @author John Sichi, jsichi@gmail.com
  */
-public class CollisionDetectionCommand extends CommandMessage
+public class ConfigureCollisionDetectionCommand extends CommandMessage
 {
     private final int meth, xThreshold, xSpeed, yThreshold, ySpeed, deadTime;
 
@@ -87,7 +87,7 @@ public class CollisionDetectionCommand extends CommandMessage
      * @param deadTime An 8-bit post-collision dead time to prevent
      * retriggering; specified in 10ms increments.
      */
-    public CollisionDetectionCommand( int meth, int xThreshold, int xSpeed, int yThreshold, int ySpeed, int deadTime )
+    public ConfigureCollisionDetectionCommand( int meth, int xThreshold, int xSpeed, int yThreshold, int ySpeed, int deadTime )
     {
         super( COMMAND_MESSAGE_TYPE.CONFIGURE_COLLISION_DETECTION );
         this.meth = meth;

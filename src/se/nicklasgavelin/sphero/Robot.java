@@ -120,12 +120,12 @@ public class Robot
 		// this.bt.getAddress() );
 
 		// Control that we got a valid robot
-		if( !this.bt.getAddress().startsWith( ROBOT_ADDRESS_PREFIX ) )
-		{
-			String msg = invalidAddressResponses[Value.clamp( error_num++, 0, invalidAddressResponses.length - 1 )];
-			Logging.error( msg );
-			throw new InvalidRobotAddressException( msg );
-		}
+		//if( !this.bt.getAddress().startsWith( ROBOT_ADDRESS_PREFIX ) )
+		//{
+		//	String msg = invalidAddressResponses[Value.clamp( error_num++, 0, invalidAddressResponses.length - 1 )];
+		//	Logging.error( msg );
+		//	throw new InvalidRobotAddressException( msg );
+		//}
 
 		if( rs == null )
 			this.rs = ProjectProperties.getInstance().getRobotSetting();

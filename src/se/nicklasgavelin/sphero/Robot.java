@@ -1535,10 +1535,10 @@ public class Robot
 													break;
 
 												/*
-												 * Data message and any other type of
-												 * message
+												 * Data/collision message
 												 */
 												case DATA:
+												case COLLISION:
 													// Notify listeners about a received
 													// data message
 													Robot.this.notifyListenersInformationResponse( dir );

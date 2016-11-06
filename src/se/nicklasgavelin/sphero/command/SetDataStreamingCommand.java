@@ -12,7 +12,7 @@ package se.nicklasgavelin.sphero.command;
 public class SetDataStreamingCommand extends CommandMessage
 {
 	// Internal storage
-	private int mDivisor, mPacketFrames, mSensorMask, mPacketCount;
+	private int mDivisor, mPacketFrames, mSensorMask, mSensorMask2, mPacketCount;
 
 	/**
 	 * Create a data streaming command without first setting the mask.
@@ -94,6 +94,16 @@ public class SetDataStreamingCommand extends CommandMessage
 	}
 
 	/**
+	 * Add mask to the already existing mask2
+	 * 
+	 * @param mask The mask to add
+	 */
+	public void addMask2( int mask )
+	{
+		this.mSensorMask2 |= mask;
+	}
+
+	/**
 	 * Returns the internal sensor mask value
 	 * 
 	 * @return The sensor mask value
@@ -103,10 +113,20 @@ public class SetDataStreamingCommand extends CommandMessage
 		return this.mSensorMask;
 	}
 
+	/**
+	 * Returns the internal sensor mask2 value
+	 * 
+	 * @return The sensor mask2 value
+	 */
+	public int getMask2()
+	{
+		return this.mSensorMask2;
+	}
+
 	@Override
 	protected byte[] getPacketData()
 	{
-		byte[] data = new byte[ 9 ];
+		byte[] data = new byte[ 13 ];
 
 		data[0] = (byte) ( this.mDivisor >> 8 );
 		data[1] = (byte) this.mDivisor;
@@ -120,6 +140,11 @@ public class SetDataStreamingCommand extends CommandMessage
 		data[7] = (byte) this.mSensorMask;
 
 		data[8] = (byte) this.mPacketCount;
+
+		data[9] = (byte) ( this.mSensorMask2 >> 24 );
+		data[10] = (byte) ( this.mSensorMask2 >> 16 );
+		data[11] = (byte) ( this.mSensorMask2 >> 8 );
+		data[12] = (byte) this.mSensorMask2;
 
 		return data;
 	}

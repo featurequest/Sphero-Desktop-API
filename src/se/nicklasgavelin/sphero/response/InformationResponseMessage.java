@@ -18,7 +18,7 @@ public class InformationResponseMessage extends ResponseMessage
 	 */
 	public enum INFORMATION_RESPONSE_CODE
 	{
-		EMIT( 6 ), DATA( 3 );
+		EMIT( 6 ), DATA( 3 ), COLLISION ( 7 );
 
 		private byte code;
 

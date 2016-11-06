@@ -201,6 +201,7 @@ public class CommandMessage
         CALIBRATE( 1, 2 ),
         STABILIZATION( 2, 2 ),
         ROTATION_RATE( 3, 2 ),
+        CONFIGURE_COLLISION_DETECTION( 18, 2 ),
         RGB_LED_OUTPUT( 32, 2 ),
         FRONT_LED_OUTPUT( 33, 2 ),
         ROLL( 48, 2 ),

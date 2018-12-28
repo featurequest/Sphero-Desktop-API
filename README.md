@@ -1,5 +1,9 @@
 # Development Quick Start Guide
 
+## Notice
+
+This API is no longer under active development and may be considered a legacy API.
+
 ## Overview
 
 ## Compatibility

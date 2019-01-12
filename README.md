@@ -55,7 +55,7 @@ to compile the code into dist/ WITH the java doc.
 ## How to use the API
 ### Connect
 The API is similar to that of the original Orbotix Sphero API with some modifications to support connecting to multiple
-Sphero devices simultaniously and sending individual commands to these. There is examples in the se.nicklasgavelin.sphero.example
+Sphero devices simultaneously and sending individual commands to these. There is examples in the se.nicklasgavelin.sphero.example
 package that will show a quick example of how to use the API.
 
 To connect to a Sphero device you may either perform a bluetooth device search as shown in one of the examples or you can use
